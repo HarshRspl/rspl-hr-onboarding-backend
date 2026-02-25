@@ -45,7 +45,7 @@ public class OnboardingService {
   public CandidateDto initiate(InitiateCandidateRequest req) {
     // Aadhaar: allow empty, validate if present
     if (req.getAadhaarNo() != null && !req.getAadhaarNo().isBlank()) {
-      if (!req.getAadhaarNo().matches("^\d{12}$")) {
+      if (!req.getAadhaarNo().matches("^\\d{12}$")) {
         throw new ValidationException("aadhaarNo must be 12 digits");
       }
     }

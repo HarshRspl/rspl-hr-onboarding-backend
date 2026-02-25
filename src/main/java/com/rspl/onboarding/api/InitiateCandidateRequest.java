@@ -16,7 +16,7 @@ public class InitiateCandidateRequest {
   private String emailId;
 
   @NotBlank
-  @Pattern(regexp = "^\d{10}$", message = "mobileNo must be 10 digits")
+  @Pattern(regexp = "^\\d{10}$", message = "mobileNo must be 10 digits")
   private String mobileNo;
 
   @NotBlank

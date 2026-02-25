@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSPL HR Onboarding</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .home-hero {
+            text-align: center;
+            color: white;
+            margin: 40px 0;
+        }
+        
+        .home-hero h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .home-hero p {
+            font-size: 1.3em;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+        
+        .navigation-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 40px auto;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        .nav-card {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+        
+        .nav-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+        }
+        
+        .nav-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+        
+        .nav-card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+        
+        .nav-card p {
+            color: #7f8c8d;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+        
+        .nav-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .nav-button:hover {
+            background: #5568d3;
+            text-decoration: none;
+        }
+        
+        .nav-button.admin {
+            background: #e74c3c;
+        }
+        
+        .nav-button.admin:hover {
+            background: #c0392b;
+        }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: auto;
+            padding-top: 40px;
+            opacity: 0.8;
+        }
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: auto;
+            padding-top: 40px;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 768px) {
+            .home-hero h1 {
+                font-size: 2em;
+            }
+            
+            .navigation-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="home-hero">
+        <h1>🎯 RSPL HR Onboarding System</h1>
+        <p>Streamline your employee onboarding process</p>
+    </div>
+
+    <div class="navigation-grid">
+        <!-- User Access Card -->
+        <div class="nav-card">
+            <div class="nav-icon">👥</div>
+            <h2>Team Access</h2>
+            <p>Create and manage candidate applications. Access the main onboarding interface to handle employee data.</p>
+            <a href="/team.html" class="nav-button">Enter Portal</a>
+        </div>
+
+        <!-- Admin Access Card -->
+        <div class="nav-card">
+            <div class="nav-icon">🔐</div>
+            <h2>Admin Portal</h2>
+            <p>Full administrative control. Manage HR team members, view analytics, and system settings.</p>
+            <a href="/admin.html" class="nav-button admin">Admin Login</a>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>🚀 RSPL HR Onboarding Backend v1.0.0 | Powered by Spring Boot</p>
+    </div>
+</body>
+</html>
