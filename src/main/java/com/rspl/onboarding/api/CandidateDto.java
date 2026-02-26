@@ -1,38 +1,49 @@
 package com.rspl.onboarding.api;
 
-public class CandidateDto {
-  private Long id;
-  private String employeeName;
-  private String emailId;
-  private String mobileNo;
-  private String aadhaarNo;
-  private String designation;
-  private String joiningStatus;
-  private String linkStatus;
-  private AssignedHrDto assignedHR;
-  private String createdAt;
-  private String rejectionReason;
+import com.rspl.onboarding.domain.Candidate;
+import java.time.LocalDateTime;
 
-  public Long getId() { return id; }
-  public void setId(Long id) { this.id = id; }
-  public String getEmployeeName() { return employeeName; }
-  public void setEmployeeName(String employeeName) { this.employeeName = employeeName; }
-  public String getEmailId() { return emailId; }
-  public void setEmailId(String emailId) { this.emailId = emailId; }
-  public String getMobileNo() { return mobileNo; }
-  public void setMobileNo(String mobileNo) { this.mobileNo = mobileNo; }
-  public String getAadhaarNo() { return aadhaarNo; }
-  public void setAadhaarNo(String aadhaarNo) { this.aadhaarNo = aadhaarNo; }
-  public String getDesignation() { return designation; }
-  public void setDesignation(String designation) { this.designation = designation; }
-  public String getJoiningStatus() { return joiningStatus; }
-  public void setJoiningStatus(String joiningStatus) { this.joiningStatus = joiningStatus; }
-  public String getLinkStatus() { return linkStatus; }
-  public void setLinkStatus(String linkStatus) { this.linkStatus = linkStatus; }
-  public AssignedHrDto getAssignedHR() { return assignedHR; }
-  public void setAssignedHR(AssignedHrDto assignedHR) { this.assignedHR = assignedHR; }
-  public String getCreatedAt() { return createdAt; }
-  public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
-  public String getRejectionReason() { return rejectionReason; }
-  public void setRejectionReason(String rejectionReason) { this.rejectionReason = rejectionReason; }
+public class CandidateDto {
+
+    private Long id;
+    private String employeeName;
+    private String email;
+    private String mobileNo;
+    private String designation;
+    private String assignedHr;
+    private String status;
+    private String rejectionReason;
+    private String onboardingToken;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    // ── Static factory: Candidate → CandidateDto ────
+    public static CandidateDto from(Candidate c) {
+        CandidateDto dto = new CandidateDto();
+        dto.id = c.getId();
+        dto.employeeName = c.getEmployeeName();
+        dto.email = c.getEmail();
+        dto.mobileNo = c.getMobileNo();
+        dto.designation = c.getDesignation();
+        dto.assignedHr = c.getAssignedHr();
+        dto.status = c.getStatus();
+        dto.rejectionReason = c.getRejectionReason();
+        dto.onboardingToken = c.getOnboardingToken();
+        dto.createdAt = c.getCreatedAt();
+        dto.updatedAt = c.getUpdatedAt();
+        return dto;
+    }
+
+    // ─── Getters ─────────────────────────────────────
+    public Long getId() { return id; }
+    public String getEmployeeName() { return employeeName; }
+    public String getEmail() { return email; }
+    public String getMobileNo() { return mobileNo; }
+    public String getDesignation() { return designation; }
+    public String getAssignedHr() { return assignedHr; }
+    public String getStatus() { return status; }
+    public String getRejectionReason() { return rejectionReason; }
+    public String getOnboardingToken() { return onboardingToken; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
 }
