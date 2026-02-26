@@ -17,7 +17,6 @@ public class CandidateDto {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // ── Static factory: Candidate → CandidateDto ────
     public static CandidateDto from(Candidate c) {
         CandidateDto dto = new CandidateDto();
         dto.id = c.getId();
@@ -34,7 +33,6 @@ public class CandidateDto {
         return dto;
     }
 
-    // ─── Getters ─────────────────────────────────────
     public Long getId() { return id; }
     public String getEmployeeName() { return employeeName; }
     public String getEmail() { return email; }
