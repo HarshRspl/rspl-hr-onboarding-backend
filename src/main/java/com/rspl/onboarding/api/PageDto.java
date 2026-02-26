@@ -1,6 +1,5 @@
 package com.rspl.onboarding.api;
 
-import org.springframework.data.domain.Page;
 import java.util.List;
 
 public class PageDto<T> {
@@ -11,20 +10,18 @@ public class PageDto<T> {
     private long totalElements;
     private int totalPages;
 
-    public static <T> PageDto<T> from(Page<T> p) {
-        PageDto<T> dto = new PageDto<>();
-        dto.content = p.getContent();
-        dto.page = p.getNumber();
-        dto.size = p.getSize();
-        dto.totalElements = p.getTotalElements();
-        dto.totalPages = p.getTotalPages();
-        return dto;
-    }
-
-    // ─── Getters ─────────────────────────────────────
     public List<T> getContent() { return content; }
+    public void setContent(List<T> content) { this.content = content; }
+
     public int getPage() { return page; }
+    public void setPage(int page) { this.page = page; }
+
     public int getSize() { return size; }
+    public void setSize(int size) { this.size = size; }
+
     public long getTotalElements() { return totalElements; }
+    public void setTotalElements(long totalElements) { this.totalElements = totalElements; }
+
     public int getTotalPages() { return totalPages; }
+    public void setTotalPages(int totalPages) { this.totalPages = totalPages; }
 }
