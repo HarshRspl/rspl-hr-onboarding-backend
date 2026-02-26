@@ -1,98 +1,71 @@
 package com.rspl.onboarding.domain;
 
 import jakarta.persistence.*;
-
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "candidates")
 public class Candidate {
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-  @Column(nullable = false)
-  private String employeeName;
+    @Column(name = "employee_name", nullable = false)
+    private String employeeName;
 
-  private String aadhaarNo;
+    @Column(name = "email", nullable = false)
+    private String email;
 
-  @Column(nullable = false)
-  private String emailId;
+    @Column(name = "mobile_no", nullable = false)
+    private String mobileNo;
 
-  @Column(nullable = false)
-  private String mobileNo;
+    @Column(name = "designation")
+    private String designation;
 
-  @Column(nullable = false)
-  private String designation;
+    @Column(name = "aadhaar_no")
+    private String aadhaarNo;
 
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
-  private JoiningStatus joiningStatus = JoiningStatus.INITIATED;
+    @Column(name = "assigned_hr")
+    private String assignedHr;
 
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
-  private LinkStatus linkStatus = LinkStatus.NOT_SENT;
+    @Column(name = "status")
+    private String status = "PENDING";
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "assigned_hr_id")
-  private HrTeamMember assignedHR;
+    @Column(name = "onboarding_token", unique = true)
+    private String onboardingToken;
 
-  private String initiatedBy;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt = LocalDateTime.now();
 
-  @Column(length = 1000)
-  private String rejectionReason;
+    // ─── Getters & Setters ───────────────────────────
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-  @Column(nullable = false)
-  private Instant createdAt;
+    public String getEmployeeName() { return employeeName; }
+    public void setEmployeeName(String employeeName) { this.employeeName = employeeName; }
 
-  @Column(nullable = false)
-  private Instant updatedAt;
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-  private String onboardingToken;
-  private Instant onboardingTokenExpiresAt;
+    public String getMobileNo() { return mobileNo; }
+    public void setMobileNo(String mobileNo) { this.mobileNo = mobileNo; }
 
-  public Candidate() {}
+    public String getDesignation() { return designation; }
+    public void setDesignation(String designation) { this.designation = designation; }
 
-  @PrePersist
-  void onCreate() {
-    this.createdAt = Instant.now();
-    this.updatedAt = this.createdAt;
-  }
+    public String getAadhaarNo() { return aadhaarNo; }
+    public void setAadhaarNo(String aadhaarNo) { this.aadhaarNo = aadhaarNo; }
 
-  @PreUpdate
-  void onUpdate() {
-    this.updatedAt = Instant.now();
-  }
+    public String getAssignedHr() { return assignedHr; }
+    public void setAssignedHr(String assignedHr) { this.assignedHr = assignedHr; }
 
-  public Long getId() { return id; }
-  public void setId(Long id) { this.id = id; }
-  public String getEmployeeName() { return employeeName; }
-  public void setEmployeeName(String employeeName) { this.employeeName = employeeName; }
-  public String getAadhaarNo() { return aadhaarNo; }
-  public void setAadhaarNo(String aadhaarNo) { this.aadhaarNo = aadhaarNo; }
-  public String getEmailId() { return emailId; }
-  public void setEmailId(String emailId) { this.emailId = emailId; }
-  public String getMobileNo() { return mobileNo; }
-  public void setMobileNo(String mobileNo) { this.mobileNo = mobileNo; }
-  public String getDesignation() { return designation; }
-  public void setDesignation(String designation) { this.designation = designation; }
-  public JoiningStatus getJoiningStatus() { return joiningStatus; }
-  public void setJoiningStatus(JoiningStatus joiningStatus) { this.joiningStatus = joiningStatus; }
-  public LinkStatus getLinkStatus() { return linkStatus; }
-  public void setLinkStatus(LinkStatus linkStatus) { this.linkStatus = linkStatus; }
-  public HrTeamMember getAssignedHR() { return assignedHR; }
-  public void setAssignedHR(HrTeamMember assignedHR) { this.assignedHR = assignedHR; }
-  public String getInitiatedBy() { return initiatedBy; }
-  public void setInitiatedBy(String initiatedBy) { this.initiatedBy = initiatedBy; }
-  public String getRejectionReason() { return rejectionReason; }
-  public void setRejectionReason(String rejectionReason) { this.rejectionReason = rejectionReason; }
-  public Instant getCreatedAt() { return createdAt; }
-  public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
-  public Instant getUpdatedAt() { return updatedAt; }
-  public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
-  public String getOnboardingToken() { return onboardingToken; }
-  public void setOnboardingToken(String onboardingToken) { this.onboardingToken = onboardingToken; }
-  public Instant getOnboardingTokenExpiresAt() { return onboardingTokenExpiresAt; }
-  public void setOnboardingTokenExpiresAt(Instant onboardingTokenExpiresAt) { this.onboardingTokenExpiresAt = onboardingTokenExpiresAt; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public String getOnboardingToken() { return onboardingToken; }
+    public void setOnboardingToken(String onboardingToken) { this.onboardingToken = onboardingToken; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }
