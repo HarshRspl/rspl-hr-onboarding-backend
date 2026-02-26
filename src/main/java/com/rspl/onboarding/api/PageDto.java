@@ -1,32 +1,30 @@
 package com.rspl.onboarding.api;
 
+import org.springframework.data.domain.Page;
 import java.util.List;
 
 public class PageDto<T> {
-  private List<T> content;
-  private int page;
-  private int size;
-  private long totalElements;
-  private int totalPages;
 
-  public PageDto() {}
+    private List<T> content;
+    private int page;
+    private int size;
+    private long totalElements;
+    private int totalPages;
 
-  public PageDto(List<T> content, int page, int size, long totalElements, int totalPages) {
-    this.content = content;
-    this.page = page;
-    this.size = size;
-    this.totalElements = totalElements;
-    this.totalPages = totalPages;
-  }
+    public static <T> PageDto<T> from(Page<T> p) {
+        PageDto<T> dto = new PageDto<>();
+        dto.content = p.getContent();
+        dto.page = p.getNumber();
+        dto.size = p.getSize();
+        dto.totalElements = p.getTotalElements();
+        dto.totalPages = p.getTotalPages();
+        return dto;
+    }
 
-  public List<T> getContent() { return content; }
-  public void setContent(List<T> content) { this.content = content; }
-  public int getPage() { return page; }
-  public void setPage(int page) { this.page = page; }
-  public int getSize() { return size; }
-  public void setSize(int size) { this.size = size; }
-  public long getTotalElements() { return totalElements; }
-  public void setTotalElements(long totalElements) { this.totalElements = totalElements; }
-  public int getTotalPages() { return totalPages; }
-  public void setTotalPages(int totalPages) { this.totalPages = totalPages; }
+    // ─── Getters ─────────────────────────────────────
+    public List<T> getContent() { return content; }
+    public int getPage() { return page; }
+    public int getSize() { return size; }
+    public long getTotalElements() { return totalElements; }
+    public int getTotalPages() { return totalPages; }
 }
