@@ -8,28 +8,27 @@ public class InitiateCandidateRequest {
     private String employeeName;
 
     @NotBlank
-    private String email;        // ← must match getEmail()
+    private String email;
 
     @NotBlank
     private String mobileNo;
 
     private String designation;
 
-    private String assignedHr;   // ← must match getAssignedHr()
+    private String assignedHr;
 
-    // ─── Getters & Setters ───────────────────────────
     public String getEmployeeName() { return employeeName; }
-    public void setEmployeeName(String employeeName) { this.employeeName = employeeName; }
+    public void setEmployeeName(String v) { this.employeeName = v; }
 
     public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public void setEmail(String v) { this.email = v; }
 
     public String getMobileNo() { return mobileNo; }
-    public void setMobileNo(String mobileNo) { this.mobileNo = mobileNo; }
+    public void setMobileNo(String v) { this.mobileNo = v; }
 
     public String getDesignation() { return designation; }
-    public void setDesignation(String designation) { this.designation = designation; }
+    public void setDesignation(String v) { this.designation = v; }
 
     public String getAssignedHr() { return assignedHr; }
-    public void setAssignedHr(String assignedHr) { this.assignedHr = assignedHr; }
+    public void setAssignedHr(String v) { this.assignedHr = v; }
 }
