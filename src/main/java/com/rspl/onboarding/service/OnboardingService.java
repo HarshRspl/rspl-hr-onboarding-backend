@@ -1,161 +1,62 @@
 package com.rspl.onboarding.service;
 
-import com.rspl.onboarding.api.*;
-import com.rspl.onboarding.domain.*;
+import com.rspl.onboarding.domain.Candidate;
 import com.rspl.onboarding.repo.CandidateRepository;
-import com.rspl.onboarding.repo.HrTeamRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.security.SecureRandom;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.HexFormat;
-import java.util.Optional;
+import java.util.List;
+import java.util.UUID;
 
 @Service
 public class OnboardingService {
 
-  private static final Logger log = LoggerFactory.getLogger(OnboardingService.class);
-  private static final SecureRandom random = new SecureRandom();
-  private static final HexFormat hex = HexFormat.of();
-  private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-      .withZone(ZoneId.systemDefault());
+    @Autowired
+    private CandidateRepository candidateRepository;
 
-  private final CandidateRepository candidateRepo;
-  private final HrTeamRepository hrRepo;
+    @Autowired
+    private SmsService smsService;
 
-  public OnboardingService(CandidateRepository candidateRepo, HrTeamRepository hrRepo) {
-    this.candidateRepo = candidateRepo;
-    this.hrRepo = hrRepo;
-  }
+    // ── Create candidate + send SMS ──────────────────
+    public Candidate createCandidate(Candidate candidate) {
+        // Generate unique token
+        String token = UUID.randomUUID().toString();
+        candidate.setOnboardingToken(token);
+        candidate.setStatus("PENDING");
 
-  public PageDto<CandidateDto> listCandidates(int page, int size) {
-    Page<Candidate> p = candidateRepo.findAll(PageRequest.of(page, size));
-    var content = p.getContent().stream().sorted((a,b) -> Long.compare(b.getId(), a.getId()))
-        .map(this::toDto).toList();
-    return new PageDto<>(content, page, size, p.getTotalElements(), p.getTotalPages());
-  }
+        // Save to DB
+        Candidate saved = candidateRepository.save(candidate);
 
-  public CandidateDto initiate(InitiateCandidateRequest req) {
-    // Aadhaar: allow empty, validate if present
-    if (req.getAadhaarNo() != null && !req.getAadhaarNo().isBlank()) {
-      if (!req.getAadhaarNo().matches("^\\d{12}$")) {
-        throw new ValidationException("aadhaarNo must be 12 digits");
-      }
+        // Send SMS with onboarding link
+        smsService.sendOnboardingLink(
+            saved.getMobileNo(),
+            saved.getEmployeeName(),
+            token
+        );
+
+        return saved;
     }
 
-    Optional<Candidate> existing = candidateRepo.findByEmailIdIgnoreCase(req.getEmailId());
-    if (existing.isPresent()) {
-      throw new ConflictException("EMAIL_ALREADY_EXISTS", existing.get().getId());
+    // ── Get all candidates ───────────────────────────
+    public List<Candidate> getAllCandidates() {
+        return candidateRepository.findAll();
     }
 
-    Candidate c = new Candidate();
-    c.setEmployeeName(req.getEmployeeName().trim());
-    c.setAadhaarNo(req.getAadhaarNo() == null ? "" : req.getAadhaarNo().trim());
-    c.setEmailId(req.getEmailId().trim());
-    c.setMobileNo(req.getMobileNo().trim());
-    c.setDesignation(req.getDesignation().trim());
-    c.setJoiningStatus(JoiningStatus.INITIATED);
-    c.setInitiatedBy(req.getInitiatedBy() == null ? "hr_admin" : req.getInitiatedBy());
-
-    if (req.getAssignedHRId() != null) {
-      HrTeamMember hr = hrRepo.findById(req.getAssignedHRId())
-          .orElseThrow(() -> new ValidationException("assignedHRId not found"));
-      c.setAssignedHR(hr);
+    // ── Get candidate by token ───────────────────────
+    public Candidate getCandidateByToken(String token) {
+        return candidateRepository.findByOnboardingToken(token)
+            .orElseThrow(() -> new RuntimeException("Invalid token"));
     }
 
-    boolean send = req.getSendLinkImmediately() == null || req.getSendLinkImmediately();
-    c.setLinkStatus(send ? LinkStatus.SENT : LinkStatus.NOT_SENT);
-    String token = newToken();
-    c.setOnboardingToken(token);
-    c.setOnboardingTokenExpiresAt(Instant.now().plusSeconds(7 * 24 * 3600));
-
-    Candidate saved = candidateRepo.save(c);
-
-    if (send) {
-      // Stub: just log. Replace with email via SMTP / Microsoft Graph later.
-      String onboardingLink = "http://localhost:5500/candidate.html?token=" + token;
-      log.info("[SEND_LINK] to: {} link: {}", saved.getEmailId(), onboardingLink);
+    // ── Update candidate status ──────────────────────
+    public Candidate updateStatus(Long id, String status) {
+        Candidate c = candidateRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Candidate not found"));
+        c.setStatus(status);
+        return candidateRepository.save(c);
     }
 
-    return toDto(saved);
-  }
-
-  @Transactional
-  public void approve(long id) {
-    Candidate c = candidateRepo.findById(id).orElseThrow(() -> new NotFoundException("NOT_FOUND"));
-    if (c.getJoiningStatus() == JoiningStatus.REJECTED) {
-      throw new ConflictException("CANNOT_APPROVE_REJECTED", id);
+    // ── Delete candidate ─────────────────────────────
+    public void deleteCandidate(Long id) {
+        candidateRepository.deleteById(id);
     }
-    c.setJoiningStatus(JoiningStatus.APPROVED);
-  }
-
-  @Transactional
-  public void reject(long id, String reason) {
-    Candidate c = candidateRepo.findById(id).orElseThrow(() -> new NotFoundException("NOT_FOUND"));
-    if (c.getJoiningStatus() == JoiningStatus.APPROVED) {
-      throw new ConflictException("CANNOT_REJECT_APPROVED", id);
-    }
-    c.setJoiningStatus(JoiningStatus.REJECTED);
-    c.setRejectionReason(reason.trim());
-  }
-
-  @Transactional
-  public void sendLink(long id) {
-    Candidate c = candidateRepo.findById(id).orElseThrow(() -> new NotFoundException("NOT_FOUND"));
-    String token = newToken();
-    c.setOnboardingToken(token);
-    c.setOnboardingTokenExpiresAt(Instant.now().plusSeconds(7 * 24 * 3600));
-    c.setLinkStatus(LinkStatus.SENT);
-
-    String onboardingLink = "http://localhost:5500/candidate.html?token=" + token;
-    log.info("[SEND_LINK] to: {} link: {}", c.getEmailId(), onboardingLink);
-  }
-
-  private CandidateDto toDto(Candidate c) {
-    CandidateDto d = new CandidateDto();
-    d.setId(c.getId());
-    d.setEmployeeName(c.getEmployeeName());
-    d.setEmailId(c.getEmailId());
-    d.setMobileNo(c.getMobileNo());
-    d.setAadhaarNo(c.getAadhaarNo() == null ? "" : c.getAadhaarNo());
-    d.setDesignation(c.getDesignation());
-    d.setJoiningStatus(c.getJoiningStatus().name());
-    d.setLinkStatus(c.getLinkStatus().name());
-    if (c.getAssignedHR() != null) {
-      d.setAssignedHR(new AssignedHrDto(c.getAssignedHR().getId(), c.getAssignedHR().getName()));
-    }
-    if (c.getCreatedAt() != null) {
-      d.setCreatedAt(DATE.format(c.getCreatedAt()));
-    }
-    if (c.getRejectionReason() != null && !c.getRejectionReason().isBlank()) {
-      d.setRejectionReason(c.getRejectionReason());
-    }
-    return d;
-  }
-
-  private String newToken() {
-    byte[] b = new byte[12];
-    random.nextBytes(b);
-    return hex.formatHex(b); // 24-char token
-  }
-
-  // --- Exception types used by controller advice ---
-  public static class NotFoundException extends RuntimeException {
-    public NotFoundException(String m) { super(m); }
-  }
-  public static class ValidationException extends RuntimeException {
-    public ValidationException(String m) { super(m); }
-  }
-  public static class ConflictException extends RuntimeException {
-    private final Object details;
-    public ConflictException(String m, Object details) { super(m); this.details = details; }
-    public Object getDetails() { return details; }
-  }
 }
