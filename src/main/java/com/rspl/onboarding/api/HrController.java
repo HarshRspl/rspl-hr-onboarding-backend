@@ -8,15 +8,26 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/hr")
+@CrossOrigin(origins = "*")
 public class HrController {
 
     @Autowired
     private OnboardingService service;
 
+    // ✅ ADDED - Frontend calls /api/hr/team
+    @GetMapping("/team")
+    public ResponseEntity<?> getTeam() {
+        return ResponseEntity.ok(
+            Map.of("success", true, "data", service.getHRTeam())
+        );
+    }
+
+    // ✅ FIXED - Returns success wrapper
     @GetMapping("/candidates")
     public ResponseEntity<?> listCandidates(
             @RequestParam(defaultValue = "0") int page,
@@ -35,30 +46,31 @@ public class HrController {
         pageDto.setTotalElements(result.getTotalElements());
         pageDto.setTotalPages(result.getTotalPages());
 
-        return ResponseEntity.ok(pageDto);
+        return ResponseEntity.ok(Map.of("success", true, "data", pageDto));
     }
 
-    @PostMapping("/candidates")
-    public ResponseEntity<CandidateDto> initiate(
+    // ✅ FIXED - Frontend calls /api/hr/candidates/initiate not /api/hr/candidates
+    @PostMapping("/candidates/initiate")
+    public ResponseEntity<?> initiate(
             @Valid @RequestBody InitiateCandidateRequest request) {
         Candidate candidate = service.initiate(request);
-        return ResponseEntity.ok(CandidateDto.from(candidate));
+        return ResponseEntity.ok(Map.of("success", true, "data", CandidateDto.from(candidate)));
     }
 
     @PostMapping("/candidates/{id}/approve")
-    public ResponseEntity<CandidateDto> approve(@PathVariable long id) {
-        return ResponseEntity.ok(CandidateDto.from(service.approve(id)));
+    public ResponseEntity<?> approve(@PathVariable long id) {
+        return ResponseEntity.ok(Map.of("success", true, "data", CandidateDto.from(service.approve(id))));
     }
 
     @PostMapping("/candidates/{id}/reject")
-    public ResponseEntity<CandidateDto> reject(
+    public ResponseEntity<?> reject(
             @PathVariable long id,
             @RequestBody RejectRequest body) {
-        return ResponseEntity.ok(CandidateDto.from(service.reject(id, body.getReason())));
+        return ResponseEntity.ok(Map.of("success", true, "data", CandidateDto.from(service.reject(id, body.getReason()))));
     }
 
     @PostMapping("/candidates/{id}/send-link")
-    public ResponseEntity<CandidateDto> sendLink(@PathVariable long id) {
-        return ResponseEntity.ok(CandidateDto.from(service.sendLink(id)));
+    public ResponseEntity<?> sendLink(@PathVariable long id) {
+        return ResponseEntity.ok(Map.of("success", true, "data", CandidateDto.from(service.sendLink(id))));
     }
 }
