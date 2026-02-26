@@ -13,7 +13,10 @@ public class InitiateCandidateRequest {
     @NotBlank
     private String mobileNo;
 
+    @NotBlank
     private String designation;
+
+    private String aadhaarNo;    // ← ADD THIS
 
     private String assignedHr;
 
@@ -28,6 +31,9 @@ public class InitiateCandidateRequest {
 
     public String getDesignation() { return designation; }
     public void setDesignation(String v) { this.designation = v; }
+
+    public String getAadhaarNo() { return aadhaarNo; }
+    public void setAadhaarNo(String v) { this.aadhaarNo = v; }
 
     public String getAssignedHr() { return assignedHr; }
     public void setAssignedHr(String v) { this.assignedHr = v; }
