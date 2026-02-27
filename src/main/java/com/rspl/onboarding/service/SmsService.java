@@ -13,19 +13,16 @@ public class SmsService {
     @Value("${fast2sms.api.key:NOT_SET}")
     private String apiKey;
 
-    private static final String BASE_URL = 
+    private static final String BASE_URL =
         "https://rspl-hr-onboarding-backend-production.up.railway.app";
 
     public void sendOnboardingLink(String mobile, String candidateName, String token) {
         try {
             String link = BASE_URL + "/onboarding.html?token=" + token;
-
-            String message = "Dear " + candidateName + 
-                ", Welcome to RSPL! Complete your onboarding: " + link + 
-                " -RSPL HR";
+            String message = "Dear " + candidateName +
+                ", Welcome to RSPL! Complete your onboarding: " + link + " -RSPL HR";
 
             RestTemplate restTemplate = new RestTemplate();
-
             HttpHeaders headers = new HttpHeaders();
             headers.set("authorization", apiKey);
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -38,14 +35,12 @@ public class SmsService {
             body.put("numbers", mobile);
 
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-
             ResponseEntity<String> response = restTemplate.postForEntity(
                 "https://www.fast2sms.com/dev/bulkV2",
                 request,
                 String.class
             );
-
-            System.out.println("✅ SMS sent to " + mobile + " | Response: " + response.getBody());
+            System.out.println("✅ SMS sent to " + mobile + " | " + response.getBody());
 
         } catch (Exception e) {
             System.err.println("❌ SMS failed for " + mobile + ": " + e.getMessage());
