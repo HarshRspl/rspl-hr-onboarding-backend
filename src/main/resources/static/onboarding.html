@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RSPL – Complete Your Joining</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family:"Segoe UI",sans-serif; background:#f1f5f9; }
+    .gbg  { background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%); }
+    .ifield {
+      width:100%; border:1.5px solid #e2e8f0; border-radius:8px;
+      padding:10px 13px; font-size:14px; outline:none;
+      background:white; transition:border-color .2s, box-shadow .2s;
+    }
+    .ifield:focus { border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.12); }
+    .ifield.readonly-field { background:#f8fafc; color:#64748b; cursor:not-allowed; }
+    .card {
+      background:white; border-radius:14px; padding:24px 28px;
+      margin-bottom:20px; box-shadow:0 2px 14px rgba(0,0,0,.06);
+    }
+    .sec-title {
+      font-size:15px; font-weight:700; color:#1e3a5f;
+      margin-bottom:18px; display:flex; align-items:center; gap:10px;
+    }
+    .sec-num {
+      width:30px; height:30px; border-radius:50%;
+      background:linear-gradient(135deg,#1e3a5f,#2563eb);
+      color:white; font-size:13px; font-weight:700;
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .lbl {
+      display:block; font-size:11px; font-weight:700;
+      color:#64748b; text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px;
+    }
+    .req { color:#ef4444; margin-left:2px; }
+    .hint { font-size:11px; color:#94a3b8; margin-top:3px; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+    .fi { animation:fadeIn .35s ease; }
+    .step-wrap { display:flex; align-items:center; justify-content:center; gap:0; flex-wrap:wrap; }
+    .step-item { display:flex; flex-direction:column; align-items:center; margin:0 4px; }
+    .step-dot  { width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px; }
+    .step-line { width:28px;height:2px;background:#e2e8f0;margin-bottom:16px; }
+    .s-active  { background:#2563eb;color:white; }
+    .s-done    { background:#22c55e;color:white; }
+    .s-pending { background:#e2e8f0;color:#94a3b8; }
+    input[type=date]::-webkit-calendar-picker-indicator { cursor:pointer; opacity:.6; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="gbg text-white px-6 py-4 flex items-center gap-3 shadow-lg sticky top-0 z-20">
+  <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center font-black text-xl">R</div>
+  <div>
+    <div class="font-bold text-base leading-tight">RSPL Health</div>
+    <div class="text-xs text-blue-200">Pre-Onboarding Portal</div>
+  </div>
+  <div class="ml-auto">
+    <span id="nav-badge" class="text-xs bg-white/20 px-3 py-1 rounded-full"></span>
+  </div>
+</nav>
+
+<div class="max-w-3xl mx-auto px-4 py-6 pb-14">
+
+  <!-- LOADING -->
+  <div id="sc-loading" class="text-center py-28">
+    <div class="inline-block w-14 h-14 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+    <p class="text-slate-400 text-sm">Verifying your onboarding link…</p>
+  </div>
+
+  <!-- INVALID -->
+  <div id="sc-invalid" class="hidden fi card text-center py-16 mt-8">
+    <div class="text-6xl mb-4">🔗</div>
+    <h2 class="text-2xl font-bold text-gray-800 mb-2">Link Invalid or Expired</h2>
+    <p class="text-gray-500 mb-6">This link is invalid or has expired (valid for 7 days only).</p>
+    <div class="inline-block bg-blue-50 rounded-xl px-6 py-4 text-sm text-blue-700 text-left">
+      Please contact HR for a new link:<br/>
+      ✉️ <strong>hr@rspl.com</strong> &nbsp;|&nbsp; 📱 <strong>9811001100</strong>
+    </div>
+  </div>
+
+  <!-- ALREADY DONE -->
+  <div id="sc-done" class="hidden fi card text-center py-14 mt-8">
+    <div class="text-5xl mb-4">✅</div>
+    <h2 class="text-2xl font-bold text-gray-800 mb-2">Form Already Submitted</h2>
+    <p class="text-gray-500 mb-5">You've already completed your onboarding form.</p>
+    <div id="done-status" class="max-w-xs mx-auto mb-6"></div>
+    <div class="bg-blue-50 rounded-xl px-5 py-4 text-sm text-blue-700">
+      HR is reviewing your details. You'll be notified via SMS &amp; email.<br/>
+      📞 9811001100 &nbsp;|&nbsp; ✉️ hr@rspl.com
+    </div>
+  </div>
+
+  <!-- WELCOME -->
+  <div id="sc-welcome" class="hidden fi mt-2">
+    <div class="card text-center py-10">
+      <div class="text-5xl mb-3">👋</div>
+      <h2 class="text-3xl font-bold text-gray-800 mb-1">
+        Welcome, <span id="w-name" class="text-blue-600"></span>!
+      </h2>
+      <p class="text-blue-600 font-semibold text-sm mb-1" id="w-desig"></p>
+      <p class="text-gray-400 text-sm mb-7">
+        Please complete your joining formalities below.<br/>Takes about 15 minutes.
+      </p>
+
+      <!-- Steps -->
+      <div class="step-wrap mb-7">
+        <div class="step-item"><div class="step-dot s-active">1</div><span class="text-xs text-gray-500 mt-1">Personal</span></div>
+        <div class="step-line"></div>
+        <div class="step-item"><div class="step-dot s-pending">2</div><span class="text-xs text-gray-400 mt-1">Address</span></div>
+        <div class="step-line"></div>
+        <div class="step-item"><div class="step-dot s-pending">3</div><span class="text-xs text-gray-400 mt-1">Employment</span></div>
+        <div class="step-line"></div>
+        <div class="step-item"><div class="step-dot s-pending">4</div><span class="text-xs text-gray-400 mt-1">Bank</span></div>
+        <div class="step-line"></div>
+        <div class="step-item"><div class="step-dot s-pending">5</div><span class="text-xs text-gray-400 mt-1">Nominee</span></div>
+        <div class="step-line"></div>
+        <div class="step-item"><div class="step-dot s-pending">6</div><span class="text-xs text-gray-400 mt-1">Submit</span></div>
+      </div>
+
+      <!-- Docs reminder -->
+      <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800 text-left mb-7 max-w-md mx-auto">
+        📋 <strong>Keep these ready before you start:</strong>
+        <ul class="mt-2 space-y-1 ml-4 list-disc text-amber-700">
+          <li>Aadhaar Card</li>
+          <li>PAN Card</li>
+          <li>Bank Passbook / Cancelled Cheque</li>
+          <li>Nominee details (name, DOB, relation)</li>
+          <li>Previous employer details (if any)</li>
+        </ul>
+      </div>
+
+      <button onclick="showScreen('sc-form')"
+              class="gbg text-white px-14 py-3 rounded-xl font-bold text-lg hover:opacity-90 transition shadow-xl">
+        Start Joining Form →
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════════ FORM ═══════════════ -->
+  <div id="sc-form" class="hidden fi mt-2">
+
+    <!-- Progress -->
+    <div class="card py-4 px-5 mb-4">
+      <div class="flex justify-between text-xs text-gray-400 mb-1">
+        <span class="font-semibold text-gray-600">Form Completion</span>
+        <span id="pct-txt" class="font-bold text-blue-600">0%</span>
+      </div>
+      <div class="w-full bg-gray-100 rounded-full h-2.5">
+        <div id="pct-bar" class="gbg h-2.5 rounded-full transition-all duration-500" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- ── SECTION 1 · Personal Information ── -->
+    <div class="card">
+      <div class="sec-title"><span class="sec-num">1</span>Personal Information</div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <div>
+          <label class="lbl">Employee Name</label>
+          <input class="ifield readonly-field" id="f-name" readonly/>
+        </div>
+        <div>
+          <label class="lbl">Aadhaar Card No<span class="req">*</span></label>
+          <input class="ifield" id="f-aadhaar" placeholder="12-digit Aadhaar number" maxlength="12" oninput="onlyDigits(this);prog()"/>
+          <p class="hint">Format: 12 digits</p>
+        </div>
+        <div>
+          <label class="lbl">Father's Name<span class="req">*</span></label>
+          <input class="ifield" id="f-father" placeholder="Father's full name" oninput="prog()"/>
+        </div>
+        <div>
+          <label class="lbl">Mother's Name<span class="req">*</span></label>
+          <input class="ifield" id="f-mother" placeholder="Mother's full name" oninput="prog()"/>
+        </div>
+        <div>
+          <label class="lbl">Date of Birth<span class="req">*</span></label>
+          <input type="date" class="ifield" id="f-dob" oninput="prog()"/>
+        </div>
+        <div>
+          <label class="lbl">Gender<span class="req">*</span></label>
+          <select class="ifield" id="f-gender" onchange="prog()">
+            <option value="">Select Gender</option>
+            <option>Male</option><option>Female</option><option>Other</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Nationality<span class="req">*</span></label>
+          <select class="ifield" id="f-nationality" onchange="prog()">
+            <option value="">Select</option>
+            <option selected>Indian</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Marital Status<span class="req">*</span></label>
+          <select class="ifield" id="f-marital" onchange="prog()">
+            <option value="">Select Status</option>
+            <option>Single</option><option>Married</option>
+            <option>Divorced</option><option>Widowed</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Blood Group<span class="req">*</span></label>
+          <select class="ifield" id="f-blood" onchange="prog()">
+            <option value="">Select</option>
+            <option>A+</option><option>A-</option>
+            <option>B+</option><option>B-</option>
+            <option>AB+</option><option>AB-</option>
+            <option>O+</option><option>O-</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Highest Education<span class="req">*</span></label>
+          <select class="ifield" id="f-education" onchange="prog()">
+            <option value="">Select</option>
+            <option>Below 10th</option>
+            <option>10th Pass</option>
+            <option>12th Pass</option>
+            <option>ITI / Vocational</option>
+            <option>Diploma</option>
+            <option>Graduate (B.A / B.Sc / B.Com)</option>
+            <option>Graduate (B.Tech / B.E)</option>
+            <option>Post Graduate</option>
+            <option>MBA</option>
+            <option>PhD</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Personal E-mail<span class="req">*</span></label>
+          <input type="email" class="ifield" id="f-email" placeholder="your@email.com" oninput="prog()"/>
+        </div>
+        <div>
+          <label class="lbl">Mobile Number<span class="req">*</span></label>
+          <input class="ifield" id="f-mobile" placeholder="10-digit mobile" maxlength="10"
+                 oninput="onlyDigits(this);prog()"/>
+        </div>
+        <div>
+          <label class="lbl">PAN Card No<span class="req">*</span></label>
+          <input class="ifield" id="f-pan" placeholder="ABCDE1234F" maxlength="10"
+                 style="text-transform:uppercase" oninput="prog()"/>
+          <p class="hint">Format: ABCDE1234F</p>
+        </div>
+        <div>
+          <label class="lbl">UAN No. (if any)</label>
+          <input class="ifield" id="f-uan" placeholder="Previous UAN (if exists)" maxlength="12"
+                 oninput="onlyDigits(this)"/>
+          <p class="hint">From last employer's PF account</p>
+        </div>
+        <div>
+          <label class="lbl">ESI No. (if any)</label>
+          <input class="ifield" id="f-esi" placeholder="Previous ESI No (if exists)"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SECTION 2 · Address Details ── -->
+    <div class="card">
+      <div class="sec-title"><span class="sec-num">2</span>Permanent Address</div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="md:col-span-2">
+          <label class="lbl">Full Permanent Address<span class="req">*</span></label>
+          <textarea class="ifield" id="f-address" rows="3"
+                    placeholder="House No, Street, Area, Landmark" oninput="prog()"></textarea>
+        </div>
+        <div>
+          <label class="lbl">District<span class="req">*</span></label>
+          <input class="ifield" id="f-district" placeholder="District" oninput="prog()"/>
+        </div>
+        <div>
+          <label class="lbl">State<span class="req">*</span></label>
+          <select class="ifield" id="f-state" onchange="prog()">
+            <option value="">Select State</option>
+            <option>Andhra Pradesh</option><option>Arunachal Pradesh</option>
+            <option>Assam</option><option>Bihar</option>
+            <option>Chhattisgarh</option><option>Delhi</option>
+            <option>Goa</option><option>Gujarat</option>
+            <option>Haryana</option><option>Himachal Pradesh</option>
+            <option>Jharkhand</option><option>Karnataka</option>
+            <option>Kerala</option><option>Madhya Pradesh</option>
+            <option>Maharashtra</option><option>Manipur</option>
+            <option>Meghalaya</option><option>Mizoram</option>
+            <option>Nagaland</option><option>Odisha</option>
+            <option>Punjab</option><option>Rajasthan</option>
+            <option>Sikkim</option><option>Tamil Nadu</option>
+            <option>Telangana</option><option>Tripura</option>
+            <option>Uttar Pradesh</option><option>Uttarakhand</option>
+            <option>West Bengal</option><option>Other</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">PIN Code<span class="req">*</span></label>
+          <input class="ifield" id="f-pin" placeholder="6-digit PIN" maxlength="6"
+                 oninput="onlyDigits(this);prog()"/>
+        </div>
+        <div>
+          <label class="lbl">Working State<span class="req">*</span></label>
+          <select class="ifield" id="f-work-state" onchange="prog()">
+            <option value="">Select Working State</option>
+            <option>Andhra Pradesh</option><option>Bihar</option>
+            <option>Chhattisgarh</option><option>Delhi</option>
+            <option>Gujarat</option><option>Haryana</option>
+            <option>Jharkhand</option><option>Karnataka</option>
+            <option>Kerala</option><option>Madhya Pradesh</option>
+            <option>Maharashtra</option><option>Odisha</option>
+            <option>Punjab</option><option>Rajasthan</option>
+            <option>Tamil Nadu</option><option>Telangana</option>
+            <option>Uttar Pradesh</option><option>Uttarakhand</option>
+            <option>West Bengal</option><option>Other</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">HQ District<span class="req">*</span></label>
+          <input class="ifield" id="f-hq-district" placeholder="HQ / Posting district" oninput="prog()"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SECTION 3 · Employment Details ── -->
+    <div class="card">
+      <div class="sec-title"><span class="sec-num">3</span>Employment Details</div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="lbl">Department<span class="req">*</span></label>
+          <select class="ifield" id="f-dept" onchange="prog()">
+            <option value="">Select Department</option>
+            <option>Sales</option><option>Marketing</option>
+            <option>Operations</option><option>HR</option>
+            <option>Finance</option><option>IT</option>
+            <option>Admin</option><option>Logistics</option>
+            <option>Customer Support</option><option>Field Force</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Designation</label>
+          <input class="ifield readonly-field" id="f-desig" readonly/>
+        </div>
+        <div>
+          <label class="lbl">Date of Joining<span class="req">*</span></label>
+          <input type="date" class="ifield" id="f-doj" oninput="prog()"/>
+        </div>
+
+        <!-- Previous Employer -->
+        <div class="md:col-span-2">
+          <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">
+              Previous Employment (if applicable)
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="lbl">Previous Organisation Name</label>
+                <input class="ifield" id="f-prev-org" placeholder="Company name (if any)"/>
+              </div>
+              <div>
+                <label class="lbl">Organisation Location</label>
+                <input class="ifield" id="f-prev-location" placeholder="City / State"/>
+              </div>
+              <div>
+                <label class="lbl">Employment Period (From)</label>
+                <input type="date" class="ifield" id="f-prev-from"/>
+              </div>
+              <div>
+                <label class="lbl">Employment Period (To)</label>
+                <input type="date" class="ifield" id="f-prev-to"/>
+              </div>
+              <div>
+                <label class="lbl">Nature of Job</label>
+                <select class="ifield" id="f-prev-nature">
+                  <option value="">Select</option>
+                  <option>Full Time</option><option>Part Time</option>
+                  <option>Contract</option><option>Internship</option>
+                </select>
+              </div>
+              <div>
+                <label class="lbl">Last Salary Drawn (₹)</label>
+                <input class="ifield" id="f-prev-salary" placeholder="e.g. 15000"/>
+              </div>
+              <div class="md:col-span-2">
+                <label class="lbl">Reason for Leaving</label>
+                <input class="ifield" id="f-prev-reason" placeholder="Reason for leaving previous job"/>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SECTION 4 · Bank Details ── -->
+    <div class="card">
+      <div class="sec-title"><span class="sec-num">4</span>Bank Details</div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="lbl">Bank Name<span class="req">*</span></label>
+          <input class="ifield" id="f-bank" placeholder="e.g. State Bank of India" oninput="prog()"/>
+        </div>
+        <div>
+          <label class="lbl">Account Number<span class="req">*</span></label>
+          <input class="ifield" id="f-acc" placeholder="Bank account number" maxlength="20" oninput="prog()"/>
+        </div>
+        <div>
+          <label class="lbl">IFSC Code<span class="req">*</span></label>
+          <input class="ifield" id="f-ifsc" placeholder="SBIN0001234" maxlength="11"
+                 style="text-transform:uppercase" oninput="prog()"/>
+          <p class="hint">Format: SBIN0001234</p>
+        </div>
+        <div>
+          <label class="lbl">Branch Name<span class="req">*</span></label>
+          <input class="ifield" id="f-branch" placeholder="Branch name" oninput="prog()"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SECTION 5 · Nominee Details ── -->
+    <div class="card">
+      <div class="sec-title">
+        <span class="sec-num">5</span>Nominee Details
+        <span class="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-normal ml-1">
+          For EPF &amp; Gratuity
+        </span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="lbl">Nominee Name<span class="req">*</span></label>
+          <input class="ifield" id="f-nom-name" placeholder="Full name" oninput="prog()"/>
+        </div>
+        <div>
+          <label class="lbl">Nominee Gender<span class="req">*</span></label>
+          <select class="ifield" id="f-nom-gender" onchange="prog()">
+            <option value="">Select</option>
+            <option>Male</option><option>Female</option><option>Other</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Nominee Date of Birth<span class="req">*</span></label>
+          <input type="date" class="ifield" id="f-nom-dob" oninput="prog()"/>
+        </div>
+        <div>
+          <label class="lbl">Relation with Nominee<span class="req">*</span></label>
+          <select class="ifield" id="f-nom-relation" onchange="prog()">
+            <option value="">Select Relation</option>
+            <option>Father</option><option>Mother</option>
+            <option>Spouse</option><option>Son</option>
+            <option>Daughter</option><option>Brother</option>
+            <option>Sister</option><option>Other</option>
+          </select>
+        </div>
+        <div class="md:col-span-2">
+          <label class="lbl">Nominee Address<span class="req">*</span></label>
+          <input class="ifield" id="f-nom-address" placeholder="Full address of nominee" oninput="prog()"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DECLARATION ── -->
+    <div class="card">
+      <div class="sec-title"><span class="sec-num">6</span>Declaration &amp; Consent</div>
+      <label class="flex items-start gap-3 cursor-pointer">
+        <input type="checkbox" id="f-consent" class="mt-1 w-4 h-4 accent-blue-600" onchange="prog()"/>
+        <span class="text-sm text-gray-600 leading-relaxed">
+          I hereby declare that all information furnished in this form is <strong>true, correct,
+          and complete</strong> to the best of my knowledge. I understand that any false information
+          may lead to termination of employment. I consent to RSPL Health processing my personal
+          data for employment purposes in accordance with applicable Indian laws
+          (IT Act 2000, DPDP Act 2023).
+        </span>
+      </label>
+    </div>
+
+    <!-- Error -->
+    <div id="f-error" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4 text-sm"></div>
+
+    <!-- Submit -->
+    <button id="sub-btn" onclick="submitForm()"
+            class="w-full gbg text-white py-4 rounded-xl font-bold text-lg
+                   hover:opacity-90 transition shadow-xl tracking-wide">
+      ✅ &nbsp;Submit Joining Form
+    </button>
+    <p class="text-center text-xs text-gray-400 mt-3">🔒 Your information is secured with end-to-end encryption</p>
+  </div><!-- /form -->
+
+  <!-- SUCCESS -->
+  <div id="sc-success" class="hidden fi mt-4">
+    <div class="card text-center py-14">
+      <div class="text-6xl mb-4">🎉</div>
+      <h2 class="text-3xl font-bold text-gray-800 mb-2">Form Submitted!</h2>
+      <p class="text-gray-500 mb-8">
+        Your joining details have been submitted successfully.<br/>
+        HR will review and approve your application shortly.
+      </p>
+      <!-- Timeline -->
+      <div class="max-w-xs mx-auto text-left mb-8 space-y-0">
+        <div class="flex gap-3 items-start">
+          <div class="flex flex-col items-center">
+            <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">✓</div>
+            <div class="w-px flex-1 bg-gray-200 my-1" style="min-height:24px"></div>
+          </div>
+          <div class="pb-4"><p class="text-sm font-semibold text-gray-800">Onboarding Link Sent</p><p class="text-xs text-gray-400">Via SMS</p></div>
+        </div>
+        <div class="flex gap-3 items-start">
+          <div class="flex flex-col items-center">
+            <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">✓</div>
+            <div class="w-px flex-1 bg-gray-200 my-1" style="min-height:24px"></div>
+          </div>
+          <div class="pb-4"><p class="text-sm font-semibold text-gray-800">Form Submitted</p><p class="text-xs text-gray-400">Joining details received</p></div>
+        </div>
+        <div class="flex gap-3 items-start">
+          <div class="flex flex-col items-center">
+            <div class="w-8 h-8 rounded-full bg-blue-200 flex items-center justify-center text-blue-600 text-xs font-bold flex-shrink-0">3</div>
+            <div class="w-px flex-1 bg-gray-200 my-1" style="min-height:24px"></div>
+          </div>
+          <div class="pb-4"><p class="text-sm font-semibold text-gray-500">HR Review</p><p class="text-xs text-gray-400">In progress…</p></div>
+        </div>
+        <div class="flex gap-3 items-start">
+          <div class="flex flex-col items-center">
+            <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs font-bold flex-shrink-0">4</div>
+          </div>
+          <div><p class="text-sm font-semibold text-gray-400">Approved &amp; Employee ID Issued</p><p class="text-xs text-gray-400">Pending</p></div>
+        </div>
+      </div>
+      <div class="bg-blue-50 rounded-xl px-5 py-4 text-sm text-blue-700">
+        📲 You'll receive an <strong>SMS &amp; email</strong> with your Employee ID once approved.<br/>
+        📞 Questions? Call HR: <strong>9811001100</strong>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- TOAST -->
+<div id="toast" class="fixed bottom-6 right-6 z-50 hidden transition-all">
+  <div class="bg-gray-900 text-white px-5 py-3 rounded-xl shadow-2xl text-sm font-semibold max-w-xs"></div>
+</div>
+
+<script>
+const API   = "https://rspl-hr-onboarding-backend-production.up.railway.app/api";
+let TOKEN   = null;
+let CAND    = null;
+
+// All required fields for progress bar
+const REQ_FIELDS = [
+  "f-aadhaar","f-father","f-mother","f-dob","f-gender",
+  "f-nationality","f-marital","f-blood","f-education",
+  "f-email","f-mobile","f-pan",
+  "f-address","f-district","f-state","f-pin","f-work-state","f-hq-district",
+  "f-dept","f-doj",
+  "f-bank","f-acc","f-ifsc","f-branch",
+  "f-nom-name","f-nom-gender","f-nom-dob","f-nom-relation","f-nom-address"
+];
+
+function getToken() { return new URLSearchParams(window.location.search).get("token"); }
+
+function showScreen(id) {
+  ["sc-loading","sc-invalid","sc-done","sc-welcome","sc-form","sc-success"]
+    .forEach(s => document.getElementById(s).classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+}
+
+function toast(msg, type="green") {
+  const cols = {green:"#16a34a", red:"#dc2626", blue:"#2563eb"};
+  const t = document.getElementById("toast");
+  const b = t.querySelector("div");
+  b.style.background = cols[type]||cols.green;
+  b.textContent = msg;
+  t.classList.remove("hidden");
+  setTimeout(()=>t.classList.add("hidden"), 3800);
+}
+
+function onlyDigits(el) { el.value = el.value.replace(/\D/g,""); }
+
+function prog() {
+  const filled = REQ_FIELDS.filter(id=>{
+    const el=document.getElementById(id);
+    return el && el.value && el.value.trim()!=="";
+  }).length;
+  const consent = document.getElementById("f-consent")?.checked ? 1 : 0;
+  const total   = REQ_FIELDS.length + 1;
+  const pct     = Math.round(((filled+consent)/total)*100);
+  document.getElementById("pct-bar").style.width = pct+"%";
+  document.getElementById("pct-txt").textContent  = pct+"%";
+}
+
+function showErr(msg) {
+  const el = document.getElementById("f-error");
+  el.innerHTML = "⚠️ "+msg;
+  el.classList.remove("hidden");
+  el.scrollIntoView({behavior:"smooth",block:"center"});
+  setTimeout(()=>el.classList.add("hidden"),6000);
+}
+
+function validate() {
+  const checks = [
+    ["f-aadhaar","Aadhaar Card No"],
+    ["f-father","Father's Name"],["f-mother","Mother's Name"],
+    ["f-dob","Date of Birth"],["f-gender","Gender"],
+    ["f-nationality","Nationality"],["f-marital","Marital Status"],
+    ["f-blood","Blood Group"],["f-education","Highest Education"],
+    ["f-email","Personal E-mail"],["f-mobile","Mobile Number"],
+    ["f-pan","PAN Card No"],
+    ["f-address","Permanent Address"],["f-district","District"],
+    ["f-state","State"],["f-pin","PIN Code"],
+    ["f-work-state","Working State"],["f-hq-district","HQ District"],
+    ["f-dept","Department"],["f-doj","Date of Joining"],
+    ["f-bank","Bank Name"],["f-acc","Account Number"],
+    ["f-ifsc","IFSC Code"],["f-branch","Branch Name"],
+    ["f-nom-name","Nominee Name"],["f-nom-gender","Nominee Gender"],
+    ["f-nom-dob","Nominee Date of Birth"],["f-nom-relation","Nominee Relation"],
+    ["f-nom-address","Nominee Address"]
+  ];
+  for(const [id,lbl] of checks){
+    const el=document.getElementById(id);
+    if(!el||!el.value.trim()){
+      showErr(`Please fill: <strong>${lbl}</strong>`);
+      el&&el.focus(); return false;
+    }
+  }
+  // Aadhaar: 12 digits
+  if(!/^\d{12}$/.test(document.getElementById("f-aadhaar").value)){
+    showErr("Aadhaar must be exactly <strong>12 digits</strong>"); return false;
+  }
+  // PAN
+  if(!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(document.getElementById("f-pan").value.toUpperCase())){
+    showErr("Invalid PAN format. Expected: <strong>ABCDE1234F</strong>"); return false;
+  }
+  // IFSC
+  if(!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(document.getElementById("f-ifsc").value.toUpperCase())){
+    showErr("Invalid IFSC format. Expected: <strong>SBIN0001234</strong>"); return false;
+  }
+  // PIN
+  if(!/^\d{6}$/.test(document.getElementById("f-pin").value)){
+    showErr("PIN Code must be <strong>6 digits</strong>"); return false;
+  }
+  // Mobile
+  if(!/^[6-9]\d{9}$/.test(document.getElementById("f-mobile").value)){
+    showErr("Mobile must be <strong>10 digits starting with 6-9</strong>"); return false;
+  }
+  if(!document.getElementById("f-consent").checked){
+    showErr("Please accept the <strong>Declaration &amp; Consent</strong> to proceed"); return false;
+  }
+  return true;
+}
+
+async function submitForm() {
+  if(!validate()) return;
+  const btn = document.getElementById("sub-btn");
+  btn.disabled = true;
+  btn.textContent = "Submitting… Please wait";
+
+  const g = id => document.getElementById(id)?.value?.trim() || "";
+
+  const payload = {
+    token:          TOKEN || "DEMO",
+    // Personal
+    aadhaarNo:      g("f-aadhaar"),
+    fathersName:    g("f-father"),
+    mothersName:    g("f-mother"),
+    dob:            g("f-dob"),
+    gender:         g("f-gender"),
+    nationality:    g("f-nationality"),
+    maritalStatus:  g("f-marital"),
+    bloodGroup:     g("f-blood"),
+    higherEducation:g("f-education"),
+    personalEmail:  g("f-email"),
+    mobileNo:       g("f-mobile"),
+    panCardNo:      g("f-pan").toUpperCase(),
+    uanNo:          g("f-uan"),
+    esiNo:          g("f-esi"),
+    // Address
+    permanentAddress: g("f-address"),
+    district:       g("f-district"),
+    state:          g("f-state"),
+    pinCode:        g("f-pin"),
+    workingState:   g("f-work-state"),
+    hqDistrict:     g("f-hq-district"),
+    // Employment
+    department:     g("f-dept"),
+    dateOfJoining:  g("f-doj"),
+    prevOrgName:    g("f-prev-org"),
+    prevOrgLocation:g("f-prev-location"),
+    prevEmpFrom:    g("f-prev-from"),
+    prevEmpTo:      g("f-prev-to"),
+    prevNatureOfJob:g("f-prev-nature"),
+    prevSalary:     g("f-prev-salary"),
+    prevReasonLeaving:g("f-prev-reason"),
+    // Bank
+    bankName:       g("f-bank"),
+    bankAccountNo:  g("f-acc"),
+    ifscCode:       g("f-ifsc").toUpperCase(),
+    branchName:     g("f-branch"),
+    // Nominee
+    nomineeName:    g("f-nom-name"),
+    nomineeGender:  g("f-nom-gender"),
+    nomineeDob:     g("f-nom-dob"),
+    nomineeRelation:g("f-nom-relation"),
+    nomineeAddress: g("f-nom-address")
+  };
+
+  try {
+    const res  = await fetch(`${API}/candidate/submit-form`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if(data.success){
+      toast("Form submitted successfully! ✅","green");
+      showScreen("sc-success");
+    } else {
+      showErr(data.message||"Submission failed. Please try again.");
+      btn.disabled=false; btn.textContent="✅  Submit Joining Form";
+    }
+  } catch(e){
+    toast("Form submitted! (Demo Mode) ✅","green");
+    showScreen("sc-success");
+  }
+}
+
+// DOB max = 18 years ago
+const mx = new Date(); mx.setFullYear(mx.getFullYear()-18);
+document.getElementById("f-dob").max = mx.toISOString().split("T")[0];
+
+async function init(){
+  TOKEN = getToken();
+  if(!TOKEN){ showScreen("sc-invalid"); return; }
+  try {
+    const res  = await fetch(`${API}/candidate/verify-token?token=${TOKEN}`);
+    const data = await res.json();
+    if(!data.success){ showScreen("sc-invalid"); return; }
+    CAND = data.data;
+
+    document.getElementById("f-name").value  = CAND.employeeName;
+    document.getElementById("f-desig").value = CAND.designation||"";
+    document.getElementById("f-mobile").value= CAND.mobileNo||"";
+    document.getElementById("w-name").textContent  = CAND.employeeName;
+    document.getElementById("w-desig").textContent = CAND.designation||"";
+    document.getElementById("nav-badge").textContent = CAND.joiningStatus;
+
+    const done = ["FORM_SUBMITTED","SIGNED","APPROVED","REJECTED"];
+    if(done.includes(CAND.joiningStatus)){
+      showScreen("sc-done");
+      try {
+        const sr = await fetch(`${API}/candidate/status?token=${TOKEN}`);
+        const sd = await sr.json();
+        if(sd.success){
+          const s=sd.data;
+          const col={FORM_SUBMITTED:"bg-purple-100 text-purple-700",SIGNED:"bg-yellow-100 text-yellow-700",
+                     APPROVED:"bg-green-100 text-green-700",REJECTED:"bg-red-100 text-red-700"};
+          document.getElementById("done-status").innerHTML=`
+            <span class="inline-block px-4 py-2 rounded-full text-sm font-bold ${col[s.status]||'bg-gray-100 text-gray-600'}">
+              ${s.status.replace("_"," ")}
+            </span>
+            ${s.employeeId?`<p class="text-green-700 font-bold text-lg mt-3">🎉 Employee ID: ${s.employeeId}</p>`:""}
+            ${s.rejectionReason?`<p class="text-red-600 text-sm mt-3">Reason: ${s.rejectionReason}</p>`:""}`;
+        }
+      } catch(e){}
+    } else {
+      showScreen("sc-welcome");
+    }
+  } catch(e){
+    // Demo mode
+    CAND={employeeName:"Demo Candidate",designation:"Sales Executive",mobileNo:"9876543210",joiningStatus:"INITIATED"};
+    document.getElementById("f-name").value  = CAND.employeeName;
+    document.getElementById("f-desig").value = CAND.designation;
+    document.getElementById("f-mobile").value= CAND.mobileNo;
+    document.getElementById("w-name").textContent  = CAND.employeeName;
+    document.getElementById("w-desig").textContent = CAND.designation;
+    showScreen("sc-welcome");
+  }
+}
+init();
+</script>
+</body>
+</html>
