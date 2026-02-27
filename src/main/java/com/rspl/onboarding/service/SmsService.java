@@ -18,16 +18,17 @@ public class SmsService {
     private String baseUrl;
 
     /**
-     * ✅ REQUIRED: OnboardingService is calling this method
+     * REQUIRED: OnboardingService calls sendSms(mobile, message)
      */
     public void sendSms(String mobile, String message) {
         try {
             if ("NOT_SET".equals(apiKey)) {
-                System.out.println("⚠️ fast2sms.api.key is NOT_SET. SMS not sent. Message would be: " + message);
+                System.out.println("⚠️ fast2sms.api.key is NOT_SET. SMS not sent. Message: " + message);
                 return;
             }
 
             RestTemplate restTemplate = new RestTemplate();
+
             HttpHeaders headers = new HttpHeaders();
             headers.set("authorization", apiKey);
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -48,20 +49,22 @@ public class SmsService {
             );
 
             System.out.println("✅ SMS sent to " + mobile + " | " + response.getBody());
+
         } catch (Exception e) {
             System.err.println("❌ SMS failed for " + mobile + ": " + e.getMessage());
         }
     }
 
     /**
-     * ✅ Keep your existing method (token-based link)
+     * Token-based onboarding link (Option A)
      */
     public void sendOnboardingLink(String mobile, String candidateName, String token) {
         String link = baseUrl + "/onboarding.html?token=" + token;
-        String message = "Dear " + candidateName +
-                ", Welcome to RSPL! Complete your onboarding: " + link + " -RSPL HR";
+
+        String message = "Dear " + candidateName
+                + ", Welcome to RSPL! Complete your onboarding: "
+                + link + " -RSPL HR";
 
         sendSms(mobile, message);
     }
 }
-``
