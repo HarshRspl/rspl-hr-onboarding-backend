@@ -2,6 +2,8 @@ package com.rspl.onboarding.domain;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Entity
 @Table(name = "candidates")
@@ -44,9 +46,77 @@ public class Candidate {
     @Column(name = "onboarding_token", unique = true)
     private String onboardingToken;
 
+    @Column(name = "token_expiry")
+    private LocalDateTime tokenExpiry;
+
+    @Column(name = "employee_id")
+    private String employeeId;
+
     @Column(name = "initiated_by")
     private String initiatedBy;
 
+    // ── Personal Details ─────────────────────────────
+    @Column(name = "fathers_name")
+    private String fathersName;
+
+    @Column(name = "dob")
+    private String dob;
+
+    @Column(name = "gender")
+    private String gender;
+
+    @Column(name = "marital_status")
+    private String maritalStatus;
+
+    @Column(name = "blood_group")
+    private String bloodGroup;
+
+    @Column(name = "higher_education")
+    private String higherEducation;
+
+    @Column(name = "pan_card_no")
+    private String panCardNo;
+
+    // ── Address ──────────────────────────────────────
+    @Column(name = "permanent_address", length = 500)
+    private String permanentAddress;
+
+    @Column(name = "district")
+    private String district;
+
+    @Column(name = "state")
+    private String state;
+
+    @Column(name = "pin_code")
+    private String pinCode;
+
+    // ── Bank Details ─────────────────────────────────
+    @Column(name = "bank_name")
+    private String bankName;
+
+    @Column(name = "bank_account_no")
+    private String bankAccountNo;
+
+    @Column(name = "ifsc_code")
+    private String ifscCode;
+
+    @Column(name = "branch_name")
+    private String branchName;
+
+    // ── Nominee ──────────────────────────────────────
+    @Column(name = "nominee_name")
+    private String nomineeName;
+
+    @Column(name = "nominee_relation")
+    private String nomineeRelation;
+
+    @Column(name = "nominee_dob")
+    private String nomineeDob;
+
+    @Column(name = "nominee_address", length = 500)
+    private String nomineeAddress;
+
+    // ── Timestamps ───────────────────────────────────
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -91,8 +161,71 @@ public class Candidate {
     public String getOnboardingToken() { return onboardingToken; }
     public void setOnboardingToken(String v) { this.onboardingToken = v; }
 
+    public LocalDateTime getTokenExpiry() { return tokenExpiry; }
+    public void setTokenExpiry(LocalDateTime v) { this.tokenExpiry = v; }
+
+    public String getEmployeeId() { return employeeId; }
+    public void setEmployeeId(String v) { this.employeeId = v; }
+
     public String getInitiatedBy() { return initiatedBy; }
     public void setInitiatedBy(String v) { this.initiatedBy = v; }
+
+    public String getFathersName() { return fathersName; }
+    public void setFathersName(String v) { this.fathersName = v; }
+
+    public String getDob() { return dob; }
+    public void setDob(String v) { this.dob = v; }
+
+    public String getGender() { return gender; }
+    public void setGender(String v) { this.gender = v; }
+
+    public String getMaritalStatus() { return maritalStatus; }
+    public void setMaritalStatus(String v) { this.maritalStatus = v; }
+
+    public String getBloodGroup() { return bloodGroup; }
+    public void setBloodGroup(String v) { this.bloodGroup = v; }
+
+    public String getHigherEducation() { return higherEducation; }
+    public void setHigherEducation(String v) { this.higherEducation = v; }
+
+    public String getPanCardNo() { return panCardNo; }
+    public void setPanCardNo(String v) { this.panCardNo = v; }
+
+    public String getPermanentAddress() { return permanentAddress; }
+    public void setPermanentAddress(String v) { this.permanentAddress = v; }
+
+    public String getDistrict() { return district; }
+    public void setDistrict(String v) { this.district = v; }
+
+    public String getState() { return state; }
+    public void setState(String v) { this.state = v; }
+
+    public String getPinCode() { return pinCode; }
+    public void setPinCode(String v) { this.pinCode = v; }
+
+    public String getBankName() { return bankName; }
+    public void setBankName(String v) { this.bankName = v; }
+
+    public String getBankAccountNo() { return bankAccountNo; }
+    public void setBankAccountNo(String v) { this.bankAccountNo = v; }
+
+    public String getIfscCode() { return ifscCode; }
+    public void setIfscCode(String v) { this.ifscCode = v; }
+
+    public String getBranchName() { return branchName; }
+    public void setBranchName(String v) { this.branchName = v; }
+
+    public String getNomineeName() { return nomineeName; }
+    public void setNomineeName(String v) { this.nomineeName = v; }
+
+    public String getNomineeRelation() { return nomineeRelation; }
+    public void setNomineeRelation(String v) { this.nomineeRelation = v; }
+
+    public String getNomineeDob() { return nomineeDob; }
+    public void setNomineeDob(String v) { this.nomineeDob = v; }
+
+    public String getNomineeAddress() { return nomineeAddress; }
+    public void setNomineeAddress(String v) { this.nomineeAddress = v; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime v) { this.createdAt = v; }
@@ -100,8 +233,8 @@ public class Candidate {
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime v) { this.updatedAt = v; }
 
-    public java.util.Map<String, Object> getAssignedHR() {
-        java.util.Map<String, Object> hr = new java.util.HashMap<>();
+    public Map<String, Object> getAssignedHR() {
+        Map<String, Object> hr = new HashMap<>();
         hr.put("id",   assignedHRId   != null ? assignedHRId   : 0);
         hr.put("name", assignedHRName != null ? assignedHRName : "-");
         return hr;
