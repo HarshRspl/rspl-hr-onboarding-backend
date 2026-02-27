@@ -1,163 +1,622 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RSPL HR Onboarding</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .home-hero {
-            text-align: center;
-            color: white;
-            margin: 40px 0;
-        }
-        
-        .home-hero h1 {
-            font-size: 3em;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-        
-        .home-hero p {
-            font-size: 1.3em;
-            margin-bottom: 40px;
-            opacity: 0.9;
-        }
-        
-        .navigation-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin: 40px auto;
-            max-width: 800px;
-            width: 100%;
-        }
-        
-        .nav-card {
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-            transition: transform 0.3s, box-shadow 0.3s;
-            cursor: pointer;
-        }
-        
-        .nav-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
-        }
-        
-        .nav-icon {
-            font-size: 60px;
-            margin-bottom: 15px;
-        }
-        
-        .nav-card h2 {
-            color: #667eea;
-            margin-bottom: 15px;
-            font-size: 24px;
-        }
-        
-        .nav-card p {
-            color: #7f8c8d;
-            margin-bottom: 25px;
-            line-height: 1.6;
-        }
-        
-        .nav-button {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 25px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.3s;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .nav-button:hover {
-            background: #5568d3;
-            text-decoration: none;
-        }
-        
-        .nav-button.admin {
-            background: #e74c3c;
-        }
-        
-        .nav-button.admin:hover {
-            background: #c0392b;
-        }
-        
-        .footer {
-            text-align: center;
-            color: white;
-            margin-top: auto;
-            padding-top: 40px;
-            opacity: 0.8;
-        }
-        .footer {
-            text-align: center;
-            color: white;
-            margin-top: auto;
-            padding-top: 40px;
-            opacity: 0.8;
-        }
-        
-        @media (max-width: 768px) {
-            .home-hero h1 {
-                font-size: 2em;
-            }
-            
-            .navigation-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RSPL HR Onboarding</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body { font-family: "Segoe UI", sans-serif; }
+    .gradient-bg { background: linear-gradient(135deg, #1e3a5f 0%, #3b82f6 100%); }
+    .card { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .initiated { background: #dbeafe; color: #1d4ed8; }
+    .approved { background: #dcfce7; color: #166534; }
+    .rejected { background: #fee2e2; color: #991b1b; }
+    .signed { background: #fef9c3; color: #854d0e; }
+    .formsubmitted { background: #ede9fe; color: #5b21b6; }
+
+    .tab-active { background: #3b82f6; color: white; }
+    .tab-inactive { background: #f1f5f9; color: #64748b; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeIn 0.3s ease; }
+  </style>
 </head>
-<body>
-    <div class="home-hero">
-        <h1>🎯 RSPL HR Onboarding System</h1>
-        <p>Streamline your employee onboarding process</p>
+
+<body class="bg-gray-50 min-h-screen">
+  <!-- TOP NAV -->
+  <nav class="gradient-bg text-white px-6 py-4 flex items-center justify-between shadow-lg">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-xl">
+        <span class="font-bold">R</span>
+      </div>
+      <div>
+        <div class="font-bold text-lg">RSPL Health</div>
+        <div class="text-xs text-blue-200">HR Onboarding Portal</div>
+      </div>
     </div>
 
-    <div class="navigation-grid">
-        <!-- User Access Card -->
-        <div class="nav-card">
-            <div class="nav-icon">👥</div>
-            <h2>Team Access</h2>
-            <p>Create and manage candidate applications. Access the main onboarding interface to handle employee data.</p>
-            <a href="/team.html" class="nav-button">Enter Portal</a>
+    <div class="flex gap-2">
+      <button onclick="showTab('dashboard')" id="tab-dashboard"
+              class="tab-active px-4 py-2 rounded-lg text-sm font-semibold transition">
+        Dashboard
+      </button>
+      <button onclick="showTab('candidates')" id="tab-candidates"
+              class="tab-inactive px-4 py-2 rounded-lg text-sm font-semibold transition">
+        Candidates
+      </button>
+      <button onclick="showTab('initiate')" id="tab-initiate"
+              class="tab-inactive px-4 py-2 rounded-lg text-sm font-semibold transition">
+        Initiate
+      </button>
+      <button onclick="showTab('team')" id="tab-team"
+              class="tab-inactive px-4 py-2 rounded-lg text-sm font-semibold transition">
+        HR Team
+      </button>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <div class="p-6">
+    <!-- DASHBOARD TAB -->
+    <div id="tab-dashboard-content" class="fade-in">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">Dashboard Overview</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="stats-grid"></div>
+
+      <div class="card p-6">
+        <h3 class="font-bold text-gray-700 mb-4">Recent Candidates</h3>
+        <div id="recent-list"></div>
+      </div>
+    </div>
+
+    <!-- CANDIDATES TAB -->
+    <div id="tab-candidates-content" class="hidden fade-in">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">All Candidates</h2>
+        <div class="flex gap-2">
+          <input id="search-input" type="text" placeholder="Search name/email..."
+                 class="border rounded-lg px-4 py-2 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                 oninput="filterCandidates()" />
+          <select id="status-filter" onchange="filterCandidates()"
+                  class="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <option value="">All Status</option>
+            <option value="INITIATED">Initiated</option>
+            <option value="FORMSUBMITTED">Form Submitted</option>
+            <option value="SIGNED">Signed</option>
+            <option value="APPROVED">Approved</option>
+            <option value="REJECTED">Rejected</option>
+          </select>
+        </div>
+      </div>
+      <div id="candidates-table"></div>
+    </div>
+
+    <!-- INITIATE TAB -->
+    <div id="tab-initiate-content" class="hidden fade-in">
+      <div class="max-w-2xl mx-auto">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Initiate New Candidate</h2>
+        <div class="card p-8">
+          <form id="initiate-form" onsubmit="submitCandidate(event)">
+            <div class="grid grid-cols-2 gap-4">
+              <div class="col-span-2">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Employee Name</label>
+                <input type="text" id="f-name" required
+                       class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                       placeholder="Full Name" />
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Aadhaar No</label>
+                <input type="text" id="f-aadhaar" required maxlength="12"
+                       class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                       placeholder="12-digit Aadhaar" />
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Mobile No</label>
+                <input type="text" id="f-mobile" required maxlength="10"
+                       class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                       placeholder="10-digit Mobile" />
+              </div>
+
+              <div class="col-span-2">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Email ID</label>
+                <input type="email" id="f-email" required
+                       class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                       placeholder="candidate@email.com" />
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Designation</label>
+                <input type="text" id="f-designation" required
+                       class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                       placeholder="Job Title" />
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Assign HR</label>
+                <select id="f-hr"
+                        class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                  <option value="">Select HR Executive</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="mt-4 flex items-center gap-2">
+              <input type="checkbox" id="f-send-link" class="rounded border-gray-300" checked />
+              <label for="f-send-link" class="text-sm text-gray-600">
+                Send onboarding link immediately via SMS
+              </label>
+            </div>
+
+            <div id="form-msg" class="mt-4 hidden"></div>
+
+            <button type="submit"
+                    class="mt-6 w-full gradient-bg text-white py-3 rounded-lg font-bold text-lg hover:opacity-90 transition">
+              Initiate Onboarding
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- HR TEAM TAB -->
+    <div id="tab-team-content" class="hidden fade-in">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">HR Team</h2>
+      <div id="hr-team-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+    </div>
+  </div>
+
+  <!-- CANDIDATE DETAIL MODAL -->
+  <div id="modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50">
+    <div class="bg-white rounded-2xl p-8 max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
+      <div id="modal-content"></div>
+      <button onclick="closeModal()"
+              class="mt-4 w-full bg-gray-100 text-gray-700 py-2 rounded-lg font-semibold hover:bg-gray-200">
+        Close
+      </button>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="fixed bottom-6 right-6 hidden z-50">
+    <div class="bg-gray-900 text-white px-6 py-3 rounded-xl shadow-2xl text-sm font-semibold"></div>
+  </div>
+
+  <script>
+    // API CONFIG
+    const API = "https://rspl-hr-onboarding-backend-production.up.railway.app/api";
+    let USE_DEMO = true; // set false once backend is confirmed working
+
+    async function callAPI(method, path, body = null) {
+      try {
+        const res = await fetch(API + path, {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: body ? JSON.stringify(body) : null
+        });
+        const data = await res.json();
+        USE_DEMO = false;
+        return data;
+      } catch (e) {
+        console.warn("API failed, using demo:", e.message);
+        USE_DEMO = true;
+        return null;
+      }
+    }
+
+    // DEMO DATA (fallback if backend is down)
+    let HRTEAM = [
+      { id: 1, name: "Sneha Kapoor", role: "Sr. HR Executive", email: "sneha@rspl.com", phone: "9811001100" },
+      { id: 2, name: "Arjun Mehta",  role: "HR Executive",     email: "arjun@rspl.com", phone: "9822002200" },
+      { id: 3, name: "Pooja Nair",   role: "HR Executive",     email: "pooja@rspl.com", phone: "9833003300" },
+      { id: 4, name: "Kunal Bose",   role: "Jr. HR Executive", email: "kunal@rspl.com", phone: "9844004400" },
+      { id: 5, name: "Divya Rawat",  role: "HR Manager",       email: "divya@rspl.com", phone: "9855005500" }
+    ];
+
+    let candidates = [
+      {
+        id: 1,
+        employeeName: "Amit Kumar",
+        emailId: "amit@test.com",
+        mobileNo: "9876543210",
+        aadhaarNo: "123412341234",
+        designation: "Sales Executive",
+        joiningStatus: "INITIATED",
+        linkStatus: "SENT",
+        assignedHR: { id: 1, name: "Sneha Kapoor" },
+        createdAt: "2026-02-20"
+      }
+      // ... add more demo rows if you like
+    ];
+
+    // TAB NAVIGATION
+    function showTab(name) {
+      ["dashboard", "candidates", "initiate", "team"].forEach(t => {
+        document.getElementById(`tab-${t}-content`).classList.add("hidden");
+        document.getElementById(`tab-${t}`).className =
+          "tab-inactive px-4 py-2 rounded-lg text-sm font-semibold transition";
+      });
+      document.getElementById(`tab-${name}-content`).classList.remove("hidden");
+      document.getElementById(`tab-${name}`).className =
+        "tab-active px-4 py-2 rounded-lg text-sm font-semibold transition";
+
+      if (name === "dashboard") renderDashboard();
+      if (name === "candidates") renderCandidates(candidates);
+      if (name === "initiate") renderHRDropdown();
+      if (name === "team") renderTeam();
+    }
+
+    // DASHBOARD
+    function renderDashboard() {
+      const total     = candidates.length;
+      const approved  = candidates.filter(c => c.joiningStatus === "APPROVED").length;
+      const pending   = candidates.filter(c =>
+        ["INITIATED", "FORMSUBMITTED", "SIGNED"].includes(c.joiningStatus)).length;
+      const rejected  = candidates.filter(c => c.joiningStatus === "REJECTED").length;
+
+      document.getElementById("stats-grid").innerHTML = [
+        statCard("Users",     "Total Candidates", total,    "blue"),
+        statCard("Check",     "Approved",         approved, "green"),
+        statCard("Clock",     "Pending",          pending,  "yellow"),
+        statCard("XCircle",   "Rejected",         rejected, "red")
+      ].join("");
+
+      const recent = [...candidates]
+        .sort((a,b) => b.id - a.id)
+        .slice(0, 5);
+
+      document.getElementById("recent-list").innerHTML = recent.map(c => `
+        <div class="flex items-center justify-between py-3 border-b last:border-0 hover:bg-gray-50 rounded-lg px-2 cursor-pointer"
+             onclick="showDetail(${c.id})">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 gradient-bg rounded-full flex items-center justify-center text-white font-bold">
+              ${c.employeeName[0] || "?"}
+            </div>
+            <div>
+              <div class="font-semibold text-gray-800">${c.employeeName}</div>
+              <div class="text-xs text-gray-500">${c.designation || ""} · ${c.emailId || ""}</div>
+            </div>
+          </div>
+          <span class="status-badge ${c.joiningStatus.toLowerCase()}">
+            ${c.joiningStatus.replace("_"," ")}
+          </span>
+        </div>
+      `).join("");
+    }
+
+    function statCard(icon, label, value, color) {
+      const colors = {
+        blue:   "bg-blue-50 text-blue-600",
+        green:  "bg-green-50 text-green-600",
+        yellow: "bg-yellow-50 text-yellow-600",
+        red:    "bg-red-50 text-red-600"
+      };
+      return `
+        <div class="card p-6 cursor-pointer hover:scale-105 transition">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 ${colors[color]} rounded-xl flex items-center justify-center text-2xl">
+              <i data-lucide="${icon}"></i>
+            </div>
+            <div>
+              <div class="text-3xl font-bold text-gray-800">${value}</div>
+              <div class="text-sm text-gray-500">${label}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // CANDIDATES TABLE
+    function renderCandidates(list) {
+      document.getElementById("candidates-table").innerHTML = `
+        <div class="card overflow-hidden">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50 border-b">
+              <tr>
+                <th class="text-left px-4 py-3 text-gray-600 font-semibold">#</th>
+                <th class="text-left px-4 py-3 text-gray-600 font-semibold">Candidate</th>
+                <th class="text-left px-4 py-3 text-gray-600 font-semibold">Designation</th>
+                <th class="text-left px-4 py-3 text-gray-600 font-semibold">Assigned HR</th>
+                <th class="text-left px-4 py-3 text-gray-600 font-semibold">Status</th>
+                <th class="text-left px-4 py-3 text-gray-600 font-semibold">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${list.map((c,i) => `
+                <tr class="border-b hover:bg-blue-50 transition cursor-pointer" onclick="showDetail(${c.id})">
+                  <td class="px-4 py-3 text-gray-500">${i+1}</td>
+                  <td class="px-4 py-3">
+                    <div class="font-semibold text-gray-800">${c.employeeName}</div>
+                    <div class="text-xs text-gray-500">${c.emailId || ""}</div>
+                  </td>
+                  <td class="px-4 py-3 text-gray-600">${c.designation || ""}</td>
+                  <td class="px-4 py-3 text-gray-600">${c.assignedHR?.name || "-"}</td>
+                  <td class="px-4 py-3">
+                    <span class="status-badge ${c.joiningStatus.toLowerCase()}">
+                      ${c.joiningStatus.replace("_"," ")}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3" onclick="event.stopPropagation()">
+                    <div class="flex gap-1">
+                      ${c.joiningStatus === "SIGNED" ? `
+                        <button onclick="approveCandidate(${c.id})"
+                                class="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600">
+                          Approve
+                        </button>` : ""
+                      }
+                      ${!["APPROVED","REJECTED"].includes(c.joiningStatus) ? `
+                        <button onclick="rejectCandidate(${c.id})"
+                                class="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600">
+                          Reject
+                        </button>` : ""
+                      }
+                      ${c.linkStatus === "NOT_SENT" ? `
+                        <button onclick="sendLink(${c.id})"
+                                class="bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600">
+                          Send Link
+                        </button>` : ""
+                      }
+                    </div>
+                  </td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function filterCandidates() {
+      const s = document.getElementById("search-input").value.toLowerCase();
+      const st = document.getElementById("status-filter").value;
+      const filtered = candidates.filter(c => {
+        const matchText = !s ||
+          c.employeeName.toLowerCase().includes(s) ||
+          (c.emailId || "").toLowerCase().includes(s);
+        const matchStatus = !st || c.joiningStatus === st;
+        return matchText && matchStatus;
+      });
+      renderCandidates(filtered);
+    }
+
+    // INITIATE FORM
+    function renderHRDropdown() {
+      const sel = document.getElementById("f-hr");
+      sel.innerHTML = `<option value="">Select HR Executive</option>` +
+        HRTEAM.map(h => `<option value="${h.id}">${h.name} (${h.role})</option>`).join("");
+    }
+
+    async function submitCandidate(e) {
+      e.preventDefault();
+      const data = {
+        employeeName: document.getElementById("f-name").value,
+        aadhaarNo:    document.getElementById("f-aadhaar").value,
+        emailId:      document.getElementById("f-email").value,
+        mobileNo:     document.getElementById("f-mobile").value,
+        designation:  document.getElementById("f-designation").value,
+        assignedHRId: document.getElementById("f-hr").value ? Number(document.getElementById("f-hr").value) : null,
+        initiatedBy:  "hradmin",
+        sendLinkImmediately: document.getElementById("f-send-link").checked
+      };
+
+      const res = await callAPI("POST", "/hr/candidates/initiate", data);
+      if (res && res.success) {
+        showToast("Candidate initiated, link sent!", "green");
+        document.getElementById("initiate-form").reset();
+        await loadCandidates();
+        showTab("candidates");
+      } else {
+        // demo fallback
+        const hr = HRTEAM.find(h => h.id === data.assignedHRId);
+        const newC = {
+          id: candidates.length + 1,
+          employeeName: data.employeeName,
+          emailId: data.emailId,
+          mobileNo: data.mobileNo,
+          aadhaarNo: data.aadhaarNo,
+          designation: data.designation,
+          joiningStatus: "INITIATED",
+          linkStatus: data.sendLinkImmediately ? "SENT" : "NOT_SENT",
+          assignedHR: hr || null,
+          createdAt: new Date().toISOString().split("T")[0]
+        };
+        candidates.unshift(newC);
+        showToast("Candidate initiated! (Demo Mode)", "green");
+        document.getElementById("initiate-form").reset();
+        showTab("candidates");
+      }
+    }
+
+    // ACTIONS
+    async function approveCandidate(id) {
+      const res = await callAPI("POST", `/hr/candidates/${id}/approve`);
+      if (res && res.success) {
+        await loadCandidates();
+        showToast("Candidate Approved!", "green");
+      } else {
+        const c = candidates.find(x => x.id === id);
+        if (c) c.joiningStatus = "APPROVED";
+        renderCandidates(candidates);
+        showToast("Approved! (Demo)", "green");
+      }
+      closeModal();
+    }
+
+    async function rejectCandidate(id) {
+      const reason = prompt("Enter rejection reason");
+      if (!reason) return;
+      const res = await callAPI("POST", `/hr/candidates/${id}/reject`, { reason });
+      if (res && res.success) {
+        await loadCandidates();
+        showToast("Candidate Rejected", "red");
+      } else {
+        const c = candidates.find(x => x.id === id);
+        if (c) {
+          c.joiningStatus = "REJECTED";
+          c.rejectionReason = reason;
+        }
+        renderCandidates(candidates);
+        showToast("Rejected! (Demo)", "red");
+      }
+      closeModal();
+    }
+
+    async function sendLink(id) {
+      const res = await callAPI("POST", `/hr/candidates/${id}/send-link`);
+      if (res && res.success) {
+        await loadCandidates();
+        showToast("Onboarding link sent!", "blue");
+      } else {
+        const c = candidates.find(x => x.id === id);
+        if (c) c.linkStatus = "SENT";
+        renderCandidates(candidates);
+        showToast("Link sent! (Demo)", "blue");
+      }
+    }
+
+    // DETAIL MODAL
+    function showDetail(id) {
+      const c = candidates.find(x => x.id === id);
+      if (!c) return;
+      document.getElementById("modal-content").innerHTML = `
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-16 h-16 gradient-bg rounded-full flex items-center justify-center text-white text-2xl font-bold">
+            ${c.employeeName[0] || "?"}
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold text-gray-800">${c.employeeName}</h2>
+            <p class="text-gray-500">${c.designation || ""}</p>
+            <span class="status-badge ${c.joiningStatus.toLowerCase()}">
+              ${c.joiningStatus.replace("_"," ")}
+            </span>
+          </div>
         </div>
 
-        <!-- Admin Access Card -->
-        <div class="nav-card">
-            <div class="nav-icon">🔐</div>
-            <h2>Admin Portal</h2>
-            <p>Full administrative control. Manage HR team members, view analytics, and system settings.</p>
-            <a href="/admin.html" class="nav-button admin">Admin Login</a>
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          ${detailRow("Mail", "Email", c.emailId || "-")}
+          ${detailRow("Phone", "Mobile", c.mobileNo || "-")}
+          ${detailRow("IdCard", "Aadhaar", c.aadhaarNo || "-")}
+          ${detailRow("User2", "HR", c.assignedHR?.name || "-")}
+          ${detailRow("Link", "Link Status", c.linkStatus || "-")}
+          ${detailRow("Calendar", "Created", c.createdAt || "-")}
+          ${c.rejectionReason ? detailRow("AlertTriangle", "Rejection Reason", c.rejectionReason) : ""}
         </div>
-    </div>
 
-    <div class="footer">
-        <p>🚀 RSPL HR Onboarding Backend v1.0.0 | Powered by Spring Boot</p>
-    </div>
+        <div class="flex gap-3">
+          ${c.joiningStatus === "SIGNED" ? `
+            <button onclick="approveCandidate(${c.id})"
+                    class="flex-1 bg-green-500 text-white py-2 rounded-lg font-semibold hover:bg-green-600">
+              Approve
+            </button>` : ""
+          }
+          ${!["APPROVED","REJECTED"].includes(c.joiningStatus) ? `
+            <button onclick="rejectCandidate(${c.id})"
+                    class="flex-1 bg-red-500 text-white py-2 rounded-lg font-semibold hover:bg-red-600">
+              Reject
+            </button>` : ""
+          }
+          ${c.linkStatus === "NOT_SENT" ? `
+            <button onclick="sendLink(${c.id})"
+                    class="flex-1 bg-blue-500 text-white py-2 rounded-lg font-semibold hover:bg-blue-600">
+              Send Link
+            </button>` : ""
+          }
+        </div>
+      `;
+      document.getElementById("modal").classList.remove("hidden");
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function detailRow(icon, label, value) {
+      return `
+        <div class="bg-gray-50 rounded-lg p-3">
+          <div class="text-xs text-gray-500 mb-1 flex items-center gap-1">
+            <i data-lucide="${icon}" class="w-3 h-3"></i>
+            <span>${label}</span>
+          </div>
+          <div class="font-semibold text-gray-800 text-sm">${value}</div>
+        </div>
+      `;
+    }
+
+    function closeModal() {
+      document.getElementById("modal").classList.add("hidden");
+    }
+
+    // HR TEAM
+    function renderTeam() {
+      document.getElementById("hr-team-grid").innerHTML = HRTEAM.map(h => `
+        <div class="card p-6 hover:scale-105 transition">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-14 h-14 gradient-bg rounded-full flex items-center justify-center text-white text-xl font-bold">
+              ${h.name[0]}
+            </div>
+            <div>
+              <div class="font-bold text-gray-800">${h.name}</div>
+              <div class="text-sm text-blue-600">${h.role}</div>
+            </div>
+          </div>
+          <div class="space-y-2 text-sm text-gray-600">
+            <div>${h.email}</div>
+            <div>${h.phone}</div>
+            <div>${candidates.filter(c => c.assignedHR?.id === h.id).length} Candidates</div>
+            <div>${candidates.filter(c => c.assignedHR?.id === h.id && c.joiningStatus === "APPROVED").length} Approved</div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    // LOAD FROM API
+    async function loadCandidates() {
+      const res = await callAPI("GET", "/hr/candidates?page=0&size=100");
+      if (res && res.success && res.data && res.data.content) {
+        candidates = res.data.content;
+      }
+      renderCandidates(candidates);
+      renderDashboard();
+    }
+
+    // TOAST
+    function showToast(msg, type = "green") {
+      const colors = {
+        green: "bg-green-600",
+        red:   "bg-red-600",
+        blue:  "bg-blue-600"
+      };
+      const t = document.getElementById("toast");
+      const box = t.querySelector("div");
+      box.className = `${colors[type]} text-white px-6 py-3 rounded-xl shadow-2xl text-sm font-semibold`;
+      box.textContent = msg;
+      t.classList.remove("hidden");
+      setTimeout(() => t.classList.add("hidden"), 3000);
+    }
+
+    // INIT
+    (async function init() {
+      // load HR from backend
+      const teamRes = await callAPI("GET", "/hr/team");
+      if (teamRes && teamRes.success && teamRes.data && teamRes.data.length > 0) {
+        HRTEAM = teamRes.data;
+      }
+      await loadCandidates();
+      renderDashboard();
+      renderHRDropdown();
+      if (window.lucide) lucide.createIcons();
+    })();
+  </script>
 </body>
 </html>
