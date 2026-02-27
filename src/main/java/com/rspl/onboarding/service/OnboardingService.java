@@ -6,7 +6,7 @@ import com.rspl.onboarding.repo.CandidateRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -18,7 +18,6 @@ public class OnboardingService {
     @Autowired
     private SmsService smsService;
 
-    // ── getHRTeam() ─────────────────────────────────
     public List<Map<String, Object>> getHRTeam() {
         List<Map<String, Object>> team = new ArrayList<>();
         team.add(Map.of("id", 1, "name", "Sneha Kapoor",  "role", "Sr. HR Executive", "email", "sneha@rspl.com",  "phone", "9811001100"));
@@ -29,40 +28,53 @@ public class OnboardingService {
         return team;
     }
 
-    // ── listCandidates ───────────────────────────────
+    private String resolveHRName(Long hrId) {
+        if (hrId == null) return "HR Admin";
+        Map<Long, String> hrNames = Map.of(
+            1L, "Sneha Kapoor",
+            2L, "Arjun Mehta",
+            3L, "Pooja Nair",
+            4L, "Kunal Bose",
+            5L, "Divya Rawat"
+        );
+        return hrNames.getOrDefault(hrId, "HR Admin");
+    }
+
     public Page<Candidate> listCandidates(int page, int size) {
         return candidateRepository.findAll(
             PageRequest.of(page, size, Sort.by("id").descending())
         );
     }
 
-    // ── initiate ─────────────────────────────────────
     public Candidate initiate(InitiateCandidateRequest request) {
         Candidate candidate = new Candidate();
         candidate.setEmployeeName(request.getEmployeeName());
 
-        // support both emailId and email from frontend
-        String email = request.getEmailId() != null ? request.getEmailId() : request.getEmail();
-        candidate.setEmail(email);
+        String email = request.getEmailId() != null
+            ? request.getEmailId() : request.getEmail();
+        candidate.setEmailId(email);
 
         candidate.setMobileNo(request.getMobileNo());
+        candidate.setAadhaarNo(request.getAadhaarNo());
         candidate.setDesignation(request.getDesignation());
+        candidate.setInitiatedBy(
+            request.getInitiatedBy() != null ? request.getInitiatedBy() : "hradmin"
+        );
 
-        // support both assignedHr (string) and assignedHRId (integer)
-        if (request.getAssignedHr() != null) {
-            candidate.setAssignedHr(request.getAssignedHr());
-        } else if (request.getAssignedHRId() != null) {
-            candidate.setAssignedHr(String.valueOf(request.getAssignedHRId()));
-        }
+        Long hrId = request.getAssignedHRId();
+        candidate.setAssignedHRId(hrId);
+        candidate.setAssignedHRName(resolveHRName(hrId));
 
-        candidate.setStatus("INITIATED");
+        candidate.setJoiningStatus("INITIATED");
+        candidate.setLinkStatus("NOT_SENT");
 
         String token = UUID.randomUUID().toString();
         candidate.setOnboardingToken(token);
+        candidate.setCreatedAt(LocalDateTime.now());
+        candidate.setUpdatedAt(LocalDateTime.now());
 
         Candidate saved = candidateRepository.save(candidate);
 
-        // send SMS safely — don't crash if it fails
         try {
             if (Boolean.TRUE.equals(request.getSendLinkImmediately())) {
                 smsService.sendOnboardingLink(
@@ -70,6 +82,9 @@ public class OnboardingService {
                     saved.getEmployeeName(),
                     token
                 );
+                saved.setLinkStatus("SENT");
+                saved.setUpdatedAt(LocalDateTime.now());
+                saved = candidateRepository.save(saved);
             }
         } catch (Exception e) {
             System.err.println("SMS failed (non-fatal): " + e.getMessage());
@@ -78,24 +93,23 @@ public class OnboardingService {
         return saved;
     }
 
-    // ── approve ──────────────────────────────────────
     public Candidate approve(long id) {
         Candidate c = candidateRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Candidate not found: " + id));
-        c.setStatus("APPROVED");
+        c.setJoiningStatus("APPROVED");
+        c.setUpdatedAt(LocalDateTime.now());
         return candidateRepository.save(c);
     }
 
-    // ── reject ───────────────────────────────────────
     public Candidate reject(long id, String reason) {
         Candidate c = candidateRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Candidate not found: " + id));
-        c.setStatus("REJECTED");
+        c.setJoiningStatus("REJECTED");
         c.setRejectionReason(reason);
+        c.setUpdatedAt(LocalDateTime.now());
         return candidateRepository.save(c);
     }
 
-    // ── sendLink ─────────────────────────────────────
     public Candidate sendLink(long id) {
         Candidate c = candidateRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Candidate not found: " + id));
@@ -110,20 +124,20 @@ public class OnboardingService {
                 c.getEmployeeName(),
                 c.getOnboardingToken()
             );
+            c.setLinkStatus("SENT");
         } catch (Exception e) {
             System.err.println("SMS failed (non-fatal): " + e.getMessage());
         }
 
+        c.setUpdatedAt(LocalDateTime.now());
         return candidateRepository.save(c);
     }
 
-    // ── getCandidateByToken ──────────────────────────
     public Candidate getCandidateByToken(String token) {
         return candidateRepository.findByOnboardingToken(token)
             .orElseThrow(() -> new RuntimeException("Invalid token"));
     }
 
-    // ── deleteCandidate ──────────────────────────────
     public void deleteCandidate(Long id) {
         candidateRepository.deleteById(id);
     }
