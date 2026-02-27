@@ -7,7 +7,6 @@ public class InitiateCandidateRequest {
     @NotBlank
     private String employeeName;
 
-    // frontend sends "emailId" — we accept both
     private String email;
     private String emailId;
 
@@ -18,17 +17,10 @@ public class InitiateCandidateRequest {
     private String designation;
 
     private String aadhaarNo;
-
     private String assignedHr;
-
-    // frontend sends "assignedHRId" as integer
-    private Integer assignedHRId;
-
+    private Long assignedHRId;
     private String initiatedBy;
-
     private Boolean sendLinkImmediately;
-
-    // ── Getters & Setters ────────────────────────────
 
     public String getEmployeeName() { return employeeName; }
     public void setEmployeeName(String v) { this.employeeName = v; }
@@ -51,8 +43,8 @@ public class InitiateCandidateRequest {
     public String getAssignedHr() { return assignedHr; }
     public void setAssignedHr(String v) { this.assignedHr = v; }
 
-    public Integer getAssignedHRId() { return assignedHRId; }
-    public void setAssignedHRId(Integer v) { this.assignedHRId = v; }
+    public Long getAssignedHRId() { return assignedHRId; }
+    public void setAssignedHRId(Long v) { this.assignedHRId = v; }
 
     public String getInitiatedBy() { return initiatedBy; }
     public void setInitiatedBy(String v) { this.initiatedBy = v; }
