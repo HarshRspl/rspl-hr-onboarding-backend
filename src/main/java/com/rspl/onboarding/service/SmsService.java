@@ -14,21 +14,11 @@ public class SmsService {
     @Value("${fast2sms.api.key:NOT_SET}")
     private String apiKey;
 
-    /**
-     * ✅ IMPORTANT:
-     * Keep this as your app's public base URL (Railway domain).
-     * Example:
-     * https://rspl-hr-onboarding-backend-production.up.railway.app
-     *
-     * You can override via env:
-     * APP_BASE_URL=https://your-app-domain
-     */
     @Value("${app.base.url:https://rspl-hr-onboarding-backend-production.up.railway.app}")
     private String baseUrl;
 
     /**
-     * ✅ This method is REQUIRED because your OnboardingService calls sendSms(mobile, message)
-     * It sends the SMS using Fast2SMS.
+     * ✅ REQUIRED: OnboardingService is calling this method
      */
     public void sendSms(String mobile, String message) {
         try {
@@ -64,28 +54,14 @@ public class SmsService {
     }
 
     /**
-     * ✅ Your existing method (kept)
-     * Generates onboarding link and sends SMS.
-     *
-     * If you later REMOVE token, see the token-free version below.
+     * ✅ Keep your existing method (token-based link)
      */
     public void sendOnboardingLink(String mobile, String candidateName, String token) {
         String link = baseUrl + "/onboarding.html?token=" + token;
         String message = "Dear " + candidateName +
                 ", Welcome to RSPL! Complete your onboarding: " + link + " -RSPL HR";
 
-        sendSms(mobile, message); // ✅ reuse common sender
-    }
-
-    /**
-     * ✅ TOKEN-FREE version (use this only if you remove token from onboarding completely)
-     * HR will send plain link (public form).
-     */
-    public void sendOnboardingLinkWithoutToken(String mobile, String candidateName) {
-        String link = baseUrl + "/onboarding.html";
-        String message = "Dear " + candidateName +
-                ", Welcome to RSPL! Complete your onboarding: " + link + " -RSPL HR";
-
         sendSms(mobile, message);
     }
 }
+``
