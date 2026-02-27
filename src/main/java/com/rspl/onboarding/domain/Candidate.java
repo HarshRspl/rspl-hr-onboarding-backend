@@ -14,32 +14,27 @@ public class Candidate {
     @Column(name = "employee_name", nullable = false)
     private String employeeName;
 
-    // ✅ FIXED: was "email" → now "email_id" to match frontend
     @Column(name = "email_id")
     private String emailId;
 
     @Column(name = "mobile_no")
     private String mobileNo;
 
-    // ✅ ADDED: was missing
     @Column(name = "aadhaar_no")
     private String aadhaarNo;
 
     @Column(name = "designation")
     private String designation;
 
-    // ✅ FIXED: was a String → now assignedHRId (Long) + assignedHRName (String)
     @Column(name = "assigned_hr_id")
     private Long assignedHRId;
 
     @Column(name = "assigned_hr_name")
     private String assignedHRName;
 
-    // ✅ FIXED: was "status" → now "joining_status" to match frontend
     @Column(name = "joining_status")
     private String joiningStatus = "INITIATED";
 
-    // ✅ ADDED: was missing entirely
     @Column(name = "link_status")
     private String linkStatus = "NOT_SENT";
 
@@ -58,57 +53,56 @@ public class Candidate {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
 
-    // ─── Getters & Setters ───────────────────────────
+    // ── Getters & Setters ────────────────────────────
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
     public String getEmployeeName() { return employeeName; }
-    public void setEmployeeName(String employeeName) { this.employeeName = employeeName; }
+    public void setEmployeeName(String v) { this.employeeName = v; }
 
     public String getEmailId() { return emailId; }
-    public void setEmailId(String emailId) { this.emailId = emailId; }
+    public void setEmailId(String v) { this.emailId = v; }
 
     public String getMobileNo() { return mobileNo; }
-    public void setMobileNo(String mobileNo) { this.mobileNo = mobileNo; }
+    public void setMobileNo(String v) { this.mobileNo = v; }
 
     public String getAadhaarNo() { return aadhaarNo; }
-    public void setAadhaarNo(String aadhaarNo) { this.aadhaarNo = aadhaarNo; }
+    public void setAadhaarNo(String v) { this.aadhaarNo = v; }
 
     public String getDesignation() { return designation; }
-    public void setDesignation(String designation) { this.designation = designation; }
+    public void setDesignation(String v) { this.designation = v; }
 
     public Long getAssignedHRId() { return assignedHRId; }
-    public void setAssignedHRId(Long assignedHRId) { this.assignedHRId = assignedHRId; }
+    public void setAssignedHRId(Long v) { this.assignedHRId = v; }
 
     public String getAssignedHRName() { return assignedHRName; }
-    public void setAssignedHRName(String assignedHRName) { this.assignedHRName = assignedHRName; }
+    public void setAssignedHRName(String v) { this.assignedHRName = v; }
 
     public String getJoiningStatus() { return joiningStatus; }
-    public void setJoiningStatus(String joiningStatus) { this.joiningStatus = joiningStatus; }
+    public void setJoiningStatus(String v) { this.joiningStatus = v; }
 
     public String getLinkStatus() { return linkStatus; }
-    public void setLinkStatus(String linkStatus) { this.linkStatus = linkStatus; }
+    public void setLinkStatus(String v) { this.linkStatus = v; }
 
     public String getRejectionReason() { return rejectionReason; }
-    public void setRejectionReason(String rejectionReason) { this.rejectionReason = rejectionReason; }
+    public void setRejectionReason(String v) { this.rejectionReason = v; }
 
     public String getOnboardingToken() { return onboardingToken; }
-    public void setOnboardingToken(String onboardingToken) { this.onboardingToken = onboardingToken; }
+    public void setOnboardingToken(String v) { this.onboardingToken = v; }
 
     public String getInitiatedBy() { return initiatedBy; }
-    public void setInitiatedBy(String initiatedBy) { this.initiatedBy = initiatedBy; }
+    public void setInitiatedBy(String v) { this.initiatedBy = v; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public void setCreatedAt(LocalDateTime v) { this.createdAt = v; }
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public void setUpdatedAt(LocalDateTime v) { this.updatedAt = v; }
 
-    // ─── Helper: build assignedHR object for frontend JSON ───
     public java.util.Map<String, Object> getAssignedHR() {
         java.util.Map<String, Object> hr = new java.util.HashMap<>();
-        hr.put("id", assignedHRId != null ? assignedHRId : 0);
+        hr.put("id",   assignedHRId   != null ? assignedHRId   : 0);
         hr.put("name", assignedHRName != null ? assignedHRName : "-");
         return hr;
     }
