@@ -21,11 +21,12 @@ public class DataSeeder implements CommandLineRunner {
         // Rejected candidate sample
         Candidate rej = new Candidate();
         rej.setEmployeeName("Rejected User");
-        rej.setEmail("rejected@rspl.com");
+        rej.setEmailId("rejected@rspl.com");          // ✅ was setEmail()
         rej.setMobileNo("9000000001");
         rej.setDesignation("Sales");
-        rej.setAssignedHr("HR Admin");
-        rej.setStatus("REJECTED");
+        rej.setAssignedHRId(1L);                      // ✅ was setAssignedHr()
+        rej.setAssignedHRName("HR Admin");            // ✅ new field
+        rej.setJoiningStatus("REJECTED");             // ✅ was setStatus()
         rej.setRejectionReason("Did not pass background check");
         rej.setOnboardingToken(UUID.randomUUID().toString());
         rej.setCreatedAt(LocalDateTime.now());
@@ -35,11 +36,12 @@ public class DataSeeder implements CommandLineRunner {
         // Pending candidate sample
         Candidate c = new Candidate();
         c.setEmployeeName("New Joinee");
-        c.setEmail("joinee@rspl.com");
+        c.setEmailId("joinee@rspl.com");              // ✅ was setEmail()
         c.setMobileNo("9000000002");
         c.setDesignation("Manager");
-        c.setAssignedHr("HR Admin");
-        c.setStatus("PENDING");
+        c.setAssignedHRId(1L);                        // ✅ was setAssignedHr()
+        c.setAssignedHRName("HR Admin");              // ✅ new field
+        c.setJoiningStatus("INITIATED");              // ✅ was setStatus("PENDING")
         c.setOnboardingToken(UUID.randomUUID().toString());
         c.setCreatedAt(LocalDateTime.now());
         c.setUpdatedAt(LocalDateTime.now());
