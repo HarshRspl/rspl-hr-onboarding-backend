@@ -1,76 +1,152 @@
-package com.rspl.onboarding.api;
+package com.rspl.onboarding.service;
 
+import com.rspl.onboarding.api.InitiateCandidateRequest;
 import com.rspl.onboarding.domain.Candidate;
-import com.rspl.onboarding.service.OnboardingService;
-import jakarta.validation.Valid;
+import com.rspl.onboarding.repo.CandidateRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import org.springframework.data.domain.*;
+import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
+import java.util.*;
 
-@RestController
-@RequestMapping("/api/hr")
-@CrossOrigin(origins = "*")
-public class HrController {
+@Service
+public class OnboardingService {
 
     @Autowired
-    private OnboardingService service;
+    private CandidateRepository candidateRepository;
 
-    // ✅ ADDED - Frontend calls /api/hr/team
-    @GetMapping("/team")
-    public ResponseEntity<?> getTeam() {
-        return ResponseEntity.ok(
-            Map.of("success", true, "data", service.getHRTeam())
+    @Autowired
+    private SmsService smsService;
+
+    // ── getHRTeam() ─────────────────────────────────
+    public List<Map<String, Object>> getHRTeam() {
+        List<Map<String, Object>> team = new ArrayList<>();
+        team.add(Map.of("id", 1, "name", "Sneha Kapoor",  "role", "Sr. HR Executive", "email", "sneha@rspl.com",  "phone", "9811001100"));
+        team.add(Map.of("id", 2, "name", "Arjun Mehta",   "role", "HR Executive",     "email", "arjun@rspl.com",  "phone", "9822002200"));
+        team.add(Map.of("id", 3, "name", "Pooja Nair",    "role", "HR Executive",     "email", "pooja@rspl.com",  "phone", "9833003300"));
+        team.add(Map.of("id", 4, "name", "Kunal Bose",    "role", "Jr. HR Executive", "email", "kunal@rspl.com",  "phone", "9844004400"));
+        team.add(Map.of("id", 5, "name", "Divya Rawat",   "role", "HR Manager",       "email", "divya@rspl.com",  "phone", "9855005500"));
+        return team;
+    }
+
+    // helper: resolve HR name from ID using the static team list
+    private String resolveHRName(Long hrId) {
+        Map<Long, String> hrNames = Map.of(
+            1L, "Sneha Kapoor",
+            2L, "Arjun Mehta",
+            3L, "Pooja Nair",
+            4L, "Kunal Bose",
+            5L, "Divya Rawat"
+        );
+        return hrNames.getOrDefault(hrId, "HR Admin");
+    }
+
+    // ── listCandidates ───────────────────────────────
+    public Page<Candidate> listCandidates(int page, int size) {
+        return candidateRepository.findAll(
+            PageRequest.of(page, size, Sort.by("id").descending())
         );
     }
 
-    // ✅ FIXED - Returns success wrapper
-    @GetMapping("/candidates")
-    public ResponseEntity<?> listCandidates(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+    // ── initiate ─────────────────────────────────────
+    public Candidate initiate(InitiateCandidateRequest request) {
+        Candidate candidate = new Candidate();
+        candidate.setEmployeeName(request.getEmployeeName());
 
-        Page<Candidate> result = service.listCandidates(page, size);
-        List<CandidateDto> list = result.getContent()
-                .stream()
-                .map(CandidateDto::from)
-                .collect(Collectors.toList());
+        // ✅ was candidate.setEmail()
+        String email = request.getEmailId() != null ? request.getEmailId() : request.getEmail();
+        candidate.setEmailId(email);
 
-        PageDto<CandidateDto> pageDto = new PageDto<>();
-        pageDto.setContent(list);
-        pageDto.setPage(result.getNumber());
-        pageDto.setSize(result.getSize());
-        pageDto.setTotalElements(result.getTotalElements());
-        pageDto.setTotalPages(result.getTotalPages());
+        candidate.setMobileNo(request.getMobileNo());
+        candidate.setAadhaarNo(request.getAadhaarNo());
+        candidate.setDesignation(request.getDesignation());
+        candidate.setInitiatedBy(request.getInitiatedBy());
 
-        return ResponseEntity.ok(Map.of("success", true, "data", pageDto));
+        // ✅ was candidate.setAssignedHr() with a String
+        Long hrId = request.getAssignedHRId();
+        candidate.setAssignedHRId(hrId);
+        candidate.setAssignedHRName(resolveHRName(hrId));
+
+        // ✅ was candidate.setStatus()
+        candidate.setJoiningStatus("INITIATED");
+        candidate.setLinkStatus("NOT_SENT");
+
+        String token = UUID.randomUUID().toString();
+        candidate.setOnboardingToken(token);
+        candidate.setCreatedAt(LocalDateTime.now());
+        candidate.setUpdatedAt(LocalDateTime.now());
+
+        Candidate saved = candidateRepository.save(candidate);
+
+        // send SMS safely — don't crash if it fails
+        try {
+            if (Boolean.TRUE.equals(request.getSendLinkImmediately())) {
+                smsService.sendOnboardingLink(
+                    saved.getMobileNo(),
+                    saved.getEmployeeName(),
+                    token
+                );
+                saved.setLinkStatus("SENT");
+                saved = candidateRepository.save(saved);
+            }
+        } catch (Exception e) {
+            System.err.println("SMS failed (non-fatal): " + e.getMessage());
+        }
+
+        return saved;
     }
 
-    // ✅ FIXED - Frontend calls /api/hr/candidates/initiate not /api/hr/candidates
-    @PostMapping("/candidates/initiate")
-    public ResponseEntity<?> initiate(
-            @Valid @RequestBody InitiateCandidateRequest request) {
-        Candidate candidate = service.initiate(request);
-        return ResponseEntity.ok(Map.of("success", true, "data", CandidateDto.from(candidate)));
+    // ── approve ──────────────────────────────────────
+    public Candidate approve(long id) {
+        Candidate c = candidateRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Candidate not found: " + id));
+        c.setJoiningStatus("APPROVED");   // ✅ was c.setStatus()
+        c.setUpdatedAt(LocalDateTime.now());
+        return candidateRepository.save(c);
     }
 
-    @PostMapping("/candidates/{id}/approve")
-    public ResponseEntity<?> approve(@PathVariable long id) {
-        return ResponseEntity.ok(Map.of("success", true, "data", CandidateDto.from(service.approve(id))));
+    // ── reject ───────────────────────────────────────
+    public Candidate reject(long id, String reason) {
+        Candidate c = candidateRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Candidate not found: " + id));
+        c.setJoiningStatus("REJECTED");   // ✅ was c.setStatus()
+        c.setRejectionReason(reason);
+        c.setUpdatedAt(LocalDateTime.now());
+        return candidateRepository.save(c);
     }
 
-    @PostMapping("/candidates/{id}/reject")
-    public ResponseEntity<?> reject(
-            @PathVariable long id,
-            @RequestBody RejectRequest body) {
-        return ResponseEntity.ok(Map.of("success", true, "data", CandidateDto.from(service.reject(id, body.getReason()))));
+    // ── sendLink ─────────────────────────────────────
+    public Candidate sendLink(long id) {
+        Candidate c = candidateRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Candidate not found: " + id));
+
+        if (c.getOnboardingToken() == null) {
+            c.setOnboardingToken(UUID.randomUUID().toString());
+        }
+
+        try {
+            smsService.sendOnboardingLink(
+                c.getMobileNo(),
+                c.getEmployeeName(),
+                c.getOnboardingToken()
+            );
+            c.setLinkStatus("SENT");      // ✅ update link status after sending
+        } catch (Exception e) {
+            System.err.println("SMS failed (non-fatal): " + e.getMessage());
+        }
+
+        c.setUpdatedAt(LocalDateTime.now());
+        return candidateRepository.save(c);
     }
 
-    @PostMapping("/candidates/{id}/send-link")
-    public ResponseEntity<?> sendLink(@PathVariable long id) {
-        return ResponseEntity.ok(Map.of("success", true, "data", CandidateDto.from(service.sendLink(id))));
+    // ── getCandidateByToken ──────────────────────────
+    public Candidate getCandidateByToken(String token) {
+        return candidateRepository.findByOnboardingToken(token)
+            .orElseThrow(() -> new RuntimeException("Invalid token"));
+    }
+
+    // ── deleteCandidate ──────────────────────────────
+    public void deleteCandidate(Long id) {
+        candidateRepository.deleteById(id);
     }
 }
