@@ -3,7 +3,6 @@ package com.rspl.onboarding.api;
 import java.util.List;
 
 public class PageDto<T> {
-
     private List<T> content;
     private int page;
     private int size;
@@ -11,17 +10,17 @@ public class PageDto<T> {
     private int totalPages;
 
     public List<T> getContent() { return content; }
-    public void setContent(List<T> content) { this.content = content; }
+    public void setContent(List<T> v) { this.content = v; }
 
     public int getPage() { return page; }
-    public void setPage(int page) { this.page = page; }
+    public void setPage(int v) { this.page = v; }
 
     public int getSize() { return size; }
-    public void setSize(int size) { this.size = size; }
+    public void setSize(int v) { this.size = v; }
 
     public long getTotalElements() { return totalElements; }
-    public void setTotalElements(long totalElements) { this.totalElements = totalElements; }
+    public void setTotalElements(long v) { this.totalElements = v; }
 
     public int getTotalPages() { return totalPages; }
-    public void setTotalPages(int totalPages) { this.totalPages = totalPages; }
+    public void setTotalPages(int v) { this.totalPages = v; }
 }
