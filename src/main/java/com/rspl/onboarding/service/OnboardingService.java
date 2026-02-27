@@ -18,16 +18,14 @@ public class OnboardingService {
     @Autowired
     private SmsService smsService;
 
-    // ── getHRTeam() ── returns static HR list (no DB table needed)
+    // ── getHRTeam() ─────────────────────────────────
     public List<Map<String, Object>> getHRTeam() {
         List<Map<String, Object>> team = new ArrayList<>();
-
         team.add(Map.of("id", 1, "name", "Sneha Kapoor",  "role", "Sr. HR Executive", "email", "sneha@rspl.com",  "phone", "9811001100"));
         team.add(Map.of("id", 2, "name", "Arjun Mehta",   "role", "HR Executive",     "email", "arjun@rspl.com",  "phone", "9822002200"));
         team.add(Map.of("id", 3, "name", "Pooja Nair",    "role", "HR Executive",     "email", "pooja@rspl.com",  "phone", "9833003300"));
         team.add(Map.of("id", 4, "name", "Kunal Bose",    "role", "Jr. HR Executive", "email", "kunal@rspl.com",  "phone", "9844004400"));
         team.add(Map.of("id", 5, "name", "Divya Rawat",   "role", "HR Manager",       "email", "divya@rspl.com",  "phone", "9855005500"));
-
         return team;
     }
 
@@ -42,22 +40,29 @@ public class OnboardingService {
     public Candidate initiate(InitiateCandidateRequest request) {
         Candidate candidate = new Candidate();
         candidate.setEmployeeName(request.getEmployeeName());
-        // support both emailId and email field names
-        candidate.setEmail(request.getEmailId() != null ? request.getEmailId() : request.getEmail());
+
+        // support both emailId and email from frontend
+        String email = request.getEmailId() != null ? request.getEmailId() : request.getEmail();
+        candidate.setEmail(email);
+
         candidate.setMobileNo(request.getMobileNo());
         candidate.setDesignation(request.getDesignation());
-        candidate.setAssignedHr(request.getAssignedHr() != null
-            ? request.getAssignedHr()
-            : String.valueOf(request.getAssignedHRId()));
+
+        // support both assignedHr (string) and assignedHRId (integer)
+        if (request.getAssignedHr() != null) {
+            candidate.setAssignedHr(request.getAssignedHr());
+        } else if (request.getAssignedHRId() != null) {
+            candidate.setAssignedHr(String.valueOf(request.getAssignedHRId()));
+        }
+
         candidate.setStatus("INITIATED");
-        candidate.setLinkStatus("NOT_SENT");
-        candidate.setCreatedAt(LocalDate.now().toString());
 
         String token = UUID.randomUUID().toString();
         candidate.setOnboardingToken(token);
 
         Candidate saved = candidateRepository.save(candidate);
 
+        // send SMS safely — don't crash if it fails
         try {
             if (Boolean.TRUE.equals(request.getSendLinkImmediately())) {
                 smsService.sendOnboardingLink(
@@ -65,12 +70,9 @@ public class OnboardingService {
                     saved.getEmployeeName(),
                     token
                 );
-                saved.setLinkStatus("SENT");
-                saved = candidateRepository.save(saved);
             }
         } catch (Exception e) {
-            // SMS failure should not break candidate creation
-            System.err.println("SMS failed: " + e.getMessage());
+            System.err.println("SMS failed (non-fatal): " + e.getMessage());
         }
 
         return saved;
@@ -109,11 +111,9 @@ public class OnboardingService {
                 c.getOnboardingToken()
             );
         } catch (Exception e) {
-            System.err.println("SMS failed: " + e.getMessage());
+            System.err.println("SMS failed (non-fatal): " + e.getMessage());
         }
 
-        c.setLinkStatus("SENT");
-        c.setStatus("INITIATED");
         return candidateRepository.save(c);
     }
 
