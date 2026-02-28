@@ -16,7 +16,7 @@ import java.util.function.Function;
 public class JwtTokenService {
 
     private static final SecretKey SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-    private static final long EXPIRATION_TIME = 1000L * 60 * 60 * 24; // 24h
+    private static final long EXPIRATION_TIME = 1000L * 60 * 60 * 24; // 24 hours
 
     public String generateToken(String username) {
         Map<String, Object> claims = new HashMap<>();
@@ -38,7 +38,8 @@ public class JwtTokenService {
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> resolver) {
-        return resolver.apply(extractAllClaims(token));
+        final Claims claims = extractAllClaims(token);
+        return resolver.apply(claims);
     }
 
     private Claims extractAllClaims(String token) {
@@ -57,4 +58,3 @@ public class JwtTokenService {
         return extractClaim(token, Claims::getExpiration).before(new Date());
     }
 }
-``
