@@ -4,17 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>RSPL Onboarding Portal</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  https://cdn.tailwindcss.com</script>
   <style>
     body { font-family: "Segoe UI", sans-serif; }
     .gradient-bg { background: linear-gradient(135deg, #1e3a5f 0%, #3b82f6 100%); }
     .step-active { background: #3b82f6; color: white; }
-    .step-done   { background: #22c55e; color: white; }
     .step-pending{ background: #e2e8f0; color: #94a3b8; }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(16px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
     .fade-in { animation: fadeIn 0.3s ease; }
     .input-field {
       width: 100%;
@@ -47,16 +43,15 @@
     </div>
   </nav>
 
-  <!-- MAIN CONTAINER -->
   <div class="max-w-3xl mx-auto p-6">
 
-    <!-- LOADING SCREEN -->
+    <!-- LOADING -->
     <div id="screen-loading" class="text-center py-20">
       <div class="inline-block w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
       <p class="text-gray-500">Verifying your link...</p>
     </div>
 
-    <!-- INVALID TOKEN SCREEN -->
+    <!-- INVALID -->
     <div id="screen-invalid" class="hidden fade-in">
       <div class="section-card text-center py-12">
         <div class="text-6xl mb-4">❌</div>
@@ -64,12 +59,12 @@
         <p class="text-gray-500 mb-6">This onboarding link is not valid or has expired (links are valid for 7 days).</p>
         <p class="text-gray-500">Please contact HR to get a new link.</p>
         <div class="mt-6 bg-blue-50 rounded-lg p-4 text-sm text-blue-700">
-          📞 HR Contact: hr@rspl.com | 9811001100
+          📞 HR Contact: hr@rspl.com<br/>9811001100
         </div>
       </div>
     </div>
 
-    <!-- WELCOME SCREEN -->
+    <!-- WELCOME -->
     <div id="screen-welcome" class="hidden fade-in">
       <div class="section-card text-center py-10">
         <div class="text-5xl mb-4">👋</div>
@@ -77,7 +72,6 @@
         <p class="text-blue-600 font-semibold mb-1" id="welcome-designation"></p>
         <p class="text-gray-500 mb-8">Please complete your onboarding formalities.<br/>This should take about 10-15 minutes.</p>
 
-        <!-- Progress Steps -->
         <div class="flex justify-center items-center gap-2 mb-8">
           <div class="flex flex-col items-center">
             <div class="w-10 h-10 rounded-full step-active flex items-center justify-center font-bold text-sm">1</div>
@@ -95,62 +89,55 @@
           </div>
           <div class="w-10 h-px bg-gray-300"></div>
           <div class="flex flex-col items-center">
-            <div class="w-10 h-10 rounded-full step-pending flex items-center justify-center font-bold text-sm">4</div>
+            <div class="w-10 h-10 rounded-full step-pending flex items-center justify-content-center font-bold text-sm">4</div>
             <span class="text-xs text-gray-500 mt-1">Nominee</span>
-          </div>
-          <div class="w-10 h-px bg-gray-300"></div>
-          <div class="flex flex-col items-center">
-            <div class="w-10 h-10 rounded-full step-pending flex items-center justify-center font-bold text-sm">5</div>
-            <span class="text-xs text-gray-500 mt-1">Review</span>
           </div>
         </div>
 
         <button onclick="showScreen('screen-form')"
-                class="gradient-bg text-white px-10 py-3 rounded-xl font-bold text-lg hover:opacity-90 transition shadow-lg">
+          class="gradient-bg text-white px-10 py-3 rounded-xl font-bold text-lg hover:opacity-90 transition shadow-lg">
           Start Onboarding →
         </button>
       </div>
     </div>
 
-    <!-- ALREADY SUBMITTED SCREEN -->
+    <!-- SUBMITTED -->
     <div id="screen-submitted" class="hidden fade-in">
       <div class="section-card text-center py-12">
         <div class="text-5xl mb-4">✅</div>
         <h2 class="text-2xl font-bold text-gray-800 mb-2">Form Already Submitted!</h2>
         <p class="text-gray-500 mb-6">You have already completed the onboarding form.</p>
         <div id="status-timeline" class="text-left max-w-sm mx-auto"></div>
-        <div class="mt-6 bg-green-50 rounded-lg p-4 text-sm text-green-700">
-          ✅ Your HR team is reviewing your details. You'll be notified soon.
-        </div>
       </div>
     </div>
 
-    <!-- ONBOARDING FORM SCREEN -->
+    <!-- FORM -->
     <div id="screen-form" class="hidden fade-in">
       <div class="mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Joining Form</h2>
         <p class="text-gray-500 text-sm">All fields are mandatory unless marked optional</p>
       </div>
 
-      <!-- SECTION 1: Personal Information -->
+      <!-- SECTION 1 -->
       <div class="section-card">
-        <h3 class="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
-          <span class="w-7 h-7 gradient-bg rounded-full flex items-center justify-center text-white text-sm font-bold">1</span>
-          Personal Information
-        </h3>
+        <h3 class="text-lg font-bold text-gray-700 mb-4">Personal Information</h3>
+
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-semibold text-gray-600 mb-1">Full Name</label>
             <input class="input-field bg-gray-50" id="f-name" readonly />
           </div>
+
           <div>
             <label class="block text-sm font-semibold text-gray-600 mb-1">Father's Name *</label>
             <input class="input-field" id="f-fathers-name" placeholder="Father's full name" />
           </div>
+
           <div>
             <label class="block text-sm font-semibold text-gray-600 mb-1">Date of Birth *</label>
             <input type="date" class="input-field" id="f-dob" max="" />
           </div>
+
           <div>
             <label class="block text-sm font-semibold text-gray-600 mb-1">Gender *</label>
             <select class="input-field" id="f-gender">
@@ -160,6 +147,7 @@
               <option>Other</option>
             </select>
           </div>
+
           <div>
             <label class="block text-sm font-semibold text-gray-600 mb-1">Marital Status *</label>
             <select class="input-field" id="f-marital">
@@ -170,6 +158,7 @@
               <option>Widowed</option>
             </select>
           </div>
+
           <div>
             <label class="block text-sm font-semibold text-gray-600 mb-1">Blood Group *</label>
             <select class="input-field" id="f-blood">
@@ -180,6 +169,7 @@
               <option>O+</option><option>O-</option>
             </select>
           </div>
+
           <div>
             <label class="block text-sm font-semibold text-gray-600 mb-1">Highest Education *</label>
             <select class="input-field" id="f-education">
@@ -194,25 +184,54 @@
               <option>PhD</option>
             </select>
           </div>
+
           <div>
             <label class="block text-sm font-semibold text-gray-600 mb-1">PAN Number *</label>
-            <input class="input-field" id="f-pan" placeholder="ABCDE1234F" maxlength="10"
-                   style="text-transform:uppercase" />
+            <input class="input-field" id="f-pan" placeholder="ABCDE1234F" maxlength="10" style="text-transform:uppercase" />
           </div>
         </div>
       </div>
 
-      <!-- SECTION 2: Address Details -->
+      <!-- ✅ UAN YES/NO -->
       <div class="section-card">
-        <h3 class="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
-          <span class="w-7 h-7 gradient-bg rounded-full flex items-center justify-center text-white text-sm font-bold">2</span>
-          Address Details
-        </h3>
+        <h3 class="text-lg font-bold text-gray-700 mb-4">PF / UAN Details</h3>
+
+        <label class="block text-sm font-semibold text-gray-600 mb-2">Do you already have UAN?</label>
+
+        <div class="flex gap-6 items-center mb-4">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="radio" name="uanAvailable" value="YES" onchange="toggleUan()">
+            <span class="text-sm text-gray-700">Yes</span>
+          </label>
+
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="radio" name="uanAvailable" value="NO" onchange="toggleUan()" checked>
+            <span class="text-sm text-gray-700">No</span>
+          </label>
+        </div>
+
+        <div id="uan-yes-box" class="hidden">
+          <label class="block text-sm font-semibold text-gray-600 mb-1">UAN Number (12 digits)</label>
+          <input class="input-field" id="f-uan" maxlength="12" placeholder="Enter your 12-digit UAN"
+                 oninput="this.value=this.value.replace(/\\D/g,'');">
+        </div>
+
+        <div id="uan-no-box" class="bg-blue-50 border border-blue-100 rounded-lg p-4">
+          <p class="text-sm text-blue-800 font-semibold mb-2">No UAN? Generate & activate UAN easily</p>
+          <p class="text-xs text-blue-700 mb-3">Watch the official EPFO guide and then proceed.</p>
+          https://www.youtube.com/watch?v=vw3k-w_3g1I
+            ▶ Official EPFO UAN Guide (YouTube)
+          </a>
+        </div>
+      </div>
+
+      <!-- SECTION 2 -->
+      <div class="section-card">
+        <h3 class="text-lg font-bold text-gray-700 mb-4">Address Details</h3>
         <div class="grid grid-cols-2 gap-4">
           <div class="col-span-2">
             <label class="block text-sm font-semibold text-gray-600 mb-1">Permanent Address *</label>
-            <textarea class="input-field" id="f-address" rows="3"
-                      placeholder="House No, Street, Area, Landmark"></textarea>
+            <textarea class="input-field" id="f-address" rows="3" placeholder="House No, Street, Area, Landmark"></textarea>
           </div>
           <div>
             <label class="block text-sm font-semibold text-gray-600 mb-1">District *</label>
@@ -220,22 +239,7 @@
           </div>
           <div>
             <label class="block text-sm font-semibold text-gray-600 mb-1">State *</label>
-            <select class="input-field" id="f-state">
-              <option value="">Select State</option>
-              <option>Andhra Pradesh</option><option>Assam</option>
-              <option>Bihar</option><option>Chhattisgarh</option>
-              <option>Delhi</option><option>Goa</option>
-              <option>Gujarat</option><option>Haryana</option>
-              <option>Himachal Pradesh</option><option>Jharkhand</option>
-              <option>Karnataka</option><option>Kerala</option>
-              <option>Madhya Pradesh</option><option>Maharashtra</option>
-              <option>Manipur</option><option>Meghalaya</option>
-              <option>Odisha</option><option>Punjab</option>
-              <option>Rajasthan</option><option>Tamil Nadu</option>
-              <option>Telangana</option><option>Uttar Pradesh</option>
-              <option>Uttarakhand</option><option>West Bengal</option>
-              <option>Other</option>
-            </select>
+            <input class="input-field" id="f-state" placeholder="State" />
           </div>
           <div>
             <label class="block text-sm font-semibold text-gray-600 mb-1">PIN Code *</label>
@@ -244,12 +248,9 @@
         </div>
       </div>
 
-      <!-- SECTION 3: Bank Details -->
+      <!-- SECTION 3 -->
       <div class="section-card">
-        <h3 class="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
-          <span class="w-7 h-7 gradient-bg rounded-full flex items-center justify-center text-white text-sm font-bold">3</span>
-          Bank Details
-        </h3>
+        <h3 class="text-lg font-bold text-gray-700 mb-4">Bank Details</h3>
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-semibold text-gray-600 mb-1">Bank Name *</label>
@@ -261,8 +262,7 @@
           </div>
           <div>
             <label class="block text-sm font-semibold text-gray-600 mb-1">IFSC Code *</label>
-            <input class="input-field" id="f-ifsc" placeholder="SBIN0001234" maxlength="11"
-                   style="text-transform:uppercase" />
+            <input class="input-field" id="f-ifsc" placeholder="SBIN0001234" maxlength="11" style="text-transform:uppercase" />
           </div>
           <div>
             <label class="block text-sm font-semibold text-gray-600 mb-1">Branch Name *</label>
@@ -271,12 +271,9 @@
         </div>
       </div>
 
-      <!-- SECTION 4: Nominee Details -->
+      <!-- SECTION 4 -->
       <div class="section-card">
-        <h3 class="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
-          <span class="w-7 h-7 gradient-bg rounded-full flex items-center justify-center text-white text-sm font-bold">4</span>
-          Nominee Details (EPF/Gratuity)
-        </h3>
+        <h3 class="text-lg font-bold text-gray-700 mb-4">Nominee Details</h3>
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-semibold text-gray-600 mb-1">Nominee Name *</label>
@@ -303,29 +300,75 @@
         </div>
       </div>
 
+      <!-- ✅ DOCUMENT UPLOADS -->
+      <div class="section-card">
+        <h3 class="text-lg font-bold text-gray-700 mb-4">📎 Upload Documents</h3>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-600 mb-1">Aadhaar (PDF/JPG/PNG)</label>
+            <input type="file" id="doc-aadhaar" accept=".pdf,.jpg,.jpeg,.png" class="input-field">
+            <button type="button" class="mt-2 w-full bg-blue-600 text-white py-2 rounded-lg text-sm font-semibold"
+                    onclick="uploadDoc('AADHAAR','doc-aadhaar')">Upload Aadhaar</button>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-600 mb-1">PAN (PDF/JPG/PNG)</label>
+            <input type="file" id="doc-pan" accept=".pdf,.jpg,.jpeg,.png" class="input-field">
+            <button type="button" class="mt-2 w-full bg-blue-600 text-white py-2 rounded-lg text-sm font-semibold"
+                    onclick="uploadDoc('PAN','doc-pan')">Upload PAN</button>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-600 mb-1">Bank Proof (PDF/JPG/PNG)</label>
+            <input type="file" id="doc-bank" accept=".pdf,.jpg,.jpeg,.png" class="input-field">
+            <button type="button" class="mt-2 w-full bg-blue-600 text-white py-2 rounded-lg text-sm font-semibold"
+                    onclick="uploadDoc('BANK_PROOF','doc-bank')">Upload Bank Proof</button>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-600 mb-1">Photo (JPG/PNG)</label>
+            <input type="file" id="doc-photo" accept=".jpg,.jpeg,.png" class="input-field">
+            <button type="button" class="mt-2 w-full bg-blue-600 text-white py-2 rounded-lg text-sm font-semibold"
+                    onclick="uploadDoc('PHOTO','doc-photo')">Upload Photo</button>
+          </div>
+        </div>
+
+        <div class="mt-4 bg-gray-50 border rounded-lg p-4">
+          <label class="block text-sm font-semibold text-gray-600 mb-1">Education / Experience (multiple files)</label>
+          <input type="file" id="doc-edu-exp" multiple accept=".pdf,.jpg,.jpeg,.png" class="input-field">
+          <button type="button" class="mt-2 w-full bg-blue-700 text-white py-2 rounded-lg text-sm font-semibold"
+                  onclick="uploadMultiple('EDU_EXP','doc-edu-exp')">Upload Education/Experience</button>
+        </div>
+
+        <div class="mt-4 flex items-center gap-2">
+          <button type="button" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-semibold"
+                  onclick="loadDocs()">Refresh Uploaded List</button>
+        </div>
+
+        <div id="docs-list" class="mt-4 text-sm text-gray-700"></div>
+      </div>
+
       <!-- CONSENT -->
       <div class="section-card">
         <label class="flex items-start gap-3 cursor-pointer">
           <input type="checkbox" id="f-consent" class="mt-1 w-4 h-4 rounded border-gray-300 text-blue-600" />
           <span class="text-sm text-gray-600">
             I hereby declare that all the information furnished above is true and correct to the best of my knowledge.
-            I consent to RSPL Health processing my personal data for employment purposes as per the
-            <strong>IT Act 2000</strong> and <strong>Indian Data Protection Bill</strong>.
           </span>
         </label>
       </div>
 
-      <!-- Error message -->
       <div id="form-error" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm"></div>
 
-      <!-- Submit button -->
       <button id="submit-btn" onclick="submitForm()"
-              class="w-full gradient-bg text-white py-4 rounded-xl font-bold text-lg hover:opacity-90 transition shadow-lg">
+        class="w-full gradient-bg text-white py-4 rounded-xl font-bold text-lg hover:opacity-90 transition shadow-lg">
         Submit Onboarding Form →
       </button>
+
     </div>
 
-    <!-- SUCCESS SCREEN -->
+    <!-- SUCCESS -->
     <div id="screen-success" class="hidden fade-in">
       <div class="section-card text-center py-12">
         <div class="text-6xl mb-4">🎉</div>
@@ -334,47 +377,10 @@
           Your joining form has been submitted successfully.<br/>
           Your HR team will review and get back to you soon.
         </p>
-
-        <!-- Status Timeline -->
-        <div class="max-w-sm mx-auto text-left mb-8">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm">✓</div>
-            <div>
-              <div class="font-semibold text-gray-800 text-sm">Link Sent</div>
-              <div class="text-xs text-gray-400">Onboarding link shared via SMS</div>
-            </div>
-          </div>
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm">✓</div>
-            <div>
-              <div class="font-semibold text-gray-800 text-sm">Form Submitted</div>
-              <div class="text-xs text-gray-400">Personal details submitted</div>
-            </div>
-          </div>
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center text-blue-600 text-sm">3</div>
-            <div>
-              <div class="font-semibold text-gray-500 text-sm">HR Review</div>
-              <div class="text-xs text-gray-400">Waiting for HR approval</div>
-            </div>
-          </div>
-          <div class="flex items-center gap-3">
-            <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-400 text-sm">4</div>
-            <div>
-              <div class="font-semibold text-gray-400 text-sm">Approved & Employee ID</div>
-              <div class="text-xs text-gray-400">Pending approval</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-blue-50 rounded-lg p-4 text-sm text-blue-700">
-          📧 You'll receive an email/SMS once approved with your Employee ID.
-          <br/>📞 Questions? Contact HR: hr@rspl.com | 9811001100
-        </div>
       </div>
     </div>
 
-  </div><!-- end max-w-3xl -->
+  </div>
 
   <!-- TOAST -->
   <div id="toast" class="fixed bottom-6 right-6 hidden z-50">
@@ -392,8 +398,7 @@
     }
 
     function showScreen(id) {
-      ["screen-loading","screen-invalid","screen-welcome",
-       "screen-form","screen-success","screen-submitted"]
+      ["screen-loading","screen-invalid","screen-welcome","screen-form","screen-success","screen-submitted"]
         .forEach(s => document.getElementById(s).classList.add("hidden"));
       document.getElementById(id).classList.remove("hidden");
     }
@@ -408,132 +413,52 @@
       setTimeout(() => t.classList.add("hidden"), 3500);
     }
 
-    // Set DOB max to 18 years ago
+    // ✅ UAN toggle
+    function toggleUan() {
+      const selected = document.querySelector('input[name="uanAvailable"]:checked')?.value || "NO";
+      const yesBox = document.getElementById("uan-yes-box");
+      const noBox  = document.getElementById("uan-no-box");
+
+      if (selected === "YES") {
+        yesBox.classList.remove("hidden");
+        noBox.classList.add("hidden");
+      } else {
+        yesBox.classList.add("hidden");
+        noBox.classList.remove("hidden");
+        const u = document.getElementById("f-uan");
+        if (u) u.value = "";
+      }
+    }
+
+    // DOB max = 18 years ago
     const maxDob = new Date();
     maxDob.setFullYear(maxDob.getFullYear() - 18);
     document.getElementById("f-dob").max = maxDob.toISOString().split("T")[0];
 
     async function init() {
       TOKEN = getTokenFromURL();
-      if (!TOKEN) {
-        showScreen("screen-invalid");
-        return;
-      }
+      if (!TOKEN) { showScreen("screen-invalid"); return; }
+
       try {
         const res = await fetch(`${API}/candidate/verify-token?token=${TOKEN}`);
         const data = await res.json();
-        if (!data.success) {
-          showScreen("screen-invalid");
-          return;
-        }
-        CANDIDATE = data.data;
 
-        // Pre-fill readonly name
+        if (!data.success) { showScreen("screen-invalid"); return; }
+
+        CANDIDATE = data.data;
         document.getElementById("f-name").value = CANDIDATE.employeeName;
         document.getElementById("welcome-name").textContent = CANDIDATE.employeeName;
-        document.getElementById("welcome-designation").textContent = CANDIDATE.designation;
+        document.getElementById("welcome-designation").textContent = CANDIDATE.designation || "";
 
         const status = CANDIDATE.joiningStatus;
         if (["FORM_SUBMITTED","SIGNED","APPROVED","REJECTED"].includes(status)) {
           showScreen("screen-submitted");
-          loadStatus();
         } else {
           showScreen("screen-welcome");
         }
-      } catch(e) {
-        // Demo mode if backend down
-        CANDIDATE = { candidateId: 1, employeeName: "Demo Candidate", designation: "Executive", joiningStatus: "INITIATED" };
-        document.getElementById("f-name").value = CANDIDATE.employeeName;
-        document.getElementById("welcome-name").textContent = CANDIDATE.employeeName;
-        document.getElementById("welcome-designation").textContent = CANDIDATE.designation;
-        showScreen("screen-welcome");
+      } catch (e) {
+        showScreen("screen-invalid");
       }
-    }
-
-    async function loadStatus() {
-      try {
-        const res = await fetch(`${API}/candidate/status?token=${TOKEN}`);
-        const data = await res.json();
-        if (data.success) {
-          const s = data.data.status;
-          const statusColors = {
-            FORM_SUBMITTED: "bg-purple-100 text-purple-700",
-            SIGNED:  "bg-yellow-100 text-yellow-700",
-            APPROVED:"bg-green-100 text-green-700",
-            REJECTED:"bg-red-100 text-red-700"
-          };
-          document.getElementById("status-timeline").innerHTML = `
-            <div class="text-center mb-4">
-              <span class="px-4 py-2 rounded-full text-sm font-bold ${statusColors[s] || 'bg-gray-100 text-gray-700'}">
-                Status: ${s.replace("_"," ")}
-              </span>
-            </div>
-            ${data.data.employeeId ? `<p class="text-center text-green-700 font-bold text-lg mt-3">🎉 Employee ID: ${data.data.employeeId}</p>` : ""}
-            ${data.data.rejectionReason ? `<p class="text-center text-red-600 mt-3 text-sm">Reason: ${data.data.rejectionReason}</p>` : ""}
-          `;
-        }
-      } catch(e) {}
-    }
-
-    function validateForm() {
-      const required = [
-        ["f-fathers-name", "Father's Name"],
-        ["f-dob",          "Date of Birth"],
-        ["f-gender",       "Gender"],
-        ["f-marital",      "Marital Status"],
-        ["f-blood",        "Blood Group"],
-        ["f-education",    "Highest Education"],
-        ["f-pan",          "PAN Number"],
-        ["f-address",      "Permanent Address"],
-        ["f-district",     "District"],
-        ["f-state",        "State"],
-        ["f-pin",          "PIN Code"],
-        ["f-bank-name",    "Bank Name"],
-        ["f-account",      "Account Number"],
-        ["f-ifsc",         "IFSC Code"],
-        ["f-branch",       "Branch Name"],
-        ["f-nominee-name", "Nominee Name"],
-        ["f-nominee-relation","Nominee Relation"],
-        ["f-nominee-dob",  "Nominee Date of Birth"],
-        ["f-nominee-address","Nominee Address"]
-      ];
-
-      for (const [id, label] of required) {
-        const el = document.getElementById(id);
-        if (!el || !el.value.trim()) {
-          showError(`Please fill: ${label}`);
-          el && el.scrollIntoView({ behavior: "smooth", block: "center" });
-          el && el.focus();
-          return false;
-        }
-      }
-
-      // PAN format
-      const pan = document.getElementById("f-pan").value.toUpperCase();
-      if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan)) {
-        showError("Invalid PAN format. Expected: ABCDE1234F");
-        return false;
-      }
-
-      // IFSC format
-      const ifsc = document.getElementById("f-ifsc").value.toUpperCase();
-      if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc)) {
-        showError("Invalid IFSC format. Expected: SBIN0001234");
-        return false;
-      }
-
-      // PIN code
-      const pin = document.getElementById("f-pin").value;
-      if (!/^\d{6}$/.test(pin)) {
-        showError("PIN Code must be exactly 6 digits");
-        return false;
-      }
-
-      if (!document.getElementById("f-consent").checked) {
-        showError("Please accept the declaration and consent to proceed");
-        return false;
-      }
-      return true;
     }
 
     function showError(msg) {
@@ -543,6 +468,73 @@
       setTimeout(() => el.classList.add("hidden"), 5000);
     }
 
+    function validateForm() {
+      const required = [
+        ["f-fathers-name", "Father's Name"],
+        ["f-dob", "Date of Birth"],
+        ["f-gender", "Gender"],
+        ["f-marital", "Marital Status"],
+        ["f-blood", "Blood Group"],
+        ["f-education", "Highest Education"],
+        ["f-pan", "PAN Number"],
+        ["f-address", "Permanent Address"],
+        ["f-district", "District"],
+        ["f-state", "State"],
+        ["f-pin", "PIN Code"],
+        ["f-bank-name", "Bank Name"],
+        ["f-account", "Account Number"],
+        ["f-ifsc", "IFSC Code"],
+        ["f-branch", "Branch Name"],
+        ["f-nominee-name", "Nominee Name"],
+        ["f-nominee-relation","Nominee Relation"],
+        ["f-nominee-dob", "Nominee Date of Birth"],
+        ["f-nominee-address","Nominee Address"]
+      ];
+
+      for (const [id, label] of required) {
+        const el = document.getElementById(id);
+        if (!el || !el.value.trim()) {
+          showError(`Please fill: ${label}`);
+          return false;
+        }
+      }
+
+      const pan = document.getElementById("f-pan").value.toUpperCase();
+      if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan)) {
+        showError("Invalid PAN format. Expected: ABCDE1234F");
+        return false;
+      }
+
+      const ifsc = document.getElementById("f-ifsc").value.toUpperCase();
+      if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc)) {
+        showError("Invalid IFSC format. Expected: SBIN0001234");
+        return false;
+      }
+
+      const pin = document.getElementById("f-pin").value;
+      if (!/^\d{6}$/.test(pin)) {
+        showError("PIN Code must be exactly 6 digits");
+        return false;
+      }
+
+      // ✅ UAN validation only if YES
+      const uanAvailable = document.querySelector('input[name="uanAvailable"]:checked')?.value || "NO";
+      if (uanAvailable === "YES") {
+        const uanNo = (document.getElementById("f-uan").value || "").trim();
+        if (!/^\d{12}$/.test(uanNo)) {
+          showError("UAN must be exactly 12 digits");
+          return false;
+        }
+      }
+
+      if (!document.getElementById("f-consent").checked) {
+        showError("Please accept the declaration to proceed");
+        return false;
+      }
+
+      return true;
+    }
+
     async function submitForm() {
       if (!validateForm()) return;
 
@@ -550,27 +542,34 @@
       btn.disabled = true;
       btn.textContent = "Submitting...";
 
+      const uanAvailable = document.querySelector('input[name="uanAvailable"]:checked')?.value || "NO";
+      const uanNo = (uanAvailable === "YES") ? (document.getElementById("f-uan").value || "").trim() : "";
+
       const payload = {
-        token:            TOKEN,
-        fathersName:      document.getElementById("f-fathers-name").value,
-        dob:              document.getElementById("f-dob").value,
-        gender:           document.getElementById("f-gender").value,
-        maritalStatus:    document.getElementById("f-marital").value,
-        bloodGroup:       document.getElementById("f-blood").value,
-        higherEducation:  document.getElementById("f-education").value,
-        panCardNo:        document.getElementById("f-pan").value.toUpperCase(),
-        permanentAddress: document.getElementById("f-address").value,
-        district:         document.getElementById("f-district").value,
-        state:            document.getElementById("f-state").value,
-        pinCode:          document.getElementById("f-pin").value,
-        bankName:         document.getElementById("f-bank-name").value,
-        bankAccountNo:    document.getElementById("f-account").value,
-        ifscCode:         document.getElementById("f-ifsc").value.toUpperCase(),
-        branchName:       document.getElementById("f-branch").value,
-        nomineeName:      document.getElementById("f-nominee-name").value,
-        nomineeRelation:  document.getElementById("f-nominee-relation").value,
-        nomineeDob:       document.getElementById("f-nominee-dob").value,
-        nomineeAddress:   document.getElementById("f-nominee-address").value
+        token: TOKEN,
+        fathersName: document.getElementById("f-fathers-name").value.trim(),
+        dob: document.getElementById("f-dob").value,
+        gender: document.getElementById("f-gender").value,
+        maritalStatus: document.getElementById("f-marital").value,
+        bloodGroup: document.getElementById("f-blood").value,
+        higherEducation: document.getElementById("f-education").value,
+        panCardNo: document.getElementById("f-pan").value.toUpperCase(),
+        permanentAddress: document.getElementById("f-address").value.trim(),
+        district: document.getElementById("f-district").value.trim(),
+        state: document.getElementById("f-state").value.trim(),
+        pinCode: document.getElementById("f-pin").value.trim(),
+        bankName: document.getElementById("f-bank-name").value.trim(),
+        bankAccountNo: document.getElementById("f-account").value.trim(),
+        ifscCode: document.getElementById("f-ifsc").value.toUpperCase(),
+        branchName: document.getElementById("f-branch").value.trim(),
+        nomineeName: document.getElementById("f-nominee-name").value.trim(),
+        nomineeRelation: document.getElementById("f-nominee-relation").value,
+        nomineeDob: document.getElementById("f-nominee-dob").value,
+        nomineeAddress: document.getElementById("f-nominee-address").value.trim(),
+
+        // ✅ NEW UAN fields
+        uanAvailable: uanAvailable,
+        uanNo: uanNo
       };
 
       try {
@@ -580,6 +579,7 @@
           body: JSON.stringify(payload)
         });
         const data = await res.json();
+
         if (data.success) {
           showToast("Form submitted successfully!", "green");
           showScreen("screen-success");
@@ -588,15 +588,103 @@
           btn.disabled = false;
           btn.textContent = "Submit Onboarding Form →";
         }
-      } catch(e) {
-        // Demo fallback
-        showToast("Form submitted! (Demo Mode)", "green");
-        showScreen("screen-success");
+      } catch (e) {
+        showToast("Submission failed (network). Try again.", "red");
+        btn.disabled = false;
+        btn.textContent = "Submit Onboarding Form →";
       }
     }
 
-    // Start
+    // ✅ Upload Single Document
+    async function uploadDoc(docType, inputId) {
+      const fileInput = document.getElementById(inputId);
+      if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        showToast("Please choose a file first", "red");
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const fd = new FormData();
+      fd.append("token", TOKEN);
+      fd.append("docType", docType);
+      fd.append("file", file);
+
+      try {
+        const res = await fetch(`${API}/candidate/documents/upload`, { method: "POST", body: fd });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`${docType} uploaded`, "green");
+          fileInput.value = "";
+          await loadDocs();
+        } else {
+          showToast(data.message || "Upload failed", "red");
+        }
+      } catch (e) {
+        showToast("Upload error: " + e.message, "red");
+      }
+    }
+
+    // ✅ Upload Multiple (Education/Experience)
+    async function uploadMultiple(docType, inputId) {
+      const fileInput = document.getElementById(inputId);
+      if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        showToast("Please choose one or more files", "red");
+        return;
+      }
+
+      try {
+        for (const file of fileInput.files) {
+          const fd = new FormData();
+          fd.append("token", TOKEN);
+          fd.append("docType", docType);
+          fd.append("file", file);
+
+          const res = await fetch(`${API}/candidate/documents/upload`, { method: "POST", body: fd });
+          const data = await res.json();
+          if (!data.success) {
+            showToast(`Upload failed for ${file.name}`, "red");
+            return;
+          }
+        }
+        showToast("Education/Experience uploaded", "green");
+        fileInput.value = "";
+        await loadDocs();
+      } catch (e) {
+        showToast("Upload error: " + e.message, "red");
+      }
+    }
+
+    // ✅ List uploaded docs
+    async function loadDocs() {
+      try {
+        const res = await fetch(`${API}/candidate/documents/list?token=${TOKEN}`);
+        const data = await res.json();
+
+        if (!data.success) {
+          document.getElementById("docs-list").innerHTML = "Unable to load documents";
+          return;
+        }
+
+        const rows = (data.data || []).map(d => `
+          <div class="flex items-center justify-between bg-gray-50 border rounded-lg px-3 py-2 mb-2">
+            <div>
+              <div class="font-semibold">${d.docType}</div>
+              <div class="text-xs text-gray-500">${d.originalName} • ${Math.round((d.fileSize||0)/1024)} KB</div>
+            </div>
+            ${API}/candidate/documents/download/${d.id}
+              Download
+            </a>
+          </div>
+        `).join("");
+
+        document.getElementById("docs-list").innerHTML = rows || "No documents uploaded yet.";
+      } catch (e) {
+        document.getElementById("docs-list").innerHTML = "Error loading docs: " + e.message;
+      }
+    }
+
     init();
   </script>
+
 </body>
 </html>
