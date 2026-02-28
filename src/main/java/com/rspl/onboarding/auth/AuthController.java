@@ -1,6 +1,6 @@
 package com.rspl.onboarding.auth;
 
-import com.rspl.onboarding.security.JwtTokenService;
+import com.rspl.onboarding.config.JwtTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,15 +15,23 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    @Autowired private AuthenticationManager authenticationManager;
-    @Autowired private JwtTokenService jwtTokenService;
-    @Autowired private UserDetailsService userDetailsService;
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private JwtTokenService jwtTokenService;
+
+    @Autowired
+    private UserDetailsService userDetailsService;
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody LoginRequest request) {
 
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+                new UsernamePasswordAuthenticationToken(
+                        request.getUsername(),
+                        request.getPassword()
+                )
         );
 
         final UserDetails userDetails =
@@ -39,15 +47,15 @@ public class AuthController {
         ));
     }
 
-    // If you prefer, move this into its own file LoginRequest.java
-    static class LoginRequest {
+    // You can move this into a separate file if you prefer: LoginRequest.java
+    public static class LoginRequest {
         private String username;
         private String password;
 
         public String getUsername() { return username; }
-        public void setUsername(String v) { this.username = v; }
+        public void setUsername(String username) { this.username = username; }
 
         public String getPassword() { return password; }
-        public void setPassword(String v) { this.password = v; }
+        public void setPassword(String password) { this.password = password; }
     }
 }
