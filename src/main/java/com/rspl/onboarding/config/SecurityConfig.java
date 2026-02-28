@@ -10,6 +10,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -21,7 +22,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Autowired private JwtAuthFilter jwtAuthFilter;         // ✅ FIXED
+    @Autowired private JwtAuthFilter jwtAuthFilter;
     @Autowired private UserDetailsService userDetailsService;
 
     @Bean
@@ -43,6 +44,13 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
+    // ✅ ADDED — bypasses filter chain entirely for static/browser resources
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return web -> web.ignoring()
+                .requestMatchers("/favicon.ico", "/static/**", "/error");
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
@@ -54,12 +62,12 @@ public class SecurityConfig {
                     "/onboarding.html",
                     "/favicon.ico",
                     "/",
-                    "/health"          // ✅ ADDED
+                    "/health"
                 ).permitAll()
                 .requestMatchers("/api/hr/**").authenticated()
                 .anyRequest().permitAll()
             )
-            .authenticationProvider(authenticationProvider())  // ✅ ADDED
+            .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
