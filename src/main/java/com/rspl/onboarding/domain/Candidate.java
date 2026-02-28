@@ -64,7 +64,7 @@ public class Candidate {
     private String mothersName;
 
     @Column(name = "dob")
-    private String dob; // yyyy-MM-dd from HTML date input
+    private String dob;
 
     @Column(name = "gender")
     private String gender;
@@ -87,13 +87,17 @@ public class Candidate {
     @Column(name = "pan_card_no")
     private String panCardNo;
 
+    // ✅ NEW: UAN availability flag
+    @Column(name = "uan_available")
+    private String uanAvailable; // YES / NO
+
     @Column(name = "uan_no")
     private String uanNo;
 
     @Column(name = "esi_no")
     private String esiNo;
 
-    // ===== Address (Excel matched) =====
+    // ===== Address =====
     @Column(name = "permanent_address", length = 500)
     private String permanentAddress;
 
@@ -112,14 +116,13 @@ public class Candidate {
     @Column(name = "hq_district")
     private String hqDistrict;
 
-    // ===== Employment (Excel matched) =====
+    // ===== Employment =====
     @Column(name = "department")
     private String department;
 
     @Column(name = "date_of_joining")
-    private String dateOfJoining; // yyyy-MM-dd
+    private String dateOfJoining;
 
-    // Previous employment block
     @Column(name = "prev_org_name")
     private String prevOrgName;
 
@@ -127,10 +130,10 @@ public class Candidate {
     private String prevOrgLocation;
 
     @Column(name = "prev_emp_from")
-    private String prevEmpFrom; // yyyy-MM-dd
+    private String prevEmpFrom;
 
     @Column(name = "prev_emp_to")
-    private String prevEmpTo; // yyyy-MM-dd
+    private String prevEmpTo;
 
     @Column(name = "prev_nature_of_job")
     private String prevNatureOfJob;
@@ -154,7 +157,7 @@ public class Candidate {
     @Column(name = "branch_name")
     private String branchName;
 
-    // ===== Nominee (Excel matched) =====
+    // ===== Nominee =====
     @Column(name = "nominee_name")
     private String nomineeName;
 
@@ -252,6 +255,10 @@ public class Candidate {
 
     public String getPanCardNo() { return panCardNo; }
     public void setPanCardNo(String panCardNo) { this.panCardNo = panCardNo; }
+
+    // ✅ NEW getters/setters
+    public String getUanAvailable() { return uanAvailable; }
+    public void setUanAvailable(String uanAvailable) { this.uanAvailable = uanAvailable; }
 
     public String getUanNo() { return uanNo; }
     public void setUanNo(String uanNo) { this.uanNo = uanNo; }
