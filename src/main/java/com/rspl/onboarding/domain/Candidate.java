@@ -87,7 +87,7 @@ public class Candidate {
     @Column(name = "pan_card_no")
     private String panCardNo;
 
-    // ✅ NEW: UAN availability flag
+    // PF/UAN
     @Column(name = "uan_available")
     private String uanAvailable; // YES / NO
 
@@ -180,7 +180,19 @@ public class Candidate {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
 
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
     // ===== Getters & Setters =====
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -256,7 +268,6 @@ public class Candidate {
     public String getPanCardNo() { return panCardNo; }
     public void setPanCardNo(String panCardNo) { this.panCardNo = panCardNo; }
 
-    // ✅ NEW getters/setters
     public String getUanAvailable() { return uanAvailable; }
     public void setUanAvailable(String uanAvailable) { this.uanAvailable = uanAvailable; }
 
@@ -351,3 +362,4 @@ public class Candidate {
         return hr;
     }
 }
+``
