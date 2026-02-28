@@ -1,62 +1,73 @@
 package com.rspl.onboarding.auth;
 
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 @Service
 public class JwtService {
 
-    @Value("${jwt.secret:rspl_jwt_secret_key_minimum_32_characters_long_2026}")
-    private String secret;
+    private static final long EXPIRATION_MS = 1000 * 60 * 60 * 24; // 24 hours
+    private final Key signingKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
-    private static final long HR_TOKEN_EXPIRY_MS = 8 * 60 * 60 * 1000L; // 8 hours
-
-    private Key getKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes());
+    // ── Called by AuthController ──────────────────────────────────────────────
+    public String generateToken(UserDetails userDetails) {
+        return generateToken(new HashMap<>(), userDetails);
     }
 
-    public String generateHRToken(String username, String role) {
+    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
         return Jwts.builder()
-            .setSubject(username)
-            .addClaims(Map.of("role", role, "type", "HR_SESSION"))
-            .setIssuedAt(new Date())
-            .setExpiration(new Date(System.currentTimeMillis() + HR_TOKEN_EXPIRY_MS))
-            .signWith(getKey(), SignatureAlgorithm.HS512)
-            .compact();
+                .setClaims(extraClaims)
+                .setSubject(userDetails.getUsername())
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_MS))
+                .signWith(signingKey)
+                .compact();
     }
 
-    public String extractUsername(String token) {
-        return getClaims(token).getSubject();
-    }
-
-    public String extractRole(String token) {
-        return (String) getClaims(token).get("role");
-    }
-
-    public boolean isHRToken(String token) {
-        return "HR_SESSION".equals(getClaims(token).get("type"));
-    }
-
-    public boolean isValid(String token) {
+    // ── Called by JwtAuthenticationFilter ────────────────────────────────────
+    public boolean isTokenValid(String token, UserDetails userDetails) {
         try {
-            Claims claims = getClaims(token);
-            return claims.getExpiration().after(new Date()) && isHRToken(token);
+            final String username = extractUsername(token);
+            return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
     }
 
-    private Claims getClaims(String token) {
+    public String extractUsername(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    // ── Internal helpers ──────────────────────────────────────────────────────
+    private boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
+
+    private Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
+
+    private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+
+    private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
-            .setSigningKey(getKey())
-            .build()
-            .parseClaimsJws(token)
-            .getBody();
+                .setSigningKey(signingKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 }
