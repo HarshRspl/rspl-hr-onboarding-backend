@@ -45,11 +45,25 @@ public class JwtService {
         }
     }
 
+    // ── Called by JwtAuthFilter ───────────────────────────────────────────────
+    public boolean isValid(String token) {
+        try {
+            extractAllClaims(token);
+            return !isTokenExpired(token);
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    public String extractRole(String token) {
+        return extractClaim(token, claims -> claims.get("role", String.class));
+    }
+
+    // ── Shared helpers ────────────────────────────────────────────────────────
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
-    // ── Internal helpers ──────────────────────────────────────────────────────
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
