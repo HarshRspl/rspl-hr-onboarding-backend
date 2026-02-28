@@ -1,6 +1,6 @@
 package com.rspl.onboarding.auth;
 
-import com.rspl.onboarding.config.JwtTokenService;
+import com.rspl.onboarding.config.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
