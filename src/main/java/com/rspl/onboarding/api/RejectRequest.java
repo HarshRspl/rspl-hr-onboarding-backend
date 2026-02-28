@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 public class RejectRequest {
 
     @NotBlank(message = "Rejection reason is required")
-    private String rejectionReason;  // ✅ matches HrController + frontend JSON
+    private String rejectionReason;
 
     private String rejectedBy;
 
