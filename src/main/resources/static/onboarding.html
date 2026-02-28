@@ -4,7 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>RSPL – Candidate Onboarding</title>
-  <script src="https://cdn.tailwindcss.comstyle>
+
+  <!-- ✅ FIXED Tailwind include -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
     body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; }
     .brand-gradient { background: linear-gradient(135deg, #0f2d4d 0%, #2563eb 100%); }
     .card { background: #fff; border-radius: 16px; box-shadow: 0 10px 30px rgba(2,6,23,.08); }
@@ -30,7 +34,6 @@
     </div>
   </header>
 
-  <!-- MAIN -->
   <main class="max-w-6xl mx-auto px-4 py-6 pb-16">
 
     <!-- LOADING -->
@@ -63,7 +66,6 @@
 
         <div id="done-box" class="mt-6"></div>
 
-        <!-- ✅ NEW: Edit button -->
         <div id="edit-actions" class="mt-6 hidden">
           <button onclick="startEdit()"
             class="w-full bg-slate-900 text-white font-extrabold py-3 rounded-xl hover:bg-black">
@@ -180,8 +182,6 @@
 
         <!-- RIGHT CONTENT -->
         <section class="md:col-span-8 space-y-6">
-
-          <!-- Error area -->
           <div id="err" class="hidden rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"></div>
 
           <!-- STEP 1 -->
@@ -277,14 +277,14 @@
               <div id="uan-yes" class="hidden mt-4">
                 <label class="text-xs font-bold text-slate-500 uppercase">UAN Number (12 digits)</label>
                 <input id="f-uan" class="field" maxlength="12" placeholder="Enter 12-digit UAN"
-                       oninput="this.value=this.value.replace(/\D/g,'')"/>
+                       oninput="this.value=this.value.replace(/\\D/g,'')"/>
               </div>
 
               <div id="uan-no" class="mt-4">
                 <div class="rounded-xl bg-blue-50 border border-blue-100 p-4">
                   <div class="text-sm font-bold text-blue-900">No UAN? Generate & activate easily</div>
                   <div class="text-xs text-blue-800 mt-1">Watch the Official EPFO guide video.</div>
-                  https://www.youtube.com/watch?v=vw3k-w_3g1I
+                  <a class="text-blue-900 font-bold underline text-sm" href="https://www.youtube.com/watch?v=vw3k-w_3g1I" target="_blank" rel="noreferrer">
                     ▶ Official EPFO UAN Guide (YouTube)
                   </a>
                 </div>
@@ -327,7 +327,7 @@
               <div>
                 <label class="text-xs font-bold text-slate-500 uppercase">PIN Code *</label>
                 <input id="f-pin" class="field" maxlength="6" placeholder="6-digit PIN"
-                       oninput="this.value=this.value.replace(/\D/g,'')"/>
+                       oninput="this.value=this.value.replace(/\\D/g,'')"/>
               </div>
             </div>
 
@@ -418,7 +418,7 @@
             </div>
           </div>
 
-          <!-- STEP 5: DOCUMENTS -->
+          <!-- STEP 5 -->
           <div id="step-5" class="card p-6 hidden">
             <div class="flex items-start justify-between gap-4">
               <div>
@@ -470,7 +470,7 @@
               </div>
             </div>
 
-            <!-- Tabs for Education vs Employment -->
+            <!-- Education / Employment Tabs -->
             <div class="mt-5 rounded-2xl border p-4">
               <div class="flex items-center justify-between gap-4 flex-wrap">
                 <div>
@@ -485,7 +485,7 @@
                     Education
                   </button>
 
-                  <button type="button" id="tab-exp"
+                  <button type="button" id="tab-emp"
                           onclick="setDocTab('emp')"
                           class="px-4 py-2 rounded-lg text-sm font-bold text-slate-600 hover:text-slate-900">
                     Employment
@@ -493,7 +493,6 @@
                 </div>
               </div>
 
-              <!-- Education Panel -->
               <div id="panel-edu" class="mt-4">
                 <div class="rounded-xl bg-indigo-50 border border-indigo-100 p-4">
                   <div class="font-bold text-indigo-900">Education Documents (Multiple)</div>
@@ -508,7 +507,6 @@
                 </div>
               </div>
 
-              <!-- Employment Panel -->
               <div id="panel-emp" class="mt-4 hidden">
                 <div class="rounded-xl bg-emerald-50 border border-emerald-100 p-4">
                   <div class="font-bold text-emerald-900">Employment Documents (Multiple)</div>
@@ -582,11 +580,10 @@
 
 <script>
   const API = "https://rspl-hr-onboarding-backend-production.up.railway.app/api";
+
   let TOKEN = null;
   let CAND = null;
   let STEP = 1;
-
-  // ✅ NEW: mode tracking
   let MODE = "new"; // "new" | "edit"
 
   function qs(k){ return new URLSearchParams(location.search).get(k); }
@@ -619,15 +616,22 @@
     const v = document.querySelector('input[name="uanAvailable"]:checked')?.value || "NO";
     const yes = document.getElementById("uan-yes");
     const no = document.getElementById("uan-no");
-    if(v==="YES"){ yes.classList.remove("hidden"); no.classList.add("hidden"); }
-    else { yes.classList.add("hidden"); no.classList.remove("hidden"); const u=document.getElementById("f-uan"); if(u) u.value=""; }
+
+    if(v==="YES"){
+      yes.classList.remove("hidden");
+      no.classList.add("hidden");
+    } else {
+      yes.classList.add("hidden");
+      no.classList.remove("hidden");
+      const u=document.getElementById("f-uan");
+      if(u) u.value="";
+    }
     updateProgress();
   }
 
-  // ✅ Tabs: Education vs Employment
   function setDocTab(tab){
     const tabEdu = document.getElementById("tab-edu");
-    const tabEmp = document.getElementById("tab-exp");
+    const tabEmp = document.getElementById("tab-emp");
     const panelEdu = document.getElementById("panel-edu");
     const panelEmp = document.getElementById("panel-emp");
 
@@ -682,7 +686,7 @@
     if(uanYes) ids.push("f-uan");
 
     const filled = ids.filter(id => (document.getElementById(id)?.value || "").trim() !== "").length;
-    const total = ids.length + 1; // + consent
+    const total = ids.length + 1;
     const consent = document.getElementById("f-consent")?.checked ? 1 : 0;
     const pct = Math.round(((filled + consent) / total) * 100);
 
@@ -737,7 +741,6 @@
     return true;
   }
 
-  // ✅ NEW: Prefill helper for Edit mode
   function fillForm(d){
     document.getElementById("f-fathers-name").value = d.fathersName || "";
     document.getElementById("f-dob").value = d.dob || "";
@@ -774,7 +777,6 @@
     updateProgress();
   }
 
-  // ✅ NEW: Edit flow
   async function startEdit(){
     MODE = "edit";
     show("scr-wizard");
@@ -841,9 +843,7 @@
     btn.textContent = (MODE === "edit") ? "Updating…" : "Submitting…";
 
     try{
-      const endpoint = (MODE === "edit")
-        ? `${API}/candidate/update-form`
-        : `${API}/candidate/submit-form`;
+      const endpoint = (MODE === "edit") ? `${API}/candidate/update-form` : `${API}/candidate/submit-form`;
 
       const res = await fetch(endpoint, {
         method:"POST",
@@ -922,6 +922,7 @@
     try{
       const res = await fetch(`${API}/candidate/documents/list?token=${TOKEN}`);
       const data = await res.json();
+
       if(!data.success){
         document.getElementById("docs-list").innerHTML = "Unable to load documents";
         return;
@@ -932,9 +933,8 @@
 
       docs.forEach(d=>{
         const k = (d.docType || "").toUpperCase();
-        const key = (k === "EXPERIENCE") ? "EMPLOYMENT" : k; // backward compatibility
-        if(!groups[key]) groups[key] = [];
-        groups[key].push(d);
+        const key = (k === "EXPERIENCE") ? "EMPLOYMENT" : k;
+        (groups[key] = groups[key] || []).push(d);
       });
 
       const renderGroup = (title, items) => {
@@ -942,16 +942,26 @@
         return `
           <div class="mt-4">
             <div class="text-sm font-extrabold text-slate-900 mb-2">${title}</div>
-            ${items.map(d=>`
+            ${items.map(d => `
               <div class="flex items-center justify-between rounded-xl border bg-white px-4 py-3 mb-2">
                 <div>
-                  <div class="font-bold text-slate-800">${d.originalName}</div>
-                  <div class="text-xs text-slate-500">${Math.round((d.fileSize||0)/1024)} KB • ${d.uploadedAt || ""}</div>
+                  <div class="font-bold text-slate-800">${d.originalName || "Document"}</div>
+                  <div class="text-xs text-slate-500">
+                    ${Math.round(((d.fileSize || 0)/1024))} KB • ${(d.uploadedAt || "")}
+                  </div>
                 </div>
                 <a class="text-blue-700 font-bold text-sm underline"
-                   href="${API}/candidate/documents/download/${d.id}" target="_blank">Download</a>
+                   href="${API}/candidate/documents/download/${d.id}" target="_blank" rel="noreferrer">
+                   Download
+                </a>
               </div>
-           aar", groups.AADHAAR) +
+            `).join("")}
+          </div>
+        `;
+      };
+
+      const html =
+        renderGroup("Aadhaar", groups.AADHAAR) +
         renderGroup("PAN", groups.PAN) +
         renderGroup("Bank Proof", groups.BANK_PROOF) +
         renderGroup("Photo", groups.PHOTO) +
@@ -973,6 +983,7 @@
     try{
       const res = await fetch(`${API}/candidate/verify-token?token=${TOKEN}`);
       const data = await res.json();
+
       if(!data.success){ show("scr-invalid"); return; }
 
       CAND = data.data;
@@ -991,7 +1002,6 @@
       if(done.includes((CAND.joiningStatus || "").toUpperCase())){
         show("scr-done");
 
-        // ✅ show Edit only when allowed
         const canEdit = ["FORM_SUBMITTED","REJECTED"].includes((CAND.joiningStatus || "").toUpperCase());
         if(canEdit){
           document.getElementById("edit-actions").classList.remove("hidden");
@@ -1001,14 +1011,16 @@
           const sr = await fetch(`${API}/candidate/status?token=${TOKEN}`);
           const sd = await sr.json();
           if(sd.success){
-            const s = sd.data;
+            const s = sd.data || {};
             document.getElementById("done-box").innerHTML = `
-              <div class="inline-block chip bg-slate-100 text-slate-700 border">${(s.status||"").replaceAll("_"," ")}</div>
+              <div class="inline-block chip bg-slate-100 text-slate-700 border">
+                ${(s.status || "").replaceAll("_"," ")}
+              </div>
               ${s.employeeId ? `<div class="mt-3 text-lg font-extrabold text-emerald-700">Employee ID: ${s.employeeId}</div>` : ""}
               ${s.rejectionReason ? `<div class="mt-3 text-sm text-red-700">Reason: ${s.rejectionReason}</div>` : ""}
             `;
           }
-        } catch(e){}
+        }catch(e){}
 
         return;
       }
@@ -1019,9 +1031,8 @@
     }
   }
 
-  // set DOB max (18 years)
+  // Set DOB max to 18 years
   const mx = new Date(); mx.setFullYear(mx.getFullYear()-18);
-
   document.addEventListener("DOMContentLoaded", ()=>{
     const dob = document.getElementById("f-dob");
     if(dob) dob.max = mx.toISOString().split("T")[0];
