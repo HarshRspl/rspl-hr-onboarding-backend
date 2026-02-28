@@ -1,771 +1,722 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RSPL HR Onboarding</title>
-
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RSPL HR – Onboarding Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-
   <style>
-    body { font-family: "Segoe UI", sans-serif; }
-    .gradient-bg { background: linear-gradient(135deg, #1e3a5f 0%, #3b82f6 100%); }
-    .card { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-
-    .status-badge {
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-      display: inline-block;
-      white-space: nowrap;
+    body { font-family:"Segoe UI",sans-serif; background:#f1f5f9; }
+    .gbg  { background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%); }
+    .card { background:white; border-radius:14px; box-shadow:0 2px 14px rgba(0,0,0,.07); }
+    .badge {
+      display:inline-flex; align-items:center;
+      padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700;
     }
-
-    .initiated { background: #dbeafe; color: #1d4ed8; }
-    .approved { background: #dcfce7; color: #166534; }
-    .rejected { background: #fee2e2; color: #991b1b; }
-    .signed { background: #fef9c3; color: #854d0e; }
-    .formsubmitted { background: #ede9fe; color: #5b21b6; }
-
-    .tab-active { background: #3b82f6; color: white; }
-    .tab-inactive { background: #f1f5f9; color: #64748b; }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+    .b-initiated      { background:#eff6ff; color:#2563eb; }
+    .b-form_submitted { background:#f5f3ff; color:#7c3aed; }
+    .b-signed         { background:#fefce8; color:#b45309; }
+    .b-approved       { background:#f0fdf4; color:#16a34a; }
+    .b-rejected       { background:#fef2f2; color:#dc2626; }
+    .ifield {
+      width:100%; border:1.5px solid #e2e8f0; border-radius:9px;
+      padding:10px 13px; font-size:14px; outline:none;
+      transition:border-color .2s,box-shadow .2s;
     }
-    .fade-in { animation: fadeIn 0.3s ease; }
+    .ifield:focus { border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.12); }
+    .lbl { display:block; font-size:11px; font-weight:700; color:#64748b;
+           text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; }
+    .overlay {
+      position:fixed; inset:0; background:rgba(0,0,0,.45);
+      display:none; z-index:50; align-items:center; justify-content:center;
+    }
+    .overlay.open { display:flex; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    .modal-box { animation:fadeUp .3s ease; }
+    .tab-btn { padding:8px 18px; border-radius:8px; font-size:13px; font-weight:600;
+               color:#64748b; cursor:pointer; transition:all .2s; }
+    .tab-btn.active { background:#2563eb; color:white; }
+    .tab-btn:not(.active):hover { background:#f1f5f9; }
+    .action-btn {
+      padding:5px 14px; border-radius:7px; font-size:12px; font-weight:700;
+      cursor:pointer; transition:all .15s; border:none;
+    }
+    tr:hover td { background:#f8fafc; }
   </style>
 </head>
+<body>
 
-<body class="bg-gray-50 min-h-screen">
+<!-- ═══ NAVBAR ═══ -->
+<nav class="gbg text-white px-6 py-3.5 flex items-center gap-4 shadow-lg sticky top-0 z-30">
+  <div class="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center font-black text-xl">R</div>
+  <div>
+    <div class="font-bold text-base leading-tight">RSPL Health</div>
+    <div class="text-xs text-blue-200">HR Onboarding Dashboard</div>
+  </div>
 
-  <!-- TOP NAV -->
-  <nav class="gradient-bg text-white px-6 py-4 flex items-center justify-between shadow-lg">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-xl">
-        <span class="font-bold">R</span>
+  <div class="ml-auto flex items-center gap-4">
+    <!-- Logged-in user -->
+    <div class="hidden md:flex items-center gap-2 bg-white/10 rounded-xl px-4 py-2">
+      <div class="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-sm font-bold"
+           id="user-avatar">?</div>
+      <div>
+        <p class="text-xs font-bold leading-tight" id="hr-user-name">Loading…</p>
+        <p class="text-xs text-blue-200 leading-tight" id="hr-user-role"></p>
+      </div>
+    </div>
+
+    <!-- Logout -->
+    <button onclick="logout()"
+            class="flex items-center gap-2 bg-white/10 hover:bg-white/20
+                   text-white px-4 py-2 rounded-xl text-sm font-semibold transition">
+      🚪 Logout
+    </button>
+  </div>
+</nav>
+
+<!-- ═══ MAIN ═══ -->
+<div class="max-w-7xl mx-auto px-4 py-6">
+
+  <!-- Stats Row -->
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+    <div class="card p-4 text-center">
+      <p class="text-2xl font-black text-gray-800" id="stat-total">–</p>
+      <p class="text-xs text-gray-500 font-semibold mt-1">Total</p>
+    </div>
+    <div class="card p-4 text-center">
+      <p class="text-2xl font-black text-blue-600" id="stat-initiated">–</p>
+      <p class="text-xs text-gray-500 font-semibold mt-1">Initiated</p>
+    </div>
+    <div class="card p-4 text-center">
+      <p class="text-2xl font-black text-purple-600" id="stat-submitted">–</p>
+      <p class="text-xs text-gray-500 font-semibold mt-1">Submitted</p>
+    </div>
+    <div class="card p-4 text-center">
+      <p class="text-2xl font-black text-green-600" id="stat-approved">–</p>
+      <p class="text-xs text-gray-500 font-semibold mt-1">Approved</p>
+    </div>
+    <div class="card p-4 text-center">
+      <p class="text-2xl font-black text-red-500" id="stat-rejected">–</p>
+      <p class="text-xs text-gray-500 font-semibold mt-1">Rejected</p>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="card px-5 py-4 mb-5 flex flex-col md:flex-row md:items-center gap-3">
+    <!-- Tabs -->
+    <div class="flex gap-1 flex-wrap" id="tab-bar">
+      <button class="tab-btn active" data-status="" onclick="setTab(this,'')">All</button>
+      <button class="tab-btn" data-status="INITIATED"       onclick="setTab(this,'INITIATED')">Initiated</button>
+      <button class="tab-btn" data-status="FORM_SUBMITTED"  onclick="setTab(this,'FORM_SUBMITTED')">Submitted</button>
+      <button class="tab-btn" data-status="SIGNED"          onclick="setTab(this,'SIGNED')">Signed</button>
+      <button class="tab-btn" data-status="APPROVED"        onclick="setTab(this,'APPROVED')">Approved</button>
+      <button class="tab-btn" data-status="REJECTED"        onclick="setTab(this,'REJECTED')">Rejected</button>
+    </div>
+
+    <div class="md:ml-auto flex gap-2">
+      <!-- Search -->
+      <input id="search-input" class="ifield w-52" placeholder="🔍 Search name / mobile…"
+             oninput="debounceSearch()"/>
+      <!-- Refresh -->
+      <button onclick="loadCandidates()"
+              class="action-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4">
+        ↻ Refresh
+      </button>
+      <!-- Initiate -->
+      <button onclick="openInitiate()"
+              class="action-btn gbg text-white px-5 py-2 text-sm shadow">
+        + Initiate Candidate
+      </button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="card overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-100">
+            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wide">#</th>
+            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wide">Employee</th>
+            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wide">Mobile</th>
+            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wide">Designation</th>
+            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wide">Assigned HR</th>
+            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wide">Status</th>
+            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wide">Link</th>
+            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wide">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="candidates-tbody">
+          <tr><td colspan="8" class="text-center py-14 text-gray-400">Loading candidates…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="flex items-center justify-between px-5 py-4 border-t border-gray-100">
+      <span class="text-xs text-gray-500" id="page-info">–</span>
+      <div class="flex gap-2">
+        <button onclick="prevPage()" id="btn-prev"
+                class="action-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-2 disabled:opacity-40">
+          ← Prev
+        </button>
+        <button onclick="nextPage()" id="btn-next"
+                class="action-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-2 disabled:opacity-40">
+          Next →
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: INITIATE CANDIDATE ═══ -->
+<div class="overlay" id="modal-initiate">
+  <div class="card modal-box w-full max-w-lg mx-4 p-7 relative max-h-screen overflow-y-auto">
+    <button onclick="closeModal('modal-initiate')"
+            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+    <h2 class="text-lg font-bold text-gray-800 mb-5">➕ Initiate New Candidate</h2>
+
+    <div class="space-y-4">
+      <div>
+        <label class="lbl">Employee Name *</label>
+        <input class="ifield" id="i-name" placeholder="Full name"/>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="lbl">Mobile *</label>
+          <input class="ifield" id="i-mobile" placeholder="10-digit mobile" maxlength="10"/>
+        </div>
+        <div>
+          <label class="lbl">Aadhaar No</label>
+          <input class="ifield" id="i-aadhaar" placeholder="12-digit Aadhaar" maxlength="12"/>
+        </div>
       </div>
       <div>
-        <div class="font-bold text-lg">RSPL Health</div>
-        <div class="text-xs text-blue-200">HR Onboarding Portal</div>
+        <label class="lbl">Email ID</label>
+        <input type="email" class="ifield" id="i-email" placeholder="candidate@email.com"/>
+      </div>
+      <div>
+        <label class="lbl">Designation *</label>
+        <input class="ifield" id="i-designation" placeholder="e.g. Sales Executive"/>
+      </div>
+      <div>
+        <label class="lbl">Assign HR</label>
+        <select class="ifield" id="i-hr">
+          <option value="">Select HR (optional)</option>
+        </select>
+      </div>
+      <div>
+        <label class="lbl">Send Link via SMS</label>
+        <select class="ifield" id="i-sendlink">
+          <option value="true">Yes – Send immediately</option>
+          <option value="false">No – Send manually later</option>
+        </select>
       </div>
     </div>
 
-    <div class="flex gap-2">
-      <button onclick="showTab('dashboard')" id="tab-dashboard"
-        class="tab-active px-4 py-2 rounded-lg text-sm font-semibold transition">
-        Dashboard
+    <div id="initiate-error"
+         class="hidden mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-xl text-sm">
+    </div>
+
+    <div class="flex gap-3 mt-6">
+      <button onclick="closeModal('modal-initiate')"
+              class="flex-1 bg-gray-100 text-gray-600 py-2.5 rounded-xl font-semibold hover:bg-gray-200 transition">
+        Cancel
       </button>
-      <button onclick="showTab('candidates')" id="tab-candidates"
-        class="tab-inactive px-4 py-2 rounded-lg text-sm font-semibold transition">
-        Candidates
-      </button>
-      <button onclick="showTab('initiate')" id="tab-initiate"
-        class="tab-inactive px-4 py-2 rounded-lg text-sm font-semibold transition">
-        Initiate
-      </button>
-      <button onclick="showTab('team')" id="tab-team"
-        class="tab-inactive px-4 py-2 rounded-lg text-sm font-semibold transition">
-        HR Team
-      </button>
-    </div>
-  </nav>
-
-  <!-- MAIN CONTENT -->
-  <div class="p-6">
-
-    <!-- DASHBOARD TAB -->
-    <div id="tab-dashboard-content" class="fade-in">
-      <h2 class="text-2xl font-bold text-gray-800 mb-6">Dashboard Overview</h2>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="stats-grid"></div>
-
-      <div class="card p-6">
-        <h3 class="font-bold text-gray-700 mb-4">Recent Candidates</h3>
-        <div id="recent-list"></div>
-      </div>
-    </div>
-
-    <!-- CANDIDATES TAB -->
-    <div id="tab-candidates-content" class="hidden fade-in">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">All Candidates</h2>
-
-        <div class="flex gap-2">
-          <input id="search-input" type="text" placeholder="Search name/email..."
-            class="border rounded-lg px-4 py-2 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            oninput="filterCandidates()" />
-
-          <select id="status-filter" onchange="filterCandidates()"
-            class="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
-            <option value="">All Status</option>
-            <option value="INITIATED">Initiated</option>
-            <option value="FORM_SUBMITTED">Form Submitted</option>
-            <option value="SIGNED">Signed</option>
-            <option value="APPROVED">Approved</option>
-            <option value="REJECTED">Rejected</option>
-          </select>
-        </div>
-      </div>
-
-      <div id="candidates-table"></div>
-    </div>
-
-    <!-- INITIATE TAB -->
-    <div id="tab-initiate-content" class="hidden fade-in">
-      <div class="max-w-2xl mx-auto">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">Initiate New Candidate</h2>
-
-        <div class="card p-8">
-          <form id="initiate-form" onsubmit="submitCandidate(event)">
-            <div class="grid grid-cols-2 gap-4">
-
-              <div class="col-span-2">
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Employee Name</label>
-                <input type="text" id="f-name" required
-                  class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  placeholder="Full Name" />
-              </div>
-
-              <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Aadhaar No</label>
-                <input type="text" id="f-aadhaar" required maxlength="12"
-                  class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  placeholder="12-digit Aadhaar" />
-              </div>
-
-              <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Mobile No</label>
-                <input type="text" id="f-mobile" required maxlength="10"
-                  class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  placeholder="10-digit Mobile" />
-              </div>
-
-              <div class="col-span-2">
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Email ID</label>
-                <input type="email" id="f-email" required
-                  class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  placeholder="candidate@email.com" />
-              </div>
-
-              <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Designation</label>
-                <input type="text" id="f-designation" required
-                  class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  placeholder="Job Title" />
-              </div>
-
-              <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Assign HR</label>
-                <select id="f-hr"
-                  class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
-                  <option value="">Select HR Executive</option>
-                </select>
-              </div>
-
-            </div>
-
-            <div class="mt-4 flex items-center gap-2">
-              <input type="checkbox" id="f-send-link" class="rounded border-gray-300" checked />
-              <label for="f-send-link" class="text-sm text-gray-600">
-                Send onboarding link immediately via SMS
-              </label>
-            </div>
-
-            <div id="form-msg" class="mt-4 hidden"></div>
-
-            <button type="submit"
-              class="mt-6 w-full gradient-bg text-white py-3 rounded-lg font-bold text-lg hover:opacity-90 transition">
-              Initiate Onboarding
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <!-- HR TEAM TAB -->
-    <div id="tab-team-content" class="hidden fade-in">
-      <h2 class="text-2xl font-bold text-gray-800 mb-6">HR Team</h2>
-      <div id="hr-team-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
-    </div>
-
-  </div>
-
-  <!-- CANDIDATE DETAIL MODAL -->
-  <div id="modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50">
-    <div class="bg-white rounded-2xl p-8 max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
-      <div id="modal-content"></div>
-      <button onclick="closeModal()"
-        class="mt-4 w-full bg-gray-100 text-gray-700 py-2 rounded-lg font-semibold hover:bg-gray-200">
-        Close
+      <button id="submit-initiate" onclick="submitInitiate()"
+              class="flex-1 gbg text-white py-2.5 rounded-xl font-bold hover:opacity-90 transition shadow">
+        Initiate & Send Link
       </button>
     </div>
   </div>
+</div>
 
-  <!-- TOAST -->
-  <div id="toast" class="fixed bottom-6 right-6 hidden z-50">
-    <div class="bg-gray-900 text-white px-6 py-3 rounded-xl shadow-2xl text-sm font-semibold"></div>
+<!-- ═══ MODAL: CANDIDATE DETAIL ═══ -->
+<div class="overlay" id="modal-detail">
+  <div class="card modal-box w-full max-w-2xl mx-4 p-7 relative max-h-[90vh] overflow-y-auto">
+    <button onclick="closeModal('modal-detail')"
+            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+    <h2 class="text-lg font-bold text-gray-800 mb-5">👤 Candidate Details</h2>
+    <div id="detail-body" class="text-sm text-gray-600 space-y-2"></div>
+    <div class="flex gap-3 mt-6" id="detail-actions"></div>
   </div>
+</div>
 
-  <script>
-    // API CONFIG
-    const API = "https://rspl-hr-onboarding-backend-production.up.railway.app/api";
-    const APP_BASE_URL = API.replace(/\/api$/, "");
-    let USE_DEMO = true; // set false once backend is confirmed working
+<!-- ═══ MODAL: REJECT ═══ -->
+<div class="overlay" id="modal-reject">
+  <div class="card modal-box w-full max-w-md mx-4 p-7 relative">
+    <button onclick="closeModal('modal-reject')"
+            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+    <h2 class="text-lg font-bold text-gray-800 mb-4">❌ Reject Candidate</h2>
+    <input type="hidden" id="reject-id"/>
+    <div>
+      <label class="lbl">Rejection Reason *</label>
+      <textarea class="ifield" id="reject-reason" rows="4"
+                placeholder="Please provide a clear reason (minimum 10 characters)"></textarea>
+    </div>
+    <div id="reject-error"
+         class="hidden mt-3 bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-xl text-xs">
+    </div>
+    <div class="flex gap-3 mt-5">
+      <button onclick="closeModal('modal-reject')"
+              class="flex-1 bg-gray-100 text-gray-600 py-2.5 rounded-xl font-semibold hover:bg-gray-200">
+        Cancel
+      </button>
+      <button onclick="submitReject()"
+              class="flex-1 bg-red-600 text-white py-2.5 rounded-xl font-bold hover:bg-red-700">
+        Confirm Reject
+      </button>
+    </div>
+  </div>
+</div>
 
-    async function callAPI(method, path, body = null) {
-      try {
-        const res = await fetch(API + path, {
-          method,
-          headers: { "Content-Type": "application/json" },
-          body: body ? JSON.stringify(body) : null
+<!-- TOAST -->
+<div id="toast" class="fixed bottom-6 right-6 z-50 hidden">
+  <div class="bg-gray-900 text-white px-5 py-3 rounded-xl shadow-2xl text-sm font-semibold"></div>
+</div>
+
+<script>
+  const API = "https://rspl-hr-onboarding-backend-production.up.railway.app/api";
+
+  // ══════════════════════════════════════════════
+  //  AUTH GUARD
+  // ══════════════════════════════════════════════
+  const HR_TOKEN    = localStorage.getItem("hr_token");
+  const HR_NAME     = localStorage.getItem("hr_name")    || "HR User";
+  const HR_ROLE     = localStorage.getItem("hr_role")    || "HR";
+  const HR_USERNAME = localStorage.getItem("hr_username") || "";
+
+  if (!HR_TOKEN) {
+    window.location.href = "login.html";
+  }
+
+  // Show logged-in user in nav
+  document.getElementById("hr-user-name").textContent = HR_NAME;
+  document.getElementById("hr-user-role").textContent = HR_ROLE.replace("_"," ");
+  document.getElementById("user-avatar").textContent  = HR_NAME.charAt(0).toUpperCase();
+
+  // ── authFetch: wraps every /api/hr/* call with JWT header ──
+  function authFetch(url, options = {}) {
+    options.headers = options.headers || {};
+    options.headers["Authorization"] = "Bearer " + HR_TOKEN;
+    if (!options.headers["Content-Type"] && options.body) {
+      options.headers["Content-Type"] = "application/json";
+    }
+    return fetch(url, options).then(res => {
+      if (res.status === 401 || res.status === 403) {
+        localStorage.clear();
+        window.location.href = "login.html";
+        throw new Error("Session expired");
+      }
+      return res;
+    });
+  }
+
+  function logout() {
+    authFetch(`${API}/auth/logout`, { method:"POST" })
+      .finally(() => {
+        localStorage.clear();
+        window.location.href = "login.html";
+      });
+  }
+
+  // ══════════════════════════════════════════════
+  //  STATE
+  // ══════════════════════════════════════════════
+  let currentPage   = 0;
+  let totalPages    = 1;
+  let currentStatus = "";
+  let searchTerm    = "";
+  let searchTimer   = null;
+  let hrTeam        = [];
+
+  // ══════════════════════════════════════════════
+  //  HELPERS
+  // ══════════════════════════════════════════════
+  function toast(msg, type = "green") {
+    const cols = { green:"#16a34a", red:"#dc2626", blue:"#2563eb" };
+    const t = document.getElementById("toast");
+    const b = t.querySelector("div");
+    b.style.background = cols[type] || cols.green;
+    b.textContent = msg;
+    t.classList.remove("hidden");
+    setTimeout(() => t.classList.add("hidden"), 3500);
+  }
+
+  function badgeClass(status) {
+    const map = {
+      INITIATED:      "b-initiated",
+      FORM_SUBMITTED: "b-form_submitted",
+      SIGNED:         "b-signed",
+      APPROVED:       "b-approved",
+      REJECTED:       "b-rejected"
+    };
+    return map[status] || "bg-gray-100 text-gray-600";
+  }
+
+  function linkBadge(ls) {
+    if (ls === "SENT") return '<span class="badge bg-green-100 text-green-700">✓ Sent</span>';
+    return '<span class="badge bg-gray-100 text-gray-500">Not Sent</span>';
+  }
+
+  function openModal(id)  { document.getElementById(id).classList.add("open"); }
+  function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+
+  function debounceSearch() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      searchTerm  = document.getElementById("search-input").value.trim();
+      currentPage = 0;
+      loadCandidates();
+    }, 400);
+  }
+
+  function setTab(el, status) {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    el.classList.add("active");
+    currentStatus = status;
+    currentPage   = 0;
+    loadCandidates();
+  }
+
+  function prevPage() { if (currentPage > 0) { currentPage--; loadCandidates(); } }
+  function nextPage() { if (currentPage < totalPages-1) { currentPage++; loadCandidates(); } }
+
+  // ══════════════════════════════════════════════
+  //  LOAD HR TEAM
+  // ══════════════════════════════════════════════
+  async function loadHRTeam() {
+    try {
+      const res  = await authFetch(`${API}/hr/team`);
+      const data = await res.json();
+      if (data.success) {
+        hrTeam = data.data;
+        const sel = document.getElementById("i-hr");
+        hrTeam.forEach(hr => {
+          const opt = document.createElement("option");
+          opt.value       = hr.id;
+          opt.textContent = `${hr.name} (${hr.role})`;
+          sel.appendChild(opt);
         });
-        const data = await res.json();
-        USE_DEMO = false;
-        return data;
-      } catch (e) {
-        console.warn("API failed, using demo:", e.message);
-        USE_DEMO = true;
-        return null;
+      }
+    } catch(e) {}
+  }
+
+  // ══════════════════════════════════════════════
+  //  LOAD CANDIDATES
+  // ══════════════════════════════════════════════
+  async function loadCandidates() {
+    const tbody = document.getElementById("candidates-tbody");
+    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-12 text-gray-400">
+      <div class="inline-block w-8 h-8 border-3 border-blue-400 border-t-transparent
+                  rounded-full animate-spin mb-2"></div><br/>Loading…</td></tr>`;
+
+    let url = `${API}/hr/candidates?page=${currentPage}&size=15`;
+    if (currentStatus) url += `&status=${currentStatus}`;
+    if (searchTerm)    url += `&search=${encodeURIComponent(searchTerm)}`;
+
+    try {
+      const res  = await authFetch(url);
+      const data = await res.json();
+
+      if (!data.success) { tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-red-400">Failed to load</td></tr>`; return; }
+
+      const page = data.data;
+      totalPages = page.totalPages || 1;
+
+      // Update page info
+      document.getElementById("page-info").textContent =
+        `Showing ${page.content.length} of ${page.totalElements} candidates | Page ${page.page+1}/${page.totalPages}`;
+      document.getElementById("btn-prev").disabled = currentPage === 0;
+      document.getElementById("btn-next").disabled = currentPage >= totalPages-1;
+
+      // Update stats
+      updateStats(page.content, page.totalElements);
+
+      if (!page.content.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-14 text-gray-400">No candidates found</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = page.content.map((c, i) => `
+        <tr class="border-b border-gray-50 cursor-pointer" onclick="viewDetail(${c.id})">
+          <td class="px-5 py-3.5 text-gray-400 font-mono text-xs">${currentPage*15+i+1}</td>
+          <td class="px-5 py-3.5">
+            <div class="font-semibold text-gray-800">${c.employeeName || "–"}</div>
+            <div class="text-xs text-gray-400">${c.emailId || ""}</div>
+          </td>
+          <td class="px-5 py-3.5 text-gray-600">${c.mobileNo || "–"}</td>
+          <td class="px-5 py-3.5 text-gray-600">${c.designation || "–"}</td>
+          <td class="px-5 py-3.5 text-gray-500 text-xs">${c.assignedHR?.name || "–"}</td>
+          <td class="px-5 py-3.5">
+            <span class="badge ${badgeClass(c.joiningStatus)}">${(c.joiningStatus||"–").replace("_"," ")}</span>
+          </td>
+          <td class="px-5 py-3.5">${linkBadge(c.linkStatus)}</td>
+          <td class="px-5 py-3.5" onclick="event.stopPropagation()">
+            <div class="flex gap-1.5">
+              ${c.joiningStatus === "INITIATED" || c.linkStatus === "NOT_SENT" ? `
+                <button onclick="sendLink(${c.id})"
+                        class="action-btn bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs px-2 py-1">
+                  📱 Link
+                </button>` : ""}
+              ${c.joiningStatus === "SIGNED" ? `
+                <button onclick="approveCandidate(${c.id})"
+                        class="action-btn bg-green-600 text-white hover:bg-green-700 px-3 py-1">
+                  ✓ Approve
+                </button>
+                <button onclick="openReject(${c.id})"
+                        class="action-btn bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1">
+                  ✕ Reject
+                </button>` : ""}
+              ${c.joiningStatus === "FORM_SUBMITTED" ? `
+                <button onclick="openReject(${c.id})"
+                        class="action-btn bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1">
+                  ✕ Reject
+                </button>` : ""}
+              ${c.joiningStatus === "APPROVED" ? `
+                <span class="text-xs text-green-600 font-semibold">✓ ${c.employeeId||""}</span>` : ""}
+            </div>
+          </td>
+        </tr>`).join("");
+    } catch(e) {
+      if (e.message !== "Session expired") {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-red-400">Error: ${e.message}</td></tr>`;
       }
     }
+  }
 
-    // ===== Portal Link helpers =====
-    function getPortalLink(c) {
-      if (!c) return "";
-      if (c.portalLink && c.portalLink.trim() !== "") return c.portalLink;
-      if (c.onboardingToken && c.onboardingToken.trim() !== "") {
-        return `${APP_BASE_URL}/onboarding.html?token=${c.onboardingToken}`;
-      }
-      return "";
+  function updateStats(list, total) {
+    document.getElementById("stat-total").textContent    = total;
+    document.getElementById("stat-initiated").textContent = list.filter(c=>c.joiningStatus==="INITIATED").length;
+    document.getElementById("stat-submitted").textContent = list.filter(c=>c.joiningStatus==="FORM_SUBMITTED").length;
+    document.getElementById("stat-approved").textContent  = list.filter(c=>c.joiningStatus==="APPROVED").length;
+    document.getElementById("stat-rejected").textContent  = list.filter(c=>c.joiningStatus==="REJECTED").length;
+  }
+
+  // ══════════════════════════════════════════════
+  //  INITIATE CANDIDATE
+  // ══════════════════════════════════════════════
+  function openInitiate() {
+    ["i-name","i-mobile","i-aadhaar","i-email","i-designation"].forEach(id => {
+      document.getElementById(id).value = "";
+    });
+    document.getElementById("i-hr").value       = "";
+    document.getElementById("i-sendlink").value = "true";
+    document.getElementById("initiate-error").classList.add("hidden");
+    openModal("modal-initiate");
+  }
+
+  async function submitInitiate() {
+    const name   = document.getElementById("i-name").value.trim();
+    const mobile = document.getElementById("i-mobile").value.trim();
+    const desig  = document.getElementById("i-designation").value.trim();
+
+    if (!name || !mobile || !desig) {
+      const el = document.getElementById("initiate-error");
+      el.textContent = "⚠️ Name, Mobile and Designation are required";
+      el.classList.remove("hidden");
+      return;
+    }
+    if (!/^[6-9]\d{9}$/.test(mobile)) {
+      const el = document.getElementById("initiate-error");
+      el.textContent = "⚠️ Mobile must be 10 digits starting with 6-9";
+      el.classList.remove("hidden");
+      return;
     }
 
-    async function copyToClipboard(text) {
-      if (!text) { showToast("Portal link not available", "red"); return; }
-      try {
-        await navigator.clipboard.writeText(text);
-        showToast("Portal link copied", "green");
-      } catch (e) {
-        const ta = document.createElement("textarea");
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand("copy");
-        document.body.removeChild(ta);
-        showToast("Portal link copied", "green");
-      }
-    }
+    const btn = document.getElementById("submit-initiate");
+    btn.disabled    = true;
+    btn.textContent = "Initiating…";
 
-    function copyPortalLinkById(id) {
-      const el = document.getElementById(`pl-${id}`);
-      if (!el) { showToast("Portal link not available", "red"); return; }
-      copyToClipboard(el.value || "");
-    }
+    const hrId = document.getElementById("i-hr").value;
+    const payload = {
+      employeeName:         name,
+      mobileNo:             mobile,
+      aadhaarNo:            document.getElementById("i-aadhaar").value.trim(),
+      emailId:              document.getElementById("i-email").value.trim(),
+      designation:          desig,
+      assignedHRId:         hrId ? parseInt(hrId) : null,
+      initiatedBy:          HR_USERNAME,
+      sendLinkImmediately:  document.getElementById("i-sendlink").value === "true"
+    };
 
-    function openPortalLinkById(id) {
-      const el = document.getElementById(`pl-${id}`);
-      const link = el ? (el.value || "") : "";
-      if (!link) { showToast("Portal link not available", "red"); return; }
-      window.open(link, "_blank");
-    }
-
-    function statusCss(s) {
-      return (s || "").replaceAll("_", "").toLowerCase();
-    }
-    function statusLabel(s) {
-      return (s || "").replaceAll("_", " ");
-    }
-
-    // DEMO DATA (fallback if backend is down)
-    let HRTEAM = [
-      { id: 1, name: "Sneha Kapoor", role: "Sr. HR Executive", email: "sneha@rspl.com", phone: "9811001100" },
-      { id: 2, name: "Arjun Mehta", role: "HR Executive", email: "arjun@rspl.com", phone: "9822002200" },
-      { id: 3, name: "Pooja Nair", role: "HR Executive", email: "pooja@rspl.com", phone: "9833003300" },
-      { id: 4, name: "Kunal Bose", role: "Jr. HR Executive", email: "kunal@rspl.com", phone: "9844004400" },
-      { id: 5, name: "Divya Rawat", role: "HR Manager", email: "divya@rspl.com", phone: "9855005500" }
-    ];
-
-    let candidates = [
-      {
-        id: 1,
-        employeeName: "Amit Kumar",
-        emailId: "amit@test.com",
-        mobileNo: "9876543210",
-        aadhaarNo: "123412341234",
-        designation: "Sales Executive",
-        joiningStatus: "INITIATED",
-        linkStatus: "SENT",
-        assignedHR: { id: 1, name: "Sneha Kapoor" },
-        createdAt: "2026-02-20",
-        onboardingToken: "demo-token-123"
-      }
-    ];
-
-    // TAB NAVIGATION
-    function showTab(name) {
-      ["dashboard", "candidates", "initiate", "team"].forEach(t => {
-        document.getElementById(`tab-${t}-content`).classList.add("hidden");
-        document.getElementById(`tab-${t}`).className =
-          "tab-inactive px-4 py-2 rounded-lg text-sm font-semibold transition";
+    try {
+      const res  = await authFetch(`${API}/hr/candidates/initiate`, {
+        method: "POST",
+        body:   JSON.stringify(payload)
       });
+      const data = await res.json();
 
-      document.getElementById(`tab-${name}-content`).classList.remove("hidden");
-      document.getElementById(`tab-${name}`).className =
-        "tab-active px-4 py-2 rounded-lg text-sm font-semibold transition";
+      if (data.success) {
+        toast("✅ Candidate initiated successfully!", "green");
+        closeModal("modal-initiate");
+        loadCandidates();
+      } else {
+        const el = document.getElementById("initiate-error");
+        el.textContent = "⚠️ " + (data.message || "Failed to initiate");
+        el.classList.remove("hidden");
+      }
+    } catch(e) {
+      if (e.message !== "Session expired") {
+        const el = document.getElementById("initiate-error");
+        el.textContent = "⚠️ Server error. Try again.";
+        el.classList.remove("hidden");
+      }
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = "Initiate & Send Link";
+    }
+  }
 
-      if (name === "dashboard") renderDashboard();
-      if (name === "candidates") renderCandidates(candidates);
-      if (name === "initiate") renderHRDropdown();
-      if (name === "team") renderTeam();
+  // ══════════════════════════════════════════════
+  //  SEND LINK
+  // ══════════════════════════════════════════════
+  async function sendLink(id) {
+    try {
+      const res  = await authFetch(`${API}/hr/candidates/${id}/send-link`, { method:"POST" });
+      const data = await res.json();
+      if (data.success) {
+        toast("📱 Link sent via SMS!", "blue");
+        loadCandidates();
+      } else {
+        toast("❌ " + (data.message||"Failed"), "red");
+      }
+    } catch(e) {}
+  }
+
+  // ══════════════════════════════════════════════
+  //  VIEW DETAIL
+  // ══════════════════════════════════════════════
+  async function viewDetail(id) {
+    openModal("modal-detail");
+    document.getElementById("detail-body").innerHTML   = "<p class='text-gray-400'>Loading…</p>";
+    document.getElementById("detail-actions").innerHTML = "";
+
+    try {
+      const res  = await authFetch(`${API}/hr/candidates/${id}`);
+      const data = await res.json();
+      if (!data.success) { document.getElementById("detail-body").innerHTML = "<p class='text-red-400'>Failed to load</p>"; return; }
+
+      const c = data.data;
+      const rows = [
+        ["Employee Name",  c.employeeName],
+        ["Mobile",         c.mobileNo],
+        ["Email",          c.emailId || "–"],
+        ["Designation",    c.designation],
+        ["Aadhaar",        c.aadhaarNo || "–"],
+        ["Status",         `<span class="badge ${badgeClass(c.joiningStatus)}">${(c.joiningStatus||"").replace("_"," ")}</span>`],
+        ["Link Status",    linkBadge(c.linkStatus)],
+        ["Employee ID",    c.employeeId ? `<strong class="text-green-600">${c.employeeId}</strong>` : "–"],
+        ["Assigned HR",    c.assignedHR?.name || "–"],
+        ["Initiated By",   c.initiatedBy || "–"],
+        ["Date",           c.createdAt ? c.createdAt.substring(0,10) : "–"],
+        // Personal details if submitted
+        ...(c.joiningStatus !== "INITIATED" ? [
+          ["Father's Name",   c.fathersName || "–"],
+          ["Date of Birth",   c.dob || "–"],
+          ["Gender",          c.gender || "–"],
+          ["Blood Group",     c.bloodGroup || "–"],
+          ["PAN",             c.panCardNo || "–"],
+          ["Bank",            c.bankName ? `${c.bankName} | A/C: ${c.bankAccountNo} | IFSC: ${c.ifscCode}` : "–"],
+          ["Nominee",         c.nomineeName ? `${c.nomineeName} (${c.nomineeRelation})` : "–"],
+          ["Address",         c.permanentAddress ? `${c.permanentAddress}, ${c.district}, ${c.state} – ${c.pinCode}` : "–"],
+        ] : []),
+        ...(c.rejectionReason ? [["Rejection Reason", `<span class="text-red-600">${c.rejectionReason}</span>`]] : [])
+      ];
+
+      document.getElementById("detail-body").innerHTML = rows.map(([k,v]) => `
+        <div class="flex gap-3 py-1.5 border-b border-gray-50">
+          <span class="w-36 flex-shrink-0 text-gray-400 font-semibold text-xs uppercase tracking-wide">${k}</span>
+          <span class="text-gray-700">${v||"–"}</span>
+        </div>`).join("");
+
+      // Action buttons
+      let actions = "";
+      if (c.joiningStatus === "SIGNED") {
+        actions += `<button onclick="approveCandidate(${c.id})"
+          class="flex-1 gbg text-white py-2.5 rounded-xl font-bold hover:opacity-90 shadow">
+          ✓ Approve & Generate Employee ID</button>`;
+        actions += `<button onclick="closeModal('modal-detail');openReject(${c.id})"
+          class="flex-1 bg-red-600 text-white py-2.5 rounded-xl font-bold hover:bg-red-700">
+          ✕ Reject</button>`;
+      } else if (c.linkStatus === "NOT_SENT" || c.joiningStatus === "INITIATED") {
+        actions += `<button onclick="sendLink(${c.id})"
+          class="flex-1 gbg text-white py-2.5 rounded-xl font-bold hover:opacity-90">
+          📱 Send Onboarding Link</button>`;
+      }
+      document.getElementById("detail-actions").innerHTML = actions;
+
+    } catch(e) {}
+  }
+
+  // ══════════════════════════════════════════════
+  //  APPROVE
+  // ══════════════════════════════════════════════
+  async function approveCandidate(id) {
+    if (!confirm("Approve this candidate and generate Employee ID?")) return;
+    try {
+      const res  = await authFetch(`${API}/hr/candidates/${id}/approve`, { method:"POST" });
+      const data = await res.json();
+      if (data.success) {
+        toast("✅ Candidate approved! Employee ID: " + (data.data?.employeeId || ""), "green");
+        closeModal("modal-detail");
+        loadCandidates();
+      } else {
+        toast("❌ " + (data.message||"Failed to approve"), "red");
+      }
+    } catch(e) {}
+  }
+
+  // ══════════════════════════════════════════════
+  //  REJECT
+  // ══════════════════════════════════════════════
+  function openReject(id) {
+    document.getElementById("reject-id").value         = id;
+    document.getElementById("reject-reason").value     = "";
+    document.getElementById("reject-error").classList.add("hidden");
+    openModal("modal-reject");
+  }
+
+  async function submitReject() {
+    const id     = document.getElementById("reject-id").value;
+    const reason = document.getElementById("reject-reason").value.trim();
+
+    if (reason.length < 10) {
+      const el = document.getElementById("reject-error");
+      el.textContent = "⚠️ Reason must be at least 10 characters";
+      el.classList.remove("hidden");
+      return;
     }
 
-    // DASHBOARD
-    function renderDashboard() {
-      const total = candidates.length;
-      const approved = candidates.filter(c => c.joiningStatus === "APPROVED").length;
-      const pending = candidates.filter(c =>
-        ["INITIATED", "FORM_SUBMITTED", "SIGNED"].includes(c.joiningStatus)
-      ).length;
-      const rejected = candidates.filter(c => c.joiningStatus === "REJECTED").length;
-
-      document.getElementById("stats-grid").innerHTML = [
-        statCard("Users", "Total Candidates", total, "blue"),
-        statCard("Check", "Approved", approved, "green"),
-        statCard("Clock", "Pending", pending, "yellow"),
-        statCard("XCircle", "Rejected", rejected, "red")
-      ].join("");
-
-      const recent = [...candidates].sort((a,b) => b.id - a.id).slice(0, 5);
-
-      document.getElementById("recent-list").innerHTML = recent.map(c => `
-        <div class="flex items-center justify-between py-3 border-b last:border-0 hover:bg-gray-50 rounded-lg px-2 cursor-pointer"
-             onclick="showDetail(${c.id})">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 gradient-bg rounded-full flex items-center justify-center text-white font-bold">
-              ${(c.employeeName && c.employeeName[0]) ? c.employeeName[0] : "?"}
-            </div>
-            <div>
-              <div class="font-semibold text-gray-800">${c.employeeName || "-"}</div>
-              <div class="text-xs text-gray-500">${c.designation || ""} · ${c.emailId || ""}</div>
-            </div>
-          </div>
-          <span class="status-badge ${statusCss(c.joiningStatus)}">${statusLabel(c.joiningStatus)}</span>
-        </div>
-      `).join("");
-
-      if (window.lucide) lucide.createIcons();
-    }
-
-    function statCard(icon, label, value, color) {
-      const colors = {
-        blue: "bg-blue-50 text-blue-600",
-        green: "bg-green-50 text-green-600",
-        yellow: "bg-yellow-50 text-yellow-600",
-        red: "bg-red-50 text-red-600"
-      };
-      return `
-        <div class="card p-6 cursor-pointer hover:scale-105 transition">
-          <div class="flex items-center gap-4">
-            <div class="w-14 h-14 ${colors[color]} rounded-xl flex items-center justify-center text-2xl">
-              <i data-lucide="${icon}"></i>
-            </div>
-            <div>
-              <div class="text-3xl font-bold text-gray-800">${value}</div>
-              <div class="text-sm text-gray-500">${label}</div>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    // CANDIDATES TABLE (UPDATED with Portal Link + Copy/Open/Resend)
-    function renderCandidates(list) {
-      document.getElementById("candidates-table").innerHTML = `
-        <div class="card overflow-hidden">
-          <table class="w-full text-sm">
-            <thead class="bg-gray-50 border-b">
-              <tr>
-                <th class="text-left px-4 py-3 text-gray-600 font-semibold">#</th>
-                <th class="text-left px-4 py-3 text-gray-600 font-semibold">Candidate</th>
-                <th class="text-left px-4 py-3 text-gray-600 font-semibold">Designation</th>
-                <th class="text-left px-4 py-3 text-gray-600 font-semibold">Assigned HR</th>
-                <th class="text-left px-4 py-3 text-gray-600 font-semibold">Status</th>
-                <th class="text-left px-4 py-3 text-gray-600 font-semibold">Portal Link</th>
-                <th class="text-left px-4 py-3 text-gray-600 font-semibold">Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              ${list.map((c,i) => {
-                const pl = getPortalLink(c);
-                return `
-                  <tr class="border-b hover:bg-blue-50 transition cursor-pointer" onclick="showDetail(${c.id})">
-                    <td class="px-4 py-3 text-gray-500">${i+1}</td>
-
-                    <td class="px-4 py-3">
-                      <div class="font-semibold text-gray-800">${c.employeeName || "-"}</div>
-                      <div class="text-xs text-gray-500">${c.emailId || ""}</div>
-                    </td>
-
-                    <td class="px-4 py-3 text-gray-600">${c.designation || ""}</td>
-                    <td class="px-4 py-3 text-gray-600">${(c.assignedHR && c.assignedHR.name) ? c.assignedHR.name : "-"}</td>
-
-                    <td class="px-4 py-3">
-                      <span class="status-badge ${statusCss(c.joiningStatus)}">${statusLabel(c.joiningStatus)}</span>
-                    </td>
-
-                    <td class="px-4 py-3" onclick="event.stopPropagation()">
-                      <div class="flex items-center gap-2">
-                        <input id="pl-${c.id}" readonly
-                          class="border rounded-lg px-2 py-1 text-xs w-64 bg-gray-50"
-                          value="${pl}">
-                        <button onclick="copyPortalLinkById(${c.id})"
-                          class="bg-gray-900 text-white px-2 py-1 rounded text-xs hover:bg-black">
-                          Copy
-                        </button>
-                        <button onclick="openPortalLinkById(${c.id})"
-                          class="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700">
-                          Open
-                        </button>
-                        <button onclick="resendLink(${c.id})"
-                          class="bg-indigo-600 text-white px-2 py-1 rounded text-xs hover:bg-indigo-700">
-                          Resend
-                        </button>
-                      </div>
-                    </td>
-
-                    <td class="px-4 py-3" onclick="event.stopPropagation()">
-                      <div class="flex gap-1">
-                        ${c.joiningStatus === "SIGNED" ? `
-                          <button onclick="approveCandidate(${c.id})"
-                            class="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600">
-                            Approve
-                          </button>` : ""
-                        }
-                        ${!["APPROVED","REJECTED"].includes(c.joiningStatus) ? `
-                          <button onclick="rejectCandidate(${c.id})"
-                            class="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600">
-                            Reject
-                          </button>` : ""
-                        }
-                        ${c.linkStatus === "NOT_SENT" ? `
-                          <button onclick="sendLink(${c.id})"
-                            class="bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600">
-                            Send Link
-                          </button>` : ""
-                        }
-                      </div>
-                    </td>
-                  </tr>
-                `;
-              }).join("")}
-            </tbody>
-          </table>
-        </div>
-      `;
-
-      if (window.lucide) lucide.createIcons();
-    }
-
-    function filterCandidates() {
-      const s = document.getElementById("search-input").value.toLowerCase();
-      const st = document.getElementById("status-filter").value;
-
-      const filtered = candidates.filter(c => {
-        const matchText = (!s) ||
-          (c.employeeName || "").toLowerCase().includes(s) ||
-          (c.emailId || "").toLowerCase().includes(s);
-
-        const matchStatus = (!st) || (c.joiningStatus === st);
-        return matchText && matchStatus;
+    try {
+      const res  = await authFetch(`${API}/hr/candidates/${id}/reject`, {
+        method: "POST",
+        body:   JSON.stringify({ reason })
       });
-
-      renderCandidates(filtered);
-    }
-
-    // INITIATE FORM
-    function renderHRDropdown() {
-      const sel = document.getElementById("f-hr");
-      sel.innerHTML = `<option value="">Select HR Executive</option>` +
-        HRTEAM.map(h => `<option value="${h.id}">${h.name} (${h.role})</option>`).join("");
-    }
-
-    async function submitCandidate(e) {
-      e.preventDefault();
-      const data = {
-        employeeName: document.getElementById("f-name").value,
-        aadhaarNo: document.getElementById("f-aadhaar").value,
-        emailId: document.getElementById("f-email").value,
-        mobileNo: document.getElementById("f-mobile").value,
-        designation: document.getElementById("f-designation").value,
-        assignedHRId: document.getElementById("f-hr").value ? Number(document.getElementById("f-hr").value) : null,
-        initiatedBy: "hradmin",
-        sendLinkImmediately: document.getElementById("f-send-link").checked
-      };
-
-      const res = await callAPI("POST", "/hr/candidates/initiate", data);
-      if (res && res.success) {
-        showToast("Candidate initiated, link sent!", "green");
-        document.getElementById("initiate-form").reset();
-        await loadCandidates();
-        showTab("candidates");
+      const data = await res.json();
+      if (data.success) {
+        toast("Candidate rejected", "red");
+        closeModal("modal-reject");
+        closeModal("modal-detail");
+        loadCandidates();
       } else {
-        const hr = HRTEAM.find(h => h.id === data.assignedHRId);
-        const newC = {
-          id: candidates.length + 1,
-          employeeName: data.employeeName,
-          emailId: data.emailId,
-          mobileNo: data.mobileNo,
-          aadhaarNo: data.aadhaarNo,
-          designation: data.designation,
-          joiningStatus: "INITIATED",
-          linkStatus: data.sendLinkImmediately ? "SENT" : "NOT_SENT",
-          assignedHR: hr || null,
-          createdAt: new Date().toISOString().split("T")[0],
-          onboardingToken: "demo-token-" + (candidates.length + 1)
-        };
-        candidates.unshift(newC);
-        showToast("Candidate initiated! (Demo Mode)", "green");
-        document.getElementById("initiate-form").reset();
-        showTab("candidates");
+        toast("❌ " + (data.message||"Failed"), "red");
       }
-    }
+    } catch(e) {}
+  }
 
-    // ACTIONS
-    async function approveCandidate(id) {
-      const res = await callAPI("POST", `/hr/candidates/${id}/approve`);
-      if (res && res.success) {
-        await loadCandidates();
-        showToast("Candidate Approved!", "green");
-      } else {
-        const c = candidates.find(x => x.id === id);
-        if (c) c.joiningStatus = "APPROVED";
-        renderCandidates(candidates);
-        showToast("Approved! (Demo)", "green");
-      }
-      closeModal();
-    }
+  // ══════════════════════════════════════════════
+  //  INIT
+  // ══════════════════════════════════════════════
+  loadHRTeam();
+  loadCandidates();
 
-    async function rejectCandidate(id) {
-      const reason = prompt("Enter rejection reason");
-      if (!reason) return;
-
-      const res = await callAPI("POST", `/hr/candidates/${id}/reject`, { reason });
-      if (res && res.success) {
-        await loadCandidates();
-        showToast("Candidate Rejected", "red");
-      } else {
-        const c = candidates.find(x => x.id === id);
-        if (c) {
-          c.joiningStatus = "REJECTED";
-          c.rejectionReason = reason;
-        }
-        renderCandidates(candidates);
-        showToast("Rejected! (Demo)", "red");
-      }
-      closeModal();
-    }
-
-    async function sendLink(id) {
-      const res = await callAPI("POST", `/hr/candidates/${id}/send-link`);
-      if (res && res.success) {
-        await loadCandidates();
-        showToast("Onboarding link sent!", "blue");
-      } else {
-        const c = candidates.find(x => x.id === id);
-        if (c) c.linkStatus = "SENT";
-        renderCandidates(candidates);
-        showToast("Link sent! (Demo)", "blue");
-      }
-    }
-
-    // RESEND LINK (NEW)
-    async function resendLink(id) {
-      const res = await callAPI("POST", `/hr/candidates/${id}/send-link`);
-      if (res && res.success) {
-        await loadCandidates();
-        showToast("Onboarding link resent!", "blue");
-      } else {
-        const c = candidates.find(x => x.id === id);
-        if (c) c.linkStatus = "SENT";
-        renderCandidates(candidates);
-        showToast("Link resent! (Demo)", "blue");
-      }
-    }
-
-    // DETAIL MODAL (UPDATED: shows Portal Link + Copy/Open/Resend)
-    function showDetail(id) {
-      const c = candidates.find(x => x.id === id);
-      if (!c) return;
-
-      const pl = getPortalLink(c);
-
-      const portalBlock = (pl && pl.trim() !== "") ? `
-        <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6">
-          <div class="text-xs text-blue-700 font-semibold mb-2 flex items-center gap-1">
-            <i data-lucide="Link" class="w-4 h-4"></i>
-            <span>Pre-Onboarding Link (Share if candidate didn’t receive SMS)</span>
-          </div>
-          <div class="flex gap-2 items-center">
-            <input id="modal-portal-link" readonly class="flex-1 border rounded-lg px-3 py-2 text-xs bg-white" value="${pl}">
-            <button onclick="copyToClipboard(document.getElementById('modal-portal-link').value)"
-              class="bg-gray-900 text-white px-3 py-2 rounded-lg text-xs hover:bg-black">
-              Copy
-            </button>
-            <a href="${pl}" target="_blank"
-              class="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs hover:bg-blue-700">
-              Open
-            </a>
-            <button onclick="resendLink(${c.id})"
-              class="bg-indigo-600 text-white px-3 py-2 rounded-lg text-xs hover:bg-indigo-700">
-              Resend
-            </button>
-          </div>
-        </div>
-      ` : `
-        <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6">
-          <div class="text-xs text-gray-600 font-semibold mb-1">Pre-Onboarding Link</div>
-          <div class="text-sm text-gray-500">Not available (token not returned)</div>
-        </div>
-      `;
-
-      document.getElementById("modal-content").innerHTML = `
-        <div class="flex items-center gap-4 mb-6">
-          <div class="w-16 h-16 gradient-bg rounded-full flex items-center justify-center text-white text-2xl font-bold">
-            ${(c.employeeName && c.employeeName[0]) ? c.employeeName[0] : "?"}
-          </div>
-          <div>
-            <h2 class="text-2xl font-bold text-gray-800">${c.employeeName || "-"}</h2>
-            <p class="text-gray-500">${c.designation || ""}</p>
-            <span class="status-badge ${statusCss(c.joiningStatus)}">${statusLabel(c.joiningStatus)}</span>
-          </div>
-        </div>
-
-        ${portalBlock}
-
-        <div class="grid grid-cols-2 gap-4 mb-6">
-          ${detailRow("Mail", "Email", c.emailId || "-")}
-          ${detailRow("Phone", "Mobile", c.mobileNo || "-")}
-          ${detailRow("IdCard", "Aadhaar", c.aadhaarNo || "-")}
-          ${detailRow("User2", "HR", (c.assignedHR && c.assignedHR.name) ? c.assignedHR.name : "-")}
-          ${detailRow("Link", "Link Status", c.linkStatus || "-")}
-          ${detailRow("Calendar", "Created", c.createdAt || "-")}
-          ${c.rejectionReason ? detailRow("AlertTriangle", "Rejection Reason", c.rejectionReason) : ""}
-        </div>
-
-        <div class="flex gap-3">
-          ${c.joiningStatus === "SIGNED" ? `
-            <button onclick="approveCandidate(${c.id})"
-              class="flex-1 bg-green-500 text-white py-2 rounded-lg font-semibold hover:bg-green-600">
-              Approve
-            </button>` : ""
-          }
-
-          ${!["APPROVED","REJECTED"].includes(c.joiningStatus) ? `
-            <button onclick="rejectCandidate(${c.id})"
-              class="flex-1 bg-red-500 text-white py-2 rounded-lg font-semibold hover:bg-red-600">
-              Reject
-            </button>` : ""
-          }
-
-          ${c.linkStatus === "NOT_SENT" ? `
-            <button onclick="sendLink(${c.id})"
-              class="flex-1 bg-blue-500 text-white py-2 rounded-lg font-semibold hover:bg-blue-600">
-              Send Link
-            </button>` : ""
-          }
-
-          <button onclick="resendLink(${c.id})"
-            class="flex-1 bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700">
-            Resend Link
-          </button>
-        </div>
-      `;
-
-      document.getElementById("modal").classList.remove("hidden");
-      if (window.lucide) lucide.createIcons();
-    }
-
-    function detailRow(icon, label, value) {
-      return `
-        <div class="bg-gray-50 rounded-lg p-3">
-          <div class="text-xs text-gray-500 mb-1 flex items-center gap-1">
-            <i data-lucide="${icon}" class="w-3 h-3"></i>
-            <span>${label}</span>
-          </div>
-          <div class="font-semibold text-gray-800 text-sm">${value}</div>
-        </div>
-      `;
-    }
-
-    function closeModal() {
-      document.getElementById("modal").classList.add("hidden");
-    }
-
-    // HR TEAM
-    function renderTeam() {
-      document.getElementById("hr-team-grid").innerHTML = HRTEAM.map(h => `
-        <div class="card p-6 hover:scale-105 transition">
-          <div class="flex items-center gap-4 mb-4">
-            <div class="w-14 h-14 gradient-bg rounded-full flex items-center justify-center text-white text-xl font-bold">
-              ${h.name[0]}
-            </div>
-            <div>
-              <div class="font-bold text-gray-800">${h.name}</div>
-              <div class="text-sm text-blue-600">${h.role}</div>
-            </div>
-          </div>
-
-          <div class="space-y-2 text-sm text-gray-600">
-            <div>${h.email}</div>
-            <div>${h.phone}</div>
-            <div>${candidates.filter(c => (c.assignedHR && c.assignedHR.id) === h.id).length} Candidates</div>
-            <div>${candidates.filter(c => (c.assignedHR && c.assignedHR.id) === h.id && c.joiningStatus === "APPROVED").length} Approved</div>
-          </div>
-        </div>
-      `).join("");
-
-      if (window.lucide) lucide.createIcons();
-    }
-
-    // LOAD FROM API
-    async function loadCandidates() {
-      const res = await callAPI("GET", "/hr/candidates?page=0&size=100");
-      if (res && res.success && res.data && res.data.content) {
-        candidates = res.data.content;
-      }
-      renderCandidates(candidates);
-      renderDashboard();
-    }
-
-    // TOAST
-    function showToast(msg, type = "green") {
-      const colors = {
-        green: "bg-green-600",
-        red: "bg-red-600",
-        blue: "bg-blue-600"
-      };
-      const t = document.getElementById("toast");
-      const box = t.querySelector("div");
-      box.className = `${colors[type]} text-white px-6 py-3 rounded-xl shadow-2xl text-sm font-semibold`;
-      box.textContent = msg;
-      t.classList.remove("hidden");
-      setTimeout(() => t.classList.add("hidden"), 3000);
-    }
-
-    // INIT
-    (async function init() {
-      const teamRes = await callAPI("GET", "/hr/team");
-      if (teamRes && teamRes.success && teamRes.data && teamRes.data.length > 0) {
-        HRTEAM = teamRes.data;
-      }
-      await loadCandidates();
-      renderDashboard();
-      renderHRDropdown();
-      if (window.lucide) lucide.createIcons();
-    })();
-  </script>
-
+  // Close modal on backdrop click
+  document.querySelectorAll(".overlay").forEach(el => {
+    el.addEventListener("click", e => {
+      if (e.target === el) el.classList.remove("open");
+    });
+  });
+</script>
 </body>
 </html>
