@@ -12,12 +12,16 @@
     body { font-family: "Segoe UI", sans-serif; }
     .gradient-bg { background: linear-gradient(135deg, #1e3a5f 0%, #3b82f6 100%); }
     .card { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+
     .status-badge {
       padding: 4px 12px;
       border-radius: 20px;
       font-size: 12px;
       font-weight: 600;
+      display: inline-block;
+      white-space: nowrap;
     }
+
     .initiated { background: #dbeafe; color: #1d4ed8; }
     .approved { background: #dcfce7; color: #166534; }
     .rejected { background: #fee2e2; color: #991b1b; }
@@ -36,6 +40,7 @@
 </head>
 
 <body class="bg-gray-50 min-h-screen">
+
   <!-- TOP NAV -->
   <nav class="gradient-bg text-white px-6 py-4 flex items-center justify-between shadow-lg">
     <div class="flex items-center gap-3">
@@ -50,19 +55,19 @@
 
     <div class="flex gap-2">
       <button onclick="showTab('dashboard')" id="tab-dashboard"
-              class="tab-active px-4 py-2 rounded-lg text-sm font-semibold transition">
+        class="tab-active px-4 py-2 rounded-lg text-sm font-semibold transition">
         Dashboard
       </button>
       <button onclick="showTab('candidates')" id="tab-candidates"
-              class="tab-inactive px-4 py-2 rounded-lg text-sm font-semibold transition">
+        class="tab-inactive px-4 py-2 rounded-lg text-sm font-semibold transition">
         Candidates
       </button>
       <button onclick="showTab('initiate')" id="tab-initiate"
-              class="tab-inactive px-4 py-2 rounded-lg text-sm font-semibold transition">
+        class="tab-inactive px-4 py-2 rounded-lg text-sm font-semibold transition">
         Initiate
       </button>
       <button onclick="showTab('team')" id="tab-team"
-              class="tab-inactive px-4 py-2 rounded-lg text-sm font-semibold transition">
+        class="tab-inactive px-4 py-2 rounded-lg text-sm font-semibold transition">
         HR Team
       </button>
     </div>
@@ -70,6 +75,7 @@
 
   <!-- MAIN CONTENT -->
   <div class="p-6">
+
     <!-- DASHBOARD TAB -->
     <div id="tab-dashboard-content" class="fade-in">
       <h2 class="text-2xl font-bold text-gray-800 mb-6">Dashboard Overview</h2>
@@ -85,21 +91,24 @@
     <div id="tab-candidates-content" class="hidden fade-in">
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-800">All Candidates</h2>
+
         <div class="flex gap-2">
           <input id="search-input" type="text" placeholder="Search name/email..."
-                 class="border rounded-lg px-4 py-2 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                 oninput="filterCandidates()" />
+            class="border rounded-lg px-4 py-2 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            oninput="filterCandidates()" />
+
           <select id="status-filter" onchange="filterCandidates()"
-                  class="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+            class="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
             <option value="">All Status</option>
             <option value="INITIATED">Initiated</option>
-            <option value="FORMSUBMITTED">Form Submitted</option>
+            <option value="FORM_SUBMITTED">Form Submitted</option>
             <option value="SIGNED">Signed</option>
             <option value="APPROVED">Approved</option>
             <option value="REJECTED">Rejected</option>
           </select>
         </div>
       </div>
+
       <div id="candidates-table"></div>
     </div>
 
@@ -107,51 +116,54 @@
     <div id="tab-initiate-content" class="hidden fade-in">
       <div class="max-w-2xl mx-auto">
         <h2 class="text-2xl font-bold text-gray-800 mb-6">Initiate New Candidate</h2>
+
         <div class="card p-8">
           <form id="initiate-form" onsubmit="submitCandidate(event)">
             <div class="grid grid-cols-2 gap-4">
+
               <div class="col-span-2">
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Employee Name</label>
                 <input type="text" id="f-name" required
-                       class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                       placeholder="Full Name" />
+                  class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  placeholder="Full Name" />
               </div>
 
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Aadhaar No</label>
                 <input type="text" id="f-aadhaar" required maxlength="12"
-                       class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                       placeholder="12-digit Aadhaar" />
+                  class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  placeholder="12-digit Aadhaar" />
               </div>
 
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Mobile No</label>
                 <input type="text" id="f-mobile" required maxlength="10"
-                       class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                       placeholder="10-digit Mobile" />
+                  class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  placeholder="10-digit Mobile" />
               </div>
 
               <div class="col-span-2">
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Email ID</label>
                 <input type="email" id="f-email" required
-                       class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                       placeholder="candidate@email.com" />
+                  class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  placeholder="candidate@email.com" />
               </div>
 
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Designation</label>
                 <input type="text" id="f-designation" required
-                       class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                       placeholder="Job Title" />
+                  class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  placeholder="Job Title" />
               </div>
 
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Assign HR</label>
                 <select id="f-hr"
-                        class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                  class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
                   <option value="">Select HR Executive</option>
                 </select>
               </div>
+
             </div>
 
             <div class="mt-4 flex items-center gap-2">
@@ -164,7 +176,7 @@
             <div id="form-msg" class="mt-4 hidden"></div>
 
             <button type="submit"
-                    class="mt-6 w-full gradient-bg text-white py-3 rounded-lg font-bold text-lg hover:opacity-90 transition">
+              class="mt-6 w-full gradient-bg text-white py-3 rounded-lg font-bold text-lg hover:opacity-90 transition">
               Initiate Onboarding
             </button>
           </form>
@@ -177,6 +189,7 @@
       <h2 class="text-2xl font-bold text-gray-800 mb-6">HR Team</h2>
       <div id="hr-team-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
     </div>
+
   </div>
 
   <!-- CANDIDATE DETAIL MODAL -->
@@ -184,7 +197,7 @@
     <div class="bg-white rounded-2xl p-8 max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
       <div id="modal-content"></div>
       <button onclick="closeModal()"
-              class="mt-4 w-full bg-gray-100 text-gray-700 py-2 rounded-lg font-semibold hover:bg-gray-200">
+        class="mt-4 w-full bg-gray-100 text-gray-700 py-2 rounded-lg font-semibold hover:bg-gray-200">
         Close
       </button>
     </div>
@@ -198,6 +211,7 @@
   <script>
     // API CONFIG
     const API = "https://rspl-hr-onboarding-backend-production.up.railway.app/api";
+    const APP_BASE_URL = API.replace(/\/api$/, "");
     let USE_DEMO = true; // set false once backend is confirmed working
 
     async function callAPI(method, path, body = null) {
@@ -217,13 +231,59 @@
       }
     }
 
+    // ===== Portal Link helpers =====
+    function getPortalLink(c) {
+      if (!c) return "";
+      if (c.portalLink && c.portalLink.trim() !== "") return c.portalLink;
+      if (c.onboardingToken && c.onboardingToken.trim() !== "") {
+        return `${APP_BASE_URL}/onboarding.html?token=${c.onboardingToken}`;
+      }
+      return "";
+    }
+
+    async function copyToClipboard(text) {
+      if (!text) { showToast("Portal link not available", "red"); return; }
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast("Portal link copied", "green");
+      } catch (e) {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        showToast("Portal link copied", "green");
+      }
+    }
+
+    function copyPortalLinkById(id) {
+      const el = document.getElementById(`pl-${id}`);
+      if (!el) { showToast("Portal link not available", "red"); return; }
+      copyToClipboard(el.value || "");
+    }
+
+    function openPortalLinkById(id) {
+      const el = document.getElementById(`pl-${id}`);
+      const link = el ? (el.value || "") : "";
+      if (!link) { showToast("Portal link not available", "red"); return; }
+      window.open(link, "_blank");
+    }
+
+    function statusCss(s) {
+      return (s || "").replaceAll("_", "").toLowerCase();
+    }
+    function statusLabel(s) {
+      return (s || "").replaceAll("_", " ");
+    }
+
     // DEMO DATA (fallback if backend is down)
     let HRTEAM = [
       { id: 1, name: "Sneha Kapoor", role: "Sr. HR Executive", email: "sneha@rspl.com", phone: "9811001100" },
-      { id: 2, name: "Arjun Mehta",  role: "HR Executive",     email: "arjun@rspl.com", phone: "9822002200" },
-      { id: 3, name: "Pooja Nair",   role: "HR Executive",     email: "pooja@rspl.com", phone: "9833003300" },
-      { id: 4, name: "Kunal Bose",   role: "Jr. HR Executive", email: "kunal@rspl.com", phone: "9844004400" },
-      { id: 5, name: "Divya Rawat",  role: "HR Manager",       email: "divya@rspl.com", phone: "9855005500" }
+      { id: 2, name: "Arjun Mehta", role: "HR Executive", email: "arjun@rspl.com", phone: "9822002200" },
+      { id: 3, name: "Pooja Nair", role: "HR Executive", email: "pooja@rspl.com", phone: "9833003300" },
+      { id: 4, name: "Kunal Bose", role: "Jr. HR Executive", email: "kunal@rspl.com", phone: "9844004400" },
+      { id: 5, name: "Divya Rawat", role: "HR Manager", email: "divya@rspl.com", phone: "9855005500" }
     ];
 
     let candidates = [
@@ -237,9 +297,9 @@
         joiningStatus: "INITIATED",
         linkStatus: "SENT",
         assignedHR: { id: 1, name: "Sneha Kapoor" },
-        createdAt: "2026-02-20"
+        createdAt: "2026-02-20",
+        onboardingToken: "demo-token-123"
       }
-      // ... add more demo rows if you like
     ];
 
     // TAB NAVIGATION
@@ -249,6 +309,7 @@
         document.getElementById(`tab-${t}`).className =
           "tab-inactive px-4 py-2 rounded-lg text-sm font-semibold transition";
       });
+
       document.getElementById(`tab-${name}-content`).classList.remove("hidden");
       document.getElementById(`tab-${name}`).className =
         "tab-active px-4 py-2 rounded-lg text-sm font-semibold transition";
@@ -261,48 +322,47 @@
 
     // DASHBOARD
     function renderDashboard() {
-      const total     = candidates.length;
-      const approved  = candidates.filter(c => c.joiningStatus === "APPROVED").length;
-      const pending   = candidates.filter(c =>
-        ["INITIATED", "FORMSUBMITTED", "SIGNED"].includes(c.joiningStatus)).length;
-      const rejected  = candidates.filter(c => c.joiningStatus === "REJECTED").length;
+      const total = candidates.length;
+      const approved = candidates.filter(c => c.joiningStatus === "APPROVED").length;
+      const pending = candidates.filter(c =>
+        ["INITIATED", "FORM_SUBMITTED", "SIGNED"].includes(c.joiningStatus)
+      ).length;
+      const rejected = candidates.filter(c => c.joiningStatus === "REJECTED").length;
 
       document.getElementById("stats-grid").innerHTML = [
-        statCard("Users",     "Total Candidates", total,    "blue"),
-        statCard("Check",     "Approved",         approved, "green"),
-        statCard("Clock",     "Pending",          pending,  "yellow"),
-        statCard("XCircle",   "Rejected",         rejected, "red")
+        statCard("Users", "Total Candidates", total, "blue"),
+        statCard("Check", "Approved", approved, "green"),
+        statCard("Clock", "Pending", pending, "yellow"),
+        statCard("XCircle", "Rejected", rejected, "red")
       ].join("");
 
-      const recent = [...candidates]
-        .sort((a,b) => b.id - a.id)
-        .slice(0, 5);
+      const recent = [...candidates].sort((a,b) => b.id - a.id).slice(0, 5);
 
       document.getElementById("recent-list").innerHTML = recent.map(c => `
         <div class="flex items-center justify-between py-3 border-b last:border-0 hover:bg-gray-50 rounded-lg px-2 cursor-pointer"
              onclick="showDetail(${c.id})">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 gradient-bg rounded-full flex items-center justify-center text-white font-bold">
-              ${c.employeeName[0] || "?"}
+              ${(c.employeeName && c.employeeName[0]) ? c.employeeName[0] : "?"}
             </div>
             <div>
-              <div class="font-semibold text-gray-800">${c.employeeName}</div>
+              <div class="font-semibold text-gray-800">${c.employeeName || "-"}</div>
               <div class="text-xs text-gray-500">${c.designation || ""} · ${c.emailId || ""}</div>
             </div>
           </div>
-          <span class="status-badge ${c.joiningStatus.toLowerCase()}">
-            ${c.joiningStatus.replace("_"," ")}
-          </span>
+          <span class="status-badge ${statusCss(c.joiningStatus)}">${statusLabel(c.joiningStatus)}</span>
         </div>
       `).join("");
+
+      if (window.lucide) lucide.createIcons();
     }
 
     function statCard(icon, label, value, color) {
       const colors = {
-        blue:   "bg-blue-50 text-blue-600",
-        green:  "bg-green-50 text-green-600",
+        blue: "bg-blue-50 text-blue-600",
+        green: "bg-green-50 text-green-600",
         yellow: "bg-yellow-50 text-yellow-600",
-        red:    "bg-red-50 text-red-600"
+        red: "bg-red-50 text-red-600"
       };
       return `
         <div class="card p-6 cursor-pointer hover:scale-105 transition">
@@ -319,7 +379,7 @@
       `;
     }
 
-    // CANDIDATES TABLE
+    // CANDIDATES TABLE (UPDATED with Portal Link + Copy/Open/Resend)
     function renderCandidates(list) {
       document.getElementById("candidates-table").innerHTML = `
         <div class="card overflow-hidden">
@@ -331,65 +391,96 @@
                 <th class="text-left px-4 py-3 text-gray-600 font-semibold">Designation</th>
                 <th class="text-left px-4 py-3 text-gray-600 font-semibold">Assigned HR</th>
                 <th class="text-left px-4 py-3 text-gray-600 font-semibold">Status</th>
+                <th class="text-left px-4 py-3 text-gray-600 font-semibold">Portal Link</th>
                 <th class="text-left px-4 py-3 text-gray-600 font-semibold">Actions</th>
               </tr>
             </thead>
+
             <tbody>
-              ${list.map((c,i) => `
-                <tr class="border-b hover:bg-blue-50 transition cursor-pointer" onclick="showDetail(${c.id})">
-                  <td class="px-4 py-3 text-gray-500">${i+1}</td>
-                  <td class="px-4 py-3">
-                    <div class="font-semibold text-gray-800">${c.employeeName}</div>
-                    <div class="text-xs text-gray-500">${c.emailId || ""}</div>
-                  </td>
-                  <td class="px-4 py-3 text-gray-600">${c.designation || ""}</td>
-                  <td class="px-4 py-3 text-gray-600">${c.assignedHR?.name || "-"}</td>
-                  <td class="px-4 py-3">
-                    <span class="status-badge ${c.joiningStatus.toLowerCase()}">
-                      ${c.joiningStatus.replace("_"," ")}
-                    </span>
-                  </td>
-                  <td class="px-4 py-3" onclick="event.stopPropagation()">
-                    <div class="flex gap-1">
-                      ${c.joiningStatus === "SIGNED" ? `
-                        <button onclick="approveCandidate(${c.id})"
-                                class="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600">
-                          Approve
-                        </button>` : ""
-                      }
-                      ${!["APPROVED","REJECTED"].includes(c.joiningStatus) ? `
-                        <button onclick="rejectCandidate(${c.id})"
-                                class="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600">
-                          Reject
-                        </button>` : ""
-                      }
-                      ${c.linkStatus === "NOT_SENT" ? `
-                        <button onclick="sendLink(${c.id})"
-                                class="bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600">
-                          Send Link
-                        </button>` : ""
-                      }
-                    </div>
-                  </td>
-                </tr>
-              `).join("")}
+              ${list.map((c,i) => {
+                const pl = getPortalLink(c);
+                return `
+                  <tr class="border-b hover:bg-blue-50 transition cursor-pointer" onclick="showDetail(${c.id})">
+                    <td class="px-4 py-3 text-gray-500">${i+1}</td>
+
+                    <td class="px-4 py-3">
+                      <div class="font-semibold text-gray-800">${c.employeeName || "-"}</div>
+                      <div class="text-xs text-gray-500">${c.emailId || ""}</div>
+                    </td>
+
+                    <td class="px-4 py-3 text-gray-600">${c.designation || ""}</td>
+                    <td class="px-4 py-3 text-gray-600">${(c.assignedHR && c.assignedHR.name) ? c.assignedHR.name : "-"}</td>
+
+                    <td class="px-4 py-3">
+                      <span class="status-badge ${statusCss(c.joiningStatus)}">${statusLabel(c.joiningStatus)}</span>
+                    </td>
+
+                    <td class="px-4 py-3" onclick="event.stopPropagation()">
+                      <div class="flex items-center gap-2">
+                        <input id="pl-${c.id}" readonly
+                          class="border rounded-lg px-2 py-1 text-xs w-64 bg-gray-50"
+                          value="${pl}">
+                        <button onclick="copyPortalLinkById(${c.id})"
+                          class="bg-gray-900 text-white px-2 py-1 rounded text-xs hover:bg-black">
+                          Copy
+                        </button>
+                        <button onclick="openPortalLinkById(${c.id})"
+                          class="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700">
+                          Open
+                        </button>
+                        <button onclick="resendLink(${c.id})"
+                          class="bg-indigo-600 text-white px-2 py-1 rounded text-xs hover:bg-indigo-700">
+                          Resend
+                        </button>
+                      </div>
+                    </td>
+
+                    <td class="px-4 py-3" onclick="event.stopPropagation()">
+                      <div class="flex gap-1">
+                        ${c.joiningStatus === "SIGNED" ? `
+                          <button onclick="approveCandidate(${c.id})"
+                            class="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600">
+                            Approve
+                          </button>` : ""
+                        }
+                        ${!["APPROVED","REJECTED"].includes(c.joiningStatus) ? `
+                          <button onclick="rejectCandidate(${c.id})"
+                            class="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600">
+                            Reject
+                          </button>` : ""
+                        }
+                        ${c.linkStatus === "NOT_SENT" ? `
+                          <button onclick="sendLink(${c.id})"
+                            class="bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600">
+                            Send Link
+                          </button>` : ""
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                `;
+              }).join("")}
             </tbody>
           </table>
         </div>
       `;
+
       if (window.lucide) lucide.createIcons();
     }
 
     function filterCandidates() {
       const s = document.getElementById("search-input").value.toLowerCase();
       const st = document.getElementById("status-filter").value;
+
       const filtered = candidates.filter(c => {
-        const matchText = !s ||
-          c.employeeName.toLowerCase().includes(s) ||
+        const matchText = (!s) ||
+          (c.employeeName || "").toLowerCase().includes(s) ||
           (c.emailId || "").toLowerCase().includes(s);
-        const matchStatus = !st || c.joiningStatus === st;
+
+        const matchStatus = (!st) || (c.joiningStatus === st);
         return matchText && matchStatus;
       });
+
       renderCandidates(filtered);
     }
 
@@ -404,12 +495,12 @@
       e.preventDefault();
       const data = {
         employeeName: document.getElementById("f-name").value,
-        aadhaarNo:    document.getElementById("f-aadhaar").value,
-        emailId:      document.getElementById("f-email").value,
-        mobileNo:     document.getElementById("f-mobile").value,
-        designation:  document.getElementById("f-designation").value,
+        aadhaarNo: document.getElementById("f-aadhaar").value,
+        emailId: document.getElementById("f-email").value,
+        mobileNo: document.getElementById("f-mobile").value,
+        designation: document.getElementById("f-designation").value,
         assignedHRId: document.getElementById("f-hr").value ? Number(document.getElementById("f-hr").value) : null,
-        initiatedBy:  "hradmin",
+        initiatedBy: "hradmin",
         sendLinkImmediately: document.getElementById("f-send-link").checked
       };
 
@@ -420,7 +511,6 @@
         await loadCandidates();
         showTab("candidates");
       } else {
-        // demo fallback
         const hr = HRTEAM.find(h => h.id === data.assignedHRId);
         const newC = {
           id: candidates.length + 1,
@@ -432,7 +522,8 @@
           joiningStatus: "INITIATED",
           linkStatus: data.sendLinkImmediately ? "SENT" : "NOT_SENT",
           assignedHR: hr || null,
-          createdAt: new Date().toISOString().split("T")[0]
+          createdAt: new Date().toISOString().split("T")[0],
+          onboardingToken: "demo-token-" + (candidates.length + 1)
         };
         candidates.unshift(newC);
         showToast("Candidate initiated! (Demo Mode)", "green");
@@ -459,6 +550,7 @@
     async function rejectCandidate(id) {
       const reason = prompt("Enter rejection reason");
       if (!reason) return;
+
       const res = await callAPI("POST", `/hr/candidates/${id}/reject`, { reason });
       if (res && res.success) {
         await loadCandidates();
@@ -488,29 +580,75 @@
       }
     }
 
-    // DETAIL MODAL
+    // RESEND LINK (NEW)
+    async function resendLink(id) {
+      const res = await callAPI("POST", `/hr/candidates/${id}/send-link`);
+      if (res && res.success) {
+        await loadCandidates();
+        showToast("Onboarding link resent!", "blue");
+      } else {
+        const c = candidates.find(x => x.id === id);
+        if (c) c.linkStatus = "SENT";
+        renderCandidates(candidates);
+        showToast("Link resent! (Demo)", "blue");
+      }
+    }
+
+    // DETAIL MODAL (UPDATED: shows Portal Link + Copy/Open/Resend)
     function showDetail(id) {
       const c = candidates.find(x => x.id === id);
       if (!c) return;
+
+      const pl = getPortalLink(c);
+
+      const portalBlock = (pl && pl.trim() !== "") ? `
+        <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6">
+          <div class="text-xs text-blue-700 font-semibold mb-2 flex items-center gap-1">
+            <i data-lucide="Link" class="w-4 h-4"></i>
+            <span>Pre-Onboarding Link (Share if candidate didn’t receive SMS)</span>
+          </div>
+          <div class="flex gap-2 items-center">
+            <input id="modal-portal-link" readonly class="flex-1 border rounded-lg px-3 py-2 text-xs bg-white" value="${pl}">
+            <button onclick="copyToClipboard(document.getElementById('modal-portal-link').value)"
+              class="bg-gray-900 text-white px-3 py-2 rounded-lg text-xs hover:bg-black">
+              Copy
+            </button>
+            <a href="${pl}" target="_blank"
+              class="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs hover:bg-blue-700">
+              Open
+            </a>
+            <button onclick="resendLink(${c.id})"
+              class="bg-indigo-600 text-white px-3 py-2 rounded-lg text-xs hover:bg-indigo-700">
+              Resend
+            </button>
+          </div>
+        </div>
+      ` : `
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6">
+          <div class="text-xs text-gray-600 font-semibold mb-1">Pre-Onboarding Link</div>
+          <div class="text-sm text-gray-500">Not available (token not returned)</div>
+        </div>
+      `;
+
       document.getElementById("modal-content").innerHTML = `
         <div class="flex items-center gap-4 mb-6">
           <div class="w-16 h-16 gradient-bg rounded-full flex items-center justify-center text-white text-2xl font-bold">
-            ${c.employeeName[0] || "?"}
+            ${(c.employeeName && c.employeeName[0]) ? c.employeeName[0] : "?"}
           </div>
           <div>
-            <h2 class="text-2xl font-bold text-gray-800">${c.employeeName}</h2>
+            <h2 class="text-2xl font-bold text-gray-800">${c.employeeName || "-"}</h2>
             <p class="text-gray-500">${c.designation || ""}</p>
-            <span class="status-badge ${c.joiningStatus.toLowerCase()}">
-              ${c.joiningStatus.replace("_"," ")}
-            </span>
+            <span class="status-badge ${statusCss(c.joiningStatus)}">${statusLabel(c.joiningStatus)}</span>
           </div>
         </div>
+
+        ${portalBlock}
 
         <div class="grid grid-cols-2 gap-4 mb-6">
           ${detailRow("Mail", "Email", c.emailId || "-")}
           ${detailRow("Phone", "Mobile", c.mobileNo || "-")}
           ${detailRow("IdCard", "Aadhaar", c.aadhaarNo || "-")}
-          ${detailRow("User2", "HR", c.assignedHR?.name || "-")}
+          ${detailRow("User2", "HR", (c.assignedHR && c.assignedHR.name) ? c.assignedHR.name : "-")}
           ${detailRow("Link", "Link Status", c.linkStatus || "-")}
           ${detailRow("Calendar", "Created", c.createdAt || "-")}
           ${c.rejectionReason ? detailRow("AlertTriangle", "Rejection Reason", c.rejectionReason) : ""}
@@ -519,24 +657,32 @@
         <div class="flex gap-3">
           ${c.joiningStatus === "SIGNED" ? `
             <button onclick="approveCandidate(${c.id})"
-                    class="flex-1 bg-green-500 text-white py-2 rounded-lg font-semibold hover:bg-green-600">
+              class="flex-1 bg-green-500 text-white py-2 rounded-lg font-semibold hover:bg-green-600">
               Approve
             </button>` : ""
           }
+
           ${!["APPROVED","REJECTED"].includes(c.joiningStatus) ? `
             <button onclick="rejectCandidate(${c.id})"
-                    class="flex-1 bg-red-500 text-white py-2 rounded-lg font-semibold hover:bg-red-600">
+              class="flex-1 bg-red-500 text-white py-2 rounded-lg font-semibold hover:bg-red-600">
               Reject
             </button>` : ""
           }
+
           ${c.linkStatus === "NOT_SENT" ? `
             <button onclick="sendLink(${c.id})"
-                    class="flex-1 bg-blue-500 text-white py-2 rounded-lg font-semibold hover:bg-blue-600">
+              class="flex-1 bg-blue-500 text-white py-2 rounded-lg font-semibold hover:bg-blue-600">
               Send Link
             </button>` : ""
           }
+
+          <button onclick="resendLink(${c.id})"
+            class="flex-1 bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700">
+            Resend Link
+          </button>
         </div>
       `;
+
       document.getElementById("modal").classList.remove("hidden");
       if (window.lucide) lucide.createIcons();
     }
@@ -570,14 +716,17 @@
               <div class="text-sm text-blue-600">${h.role}</div>
             </div>
           </div>
+
           <div class="space-y-2 text-sm text-gray-600">
             <div>${h.email}</div>
             <div>${h.phone}</div>
-            <div>${candidates.filter(c => c.assignedHR?.id === h.id).length} Candidates</div>
-            <div>${candidates.filter(c => c.assignedHR?.id === h.id && c.joiningStatus === "APPROVED").length} Approved</div>
+            <div>${candidates.filter(c => (c.assignedHR && c.assignedHR.id) === h.id).length} Candidates</div>
+            <div>${candidates.filter(c => (c.assignedHR && c.assignedHR.id) === h.id && c.joiningStatus === "APPROVED").length} Approved</div>
           </div>
         </div>
       `).join("");
+
+      if (window.lucide) lucide.createIcons();
     }
 
     // LOAD FROM API
@@ -594,8 +743,8 @@
     function showToast(msg, type = "green") {
       const colors = {
         green: "bg-green-600",
-        red:   "bg-red-600",
-        blue:  "bg-blue-600"
+        red: "bg-red-600",
+        blue: "bg-blue-600"
       };
       const t = document.getElementById("toast");
       const box = t.querySelector("div");
@@ -607,7 +756,6 @@
 
     // INIT
     (async function init() {
-      // load HR from backend
       const teamRes = await callAPI("GET", "/hr/team");
       if (teamRes && teamRes.success && teamRes.data && teamRes.data.length > 0) {
         HRTEAM = teamRes.data;
@@ -618,5 +766,6 @@
       if (window.lucide) lucide.createIcons();
     })();
   </script>
+
 </body>
 </html>
