@@ -27,16 +27,13 @@ public class CandidatePortalController {
                     "message", "Token expired or invalid"
             ));
         }
-
         Candidate c = opt.get();
-
         if (c.getTokenExpiry() != null && c.getTokenExpiry().isBefore(LocalDateTime.now())) {
             return ResponseEntity.status(401).body(Map.of(
                     "success", false,
                     "message", "Token has expired. Please contact HR."
             ));
         }
-
         return ResponseEntity.ok(Map.of(
                 "success", true,
                 "data", Map.of(
@@ -80,7 +77,7 @@ public class CandidatePortalController {
                     return (v == null) ? fallback : v;
                 };
 
-        // ===== Personal (Excel matched) =====
+        // ===== Personal =====
         c.setAadhaarNo(val.apply("aadhaarNo", c.getAadhaarNo()));
         c.setMobileNo(val.apply("mobileNo", c.getMobileNo()));
         c.setPersonalEmail(val.apply("personalEmail", c.getPersonalEmail()));
@@ -93,7 +90,11 @@ public class CandidatePortalController {
         c.setBloodGroup(val.apply("bloodGroup", c.getBloodGroup()));
         c.setHigherEducation(val.apply("higherEducation", c.getHigherEducation()));
         c.setPanCardNo(val.apply("panCardNo", c.getPanCardNo()));
+
+        // ✅ NEW: UAN yes/no + number
+        c.setUanAvailable(val.apply("uanAvailable", c.getUanAvailable()));
         c.setUanNo(val.apply("uanNo", c.getUanNo()));
+
         c.setEsiNo(val.apply("esiNo", c.getEsiNo()));
 
         // ===== Address =====
@@ -108,7 +109,6 @@ public class CandidatePortalController {
         c.setDepartment(val.apply("department", c.getDepartment()));
         c.setDateOfJoining(val.apply("dateOfJoining", c.getDateOfJoining()));
 
-        // Previous employment block
         c.setPrevOrgName(val.apply("prevOrgName", c.getPrevOrgName()));
         c.setPrevOrgLocation(val.apply("prevOrgLocation", c.getPrevOrgLocation()));
         c.setPrevEmpFrom(val.apply("prevEmpFrom", c.getPrevEmpFrom()));
@@ -149,15 +149,12 @@ public class CandidatePortalController {
     @GetMapping("/status")
     public ResponseEntity<Map<String, Object>> getStatus(@RequestParam String token) {
         Optional<Candidate> opt = candidateRepository.findByOnboardingToken(token);
-
         if (opt.isEmpty()) {
             return ResponseEntity.status(401).body(
                     Map.of("success", false, "message", "Invalid token")
             );
         }
-
         Candidate c = opt.get();
-
         return ResponseEntity.ok(Map.of(
                 "success", true,
                 "data", Map.of(
