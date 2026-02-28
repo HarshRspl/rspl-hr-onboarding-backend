@@ -32,16 +32,43 @@ public class OnboardingService {
     private String resolveHRName(Long hrId) {
         if (hrId == null) return "HR Admin";
         Map<Long, String> names = Map.of(
-            1L,"Sneha Kapoor",2L,"Arjun Mehta",
-            3L,"Pooja Nair",  4L,"Kunal Bose",5L,"Divya Rawat"
+            1L,"Sneha Kapoor", 2L,"Arjun Mehta",
+            3L,"Pooja Nair",   4L,"Kunal Bose", 5L,"Divya Rawat"
         );
         return names.getOrDefault(hrId, "HR Admin");
     }
 
-    public Page<Candidate> listCandidates(int page, int size) {
-        return candidateRepository.findAll(
-            PageRequest.of(page, size, Sort.by("id").descending())
-        );
+    // ✅ UPDATED — now supports status filter + search
+    public Page<Candidate> listCandidates(int page, int size, String status, String search) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+
+        boolean hasStatus = status != null && !status.isBlank();
+        boolean hasSearch = search != null && !search.isBlank();
+
+        if (hasStatus && hasSearch)
+            return candidateRepository.findByJoiningStatusAndSearch(status, search, pageable);
+        else if (hasStatus)
+            return candidateRepository.findByJoiningStatus(status, pageable);
+        else if (hasSearch)
+            return candidateRepository.findBySearch(search, pageable);
+        else
+            return candidateRepository.findAll(pageable);
+    }
+
+    // ✅ ADDED — for GET /candidates/{id}
+    public Candidate getCandidate(long id) {
+        return candidateRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Candidate not found: " + id));
+    }
+
+    // ✅ ADDED — for stats total count
+    public long countAll() {
+        return candidateRepository.count();
+    }
+
+    // ✅ ADDED — for stats per-status count
+    public long countByStatus(String status) {
+        return candidateRepository.countByJoiningStatus(status);
     }
 
     public Candidate initiate(InitiateCandidateRequest request) {
@@ -69,13 +96,11 @@ public class OnboardingService {
         String token = UUID.randomUUID().toString();
         candidate.setOnboardingToken(token);
         candidate.setTokenExpiry(LocalDateTime.now().plusDays(7));
-
         candidate.setCreatedAt(LocalDateTime.now());
         candidate.setUpdatedAt(LocalDateTime.now());
 
         Candidate saved = candidateRepository.save(candidate);
 
-        // Send SMS if requested
         Boolean sendLink = request.getSendLinkImmediately();
         if (sendLink == null || sendLink) {
             String portalUrl = "https://rspl-hr-onboarding-backend-production.up.railway.app/onboarding.html?token=" + token;
@@ -95,7 +120,6 @@ public class OnboardingService {
         Candidate c = candidateRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Candidate not found"));
         c.setJoiningStatus("APPROVED");
-        // Generate Employee ID: RSPL-YYYY-NNN
         long count = candidateRepository.count();
         String empId = "RSPL-" + java.time.Year.now().getValue() + "-"
             + String.format("%03d", count);
