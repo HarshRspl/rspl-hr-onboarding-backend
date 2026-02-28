@@ -1,1048 +1,627 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>RSPL – Candidate Onboarding</title>
-
-  <!-- ✅ FIXED Tailwind include -->
+  <title>RSPL HR – Onboarding Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
-
   <style>
-    body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; }
-    .brand-gradient { background: linear-gradient(135deg, #0f2d4d 0%, #2563eb 100%); }
-    .card { background: #fff; border-radius: 16px; box-shadow: 0 10px 30px rgba(2,6,23,.08); }
-    .field { width: 100%; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px; outline: none; }
-    .field:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59,130,246,.15); }
-    .chip { border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 700; }
+    body { font-family:"Segoe UI",sans-serif; background:#f1f5f9; }
+    .gbg  { background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%); }
+    .card { background:white; border-radius:14px; box-shadow:0 2px 14px rgba(0,0,0,.07); }
+    .badge { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700; }
+    .b-initiated      { background:#eff6ff; color:#2563eb; }
+    .b-form_submitted { background:#f5f3ff; color:#7c3aed; }
+    .b-signed         { background:#fefce8; color:#b45309; }
+    .b-approved       { background:#f0fdf4; color:#16a34a; }
+    .b-rejected       { background:#fef2f2; color:#dc2626; }
+    .ifield { width:100%; border:1.5px solid #e2e8f0; border-radius:9px; padding:10px 13px; font-size:14px; outline:none; transition:border-color .2s,box-shadow .2s; }
+    .ifield:focus { border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.12); }
+    .lbl { display:block; font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; }
+    .overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; z-index:50; align-items:center; justify-content:center; }
+    .overlay.open { display:flex; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    .modal-box { animation:fadeUp .3s ease; }
+    .tab-btn { padding:8px 18px; border-radius:8px; font-size:13px; font-weight:600; color:#64748b; cursor:pointer; transition:all .2s; }
+    .tab-btn.active { background:#2563eb; color:white; }
+    .tab-btn:not(.active):hover { background:#f1f5f9; }
+    .action-btn { padding:5px 14px; border-radius:7px; font-size:12px; font-weight:700; cursor:pointer; transition:all .15s; border:none; }
+    tr:hover td { background:#f8fafc; }
   </style>
 </head>
+<body>
 
-<body class="bg-slate-50 min-h-screen">
-
-  <!-- TOP BAR -->
-  <header class="brand-gradient text-white sticky top-0 z-20">
-    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center font-black text-xl">R</div>
-      <div class="leading-tight">
-        <div class="font-bold text-base">RSPL Health</div>
-        <div class="text-xs text-blue-100">Pre‑Onboarding Portal</div>
-      </div>
-      <div class="ml-auto flex items-center gap-2">
-        <span id="badge-status" class="chip bg-white/15 text-white hidden"></span>
+<nav class="gbg text-white px-6 py-3.5 flex items-center gap-4 shadow-lg sticky top-0 z-30">
+  <div class="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center font-black text-xl">R</div>
+  <div>
+    <div class="font-bold text-base leading-tight">RSPL Health</div>
+    <div class="text-xs text-blue-200">HR Onboarding Dashboard</div>
+  </div>
+  <div class="ml-auto flex items-center gap-4">
+    <div class="hidden md:flex items-center gap-2 bg-white/10 rounded-xl px-4 py-2">
+      <div class="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-sm font-bold" id="user-avatar">?</div>
+      <div>
+        <p class="text-xs font-bold leading-tight" id="hr-user-name">Loading…</p>
+        <p class="text-xs text-blue-200 leading-tight" id="hr-user-role"></p>
       </div>
     </div>
-  </header>
-
-  <main class="max-w-6xl mx-auto px-4 py-6 pb-16">
-
-    <!-- LOADING -->
-    <section id="scr-loading" class="text-center py-24">
-      <div class="inline-flex items-center justify-center w-14 h-14 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-      <div class="mt-4 text-slate-500 text-sm">Verifying your link…</div>
-    </section>
-
-    <!-- INVALID -->
-    <section id="scr-invalid" class="hidden">
-      <div class="card p-8 md:p-10 text-center">
-        <div class="text-6xl mb-4">🔗</div>
-        <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900">Link Invalid or Expired</h2>
-        <p class="mt-2 text-slate-600">This onboarding link is invalid or has expired (valid for 7 days).</p>
-        <div class="mt-6 rounded-2xl bg-blue-50 border border-blue-100 p-4 text-left inline-block">
-          <div class="text-sm font-bold text-blue-900">Need a new link?</div>
-          <div class="text-sm text-blue-800 mt-1">Contact HR: <span class="font-semibold">hr@rspl.com</span></div>
-          <div class="text-sm text-blue-800">Phone: <span class="font-semibold">9811001100</span></div>
-        </div>
-        <div class="mt-8 text-xs text-slate-400">Tip: Ask HR to resend your onboarding link.</div>
-      </div>
-    </section>
-
-    <!-- ALREADY SUBMITTED -->
-    <section id="scr-done" class="hidden">
-      <div class="card p-8 md:p-10 text-center">
-        <div class="text-6xl mb-4">✅</div>
-        <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900">Already Submitted</h2>
-        <p class="mt-2 text-slate-600">You have already completed the onboarding form.</p>
-
-        <div id="done-box" class="mt-6"></div>
-
-        <div id="edit-actions" class="mt-6 hidden">
-          <button onclick="startEdit()"
-            class="w-full bg-slate-900 text-white font-extrabold py-3 rounded-xl hover:bg-black">
-            Edit Submitted Form ✏️
-          </button>
-          <div class="mt-2 text-xs text-slate-500">
-            You can edit details until HR signs/approves your onboarding.
-          </div>
-        </div>
-
-        <div class="mt-8 rounded-2xl bg-emerald-50 border border-emerald-100 p-4 text-emerald-900 text-sm">
-          HR is reviewing your details. You’ll be notified soon.
-        </div>
-      </div>
-    </section>
-
-    <!-- WELCOME -->
-    <section id="scr-welcome" class="hidden">
-      <div class="card p-8 md:p-10">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div>
-            <div class="text-sm text-slate-500 font-semibold">Welcome</div>
-            <div class="text-3xl font-extrabold text-slate-900">
-              <span id="w-name">Candidate</span>
-            </div>
-            <div class="mt-1 text-slate-600 font-medium" id="w-desig"></div>
-            <div class="mt-4 text-sm text-slate-500">
-              Please complete your joining details. Estimated time: <span class="font-semibold">10–15 minutes</span>.
-            </div>
-            <div class="mt-4 flex flex-wrap gap-2">
-              <span class="chip bg-amber-50 text-amber-800 border border-amber-100">Keep Aadhaar + PAN handy</span>
-              <span class="chip bg-amber-50 text-amber-800 border border-amber-100">Bank proof + nominee details</span>
-              <span class="chip bg-amber-50 text-amber-800 border border-amber-100">Education & employment docs</span>
-            </div>
-          </div>
-
-          <div class="md:w-[280px] rounded-2xl bg-slate-50 border border-slate-200 p-4">
-            <div class="text-xs font-bold text-slate-500 uppercase tracking-wide">Status</div>
-            <div class="mt-2 flex items-center gap-2">
-              <div class="w-2.5 h-2.5 rounded-full bg-blue-600"></div>
-              <div class="text-sm font-semibold text-slate-800" id="w-status">INITIATED</div>
-            </div>
-
-            <button onclick="openWizard()"
-              class="mt-4 w-full brand-gradient text-white font-bold py-3 rounded-xl hover:opacity-95 transition">
-              Start Onboarding →
-            </button>
-
-            <div class="mt-3 text-xs text-slate-500">If you face issues, contact HR.</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- WIZARD -->
-    <section id="scr-wizard" class="hidden">
-      <div class="grid md:grid-cols-12 gap-6">
-
-        <!-- LEFT STEPPER -->
-        <aside class="md:col-span-4">
-          <div class="card p-5 sticky top-[92px]">
-            <div class="text-xs font-bold text-slate-500 uppercase tracking-wide">Progress</div>
-            <div class="mt-3">
-              <div class="flex justify-between text-xs text-slate-500 mb-1">
-                <span>Completion</span>
-                <span id="pct">0%</span>
-              </div>
-              <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div id="bar" class="h-2 bg-blue-600 rounded-full" style="width:0%"></div>
-              </div>
-            </div>
-
-            <div class="mt-6 space-y-2 text-sm">
-              <button class="w-full text-left p-3 rounded-xl border bg-white hover:bg-slate-50 transition"
-                      id="stepbtn-1" onclick="goStep(1)">
-                <div class="font-bold text-slate-800">1) Personal</div>
-                <div class="text-xs text-slate-500">Basic details + PF/UAN</div>
-              </button>
-
-              <button class="w-full text-left p-3 rounded-xl border bg-white hover:bg-slate-50 transition"
-                      id="stepbtn-2" onclick="goStep(2)">
-                <div class="font-bold text-slate-800">2) Address</div>
-                <div class="text-xs text-slate-500">Permanent address</div>
-              </button>
-
-              <button class="w-full text-left p-3 rounded-xl border bg-white hover:bg-slate-50 transition"
-                      id="stepbtn-3" onclick="goStep(3)">
-                <div class="font-bold text-slate-800">3) Bank</div>
-                <div class="text-xs text-slate-500">Account + IFSC</div>
-              </button>
-
-              <button class="w-full text-left p-3 rounded-xl border bg-white hover:bg-slate-50 transition"
-                      id="stepbtn-4" onclick="goStep(4)">
-                <div class="font-bold text-slate-800">4) Nominee</div>
-                <div class="text-xs text-slate-500">EPF / Gratuity nominee</div>
-              </button>
-
-              <button class="w-full text-left p-3 rounded-xl border bg-white hover:bg-slate-50 transition"
-                      id="stepbtn-5" onclick="goStep(5)">
-                <div class="font-bold text-slate-800">5) Documents</div>
-                <div class="text-xs text-slate-500">Upload documents</div>
-              </button>
-
-              <button class="w-full text-left p-3 rounded-xl border bg-white hover:bg-slate-50 transition"
-                      id="stepbtn-6" onclick="goStep(6)">
-                <div class="font-bold text-slate-800">6) Review & Submit</div>
-                <div class="text-xs text-slate-500">Confirm & submit</div>
-              </button>
-            </div>
-
-            <div class="mt-6 text-xs text-slate-500">🔒 Your data is securely submitted to HR.</div>
-          </div>
-        </aside>
-
-        <!-- RIGHT CONTENT -->
-        <section class="md:col-span-8 space-y-6">
-          <div id="err" class="hidden rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"></div>
-
-          <!-- STEP 1 -->
-          <div id="step-1" class="card p-6">
-            <div class="flex items-start justify-between gap-4">
-              <div>
-                <h2 class="text-xl font-extrabold text-slate-900">Personal Information</h2>
-                <p class="text-sm text-slate-500 mt-1">Fill basic details. Fields marked * are mandatory.</p>
-              </div>
-              <span class="chip bg-blue-50 text-blue-700 border border-blue-100">Step 1/6</span>
-            </div>
-
-            <div class="mt-6 grid md:grid-cols-2 gap-4">
-              <div>
-                <label class="text-xs font-bold text-slate-500 uppercase">Full Name</label>
-                <input id="f-name" class="field bg-slate-50 text-slate-600" readonly />
-              </div>
-
-              <div>
-                <label class="text-xs font-bold text-slate-500 uppercase">Father’s Name *</label>
-                <input id="f-fathers-name" class="field" placeholder="Father's full name"/>
-              </div>
-
-              <div>
-                <label class="text-xs font-bold text-slate-500 uppercase">Date of Birth *</label>
-                <input id="f-dob" type="date" class="field"/>
-              </div>
-
-              <div>
-                <label class="text-xs font-bold text-slate-500 uppercase">Gender *</label>
-                <select id="f-gender" class="field">
-                  <option value="">Select</option>
-                  <option>Male</option><option>Female</option><option>Other</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="text-xs font-bold text-slate-500 uppercase">Marital Status *</label>
-                <select id="f-marital" class="field">
-                  <option value="">Select</option>
-                  <option>Single</option><option>Married</option><option>Divorced</option><option>Widowed</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="text-xs font-bold text-slate-500 uppercase">Blood Group *</label>
-                <select id="f-blood" class="field">
-                  <option value="">Select</option>
-                  <option>A+</option><option>A-</option>
-                  <option>B+</option><option>B-</option>
-                  <option>AB+</option><option>AB-</option>
-                  <option>O+</option><option>O-</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="text-xs font-bold text-slate-500 uppercase">Highest Education *</label>
-                <select id="f-education" class="field">
-                  <option value="">Select</option>
-                  <option>10th Pass</option><option>12th Pass</option><option>Diploma</option>
-                  <option>Graduate (B.A / B.Sc / B.Com)</option>
-                  <option>Graduate (B.Tech / B.E)</option>
-                  <option>Post Graduate</option><option>MBA</option><option>PhD</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="text-xs font-bold text-slate-500 uppercase">PAN Number *</label>
-                <input id="f-pan" class="field" maxlength="10" placeholder="ABCDE1234F" style="text-transform:uppercase"/>
-                <div class="text-[11px] text-slate-400 mt-1">Format: 5 letters + 4 digits + 1 letter</div>
-              </div>
-            </div>
-
-            <!-- UAN SECTION -->
-            <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-              <div class="flex items-center justify-between">
-                <div class="font-extrabold text-slate-900">PF / UAN</div>
-                <span class="text-xs text-slate-500 font-semibold">Optional if you don’t have UAN yet</span>
-              </div>
-
-              <div class="mt-3 text-sm font-semibold text-slate-700">Do you already have UAN?</div>
-              <div class="mt-2 flex gap-6">
-                <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="uanAvailable" value="YES" onchange="toggleUan()" />
-                  <span class="text-sm">Yes</span>
-                </label>
-                <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="uanAvailable" value="NO" onchange="toggleUan()" checked />
-                  <span class="text-sm">No</span>
-                </label>
-              </div>
-
-              <div id="uan-yes" class="hidden mt-4">
-                <label class="text-xs font-bold text-slate-500 uppercase">UAN Number (12 digits)</label>
-                <input id="f-uan" class="field" maxlength="12" placeholder="Enter 12-digit UAN"
-                       oninput="this.value=this.value.replace(/\\D/g,'')"/>
-              </div>
-
-              <div id="uan-no" class="mt-4">
-                <div class="rounded-xl bg-blue-50 border border-blue-100 p-4">
-                  <div class="text-sm font-bold text-blue-900">No UAN? Generate & activate easily</div>
-                  <div class="text-xs text-blue-800 mt-1">Watch the Official EPFO guide video.</div>
-                  <a class="text-blue-900 font-bold underline text-sm" href="https://www.youtube.com/watch?v=vw3k-w_3g1I" target="_blank" rel="noreferrer">
-                    ▶ Official EPFO UAN Guide (YouTube)
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <div class="mt-6 flex justify-end">
-              <button onclick="nextStep()" class="brand-gradient text-white font-bold px-6 py-3 rounded-xl hover:opacity-95">
-                Next →
-              </button>
-            </div>
-          </div>
-
-          <!-- STEP 2 -->
-          <div id="step-2" class="card p-6 hidden">
-            <div class="flex items-start justify-between gap-4">
-              <div>
-                <h2 class="text-xl font-extrabold text-slate-900">Address Details</h2>
-                <p class="text-sm text-slate-500 mt-1">Enter your permanent address details.</p>
-              </div>
-              <span class="chip bg-blue-50 text-blue-700 border border-blue-100">Step 2/6</span>
-            </div>
-
-            <div class="mt-6 grid md:grid-cols-2 gap-4">
-              <div class="md:col-span-2">
-                <label class="text-xs font-bold text-slate-500 uppercase">Permanent Address *</label>
-                <textarea id="f-address" class="field" rows="3" placeholder="House No, Street, Area, Landmark"></textarea>
-              </div>
-
-              <div>
-                <label class="text-xs font-bold text-slate-500 uppercase">District *</label>
-                <input id="f-district" class="field" placeholder="District"/>
-              </div>
-
-              <div>
-                <label class="text-xs font-bold text-slate-500 uppercase">State *</label>
-                <input id="f-state" class="field" placeholder="State"/>
-              </div>
-
-              <div>
-                <label class="text-xs font-bold text-slate-500 uppercase">PIN Code *</label>
-                <input id="f-pin" class="field" maxlength="6" placeholder="6-digit PIN"
-                       oninput="this.value=this.value.replace(/\\D/g,'')"/>
-              </div>
-            </div>
-
-            <div class="mt-6 flex justify-between">
-              <button onclick="prevStep()" class="px-6 py-3 rounded-xl font-bold border hover:bg-slate-50">← Back</button>
-              <button onclick="nextStep()" class="brand-gradient text-white font-bold px-6 py-3 rounded-xl hover:opacity-95">Next →</button>
-            </div>
-          </div>
-
-          <!-- STEP 3 -->
-          <div id="step-3" class="card p-6 hidden">
-            <div class="flex items-start justify-between gap-4">
-              <div>
-                <h2 class="text-xl font-extrabold text-slate-900">Bank Details</h2>
-                <p class="text-sm text-slate-500 mt-1">Enter bank details for salary processing.</p>
-              </div>
-              <span class="chip bg-blue-50 text-blue-700 border border-blue-100">Step 3/6</span>
-            </div>
-
-            <div class="mt-6 grid md:grid-cols-2 gap-4">
-              <div>
-                <label class="text-xs font-bold text-slate-500 uppercase">Bank Name *</label>
-                <input id="f-bank-name" class="field" placeholder="Bank name"/>
-              </div>
-
-              <div>
-                <label class="text-xs font-bold text-slate-500 uppercase">Account Number *</label>
-                <input id="f-account" class="field" maxlength="20" placeholder="Account number"/>
-              </div>
-
-              <div>
-                <label class="text-xs font-bold text-slate-500 uppercase">IFSC Code *</label>
-                <input id="f-ifsc" class="field" maxlength="11" placeholder="SBIN0001234" style="text-transform:uppercase"/>
-              </div>
-
-              <div>
-                <label class="text-xs font-bold text-slate-500 uppercase">Branch Name *</label>
-                <input id="f-branch" class="field" placeholder="Branch name"/>
-              </div>
-            </div>
-
-            <div class="mt-6 flex justify-between">
-              <button onclick="prevStep()" class="px-6 py-3 rounded-xl font-bold border hover:bg-slate-50">← Back</button>
-              <button onclick="nextStep()" class="brand-gradient text-white font-bold px-6 py-3 rounded-xl hover:opacity-95">Next →</button>
-            </div>
-          </div>
-
-          <!-- STEP 4 -->
-          <div id="step-4" class="card p-6 hidden">
-            <div class="flex items-start justify-between gap-4">
-              <div>
-                <h2 class="text-xl font-extrabold text-slate-900">Nominee Details</h2>
-                <p class="text-sm text-slate-500 mt-1">Nominee required for EPF/Gratuity.</p>
-              </div>
-              <span class="chip bg-blue-50 text-blue-700 border border-blue-100">Step 4/6</span>
-            </div>
-
-            <div class="mt-6 grid md:grid-cols-2 gap-4">
-              <div>
-                <label class="text-xs font-bold text-slate-500 uppercase">Nominee Name *</label>
-                <input id="f-nominee-name" class="field" placeholder="Nominee full name"/>
-              </div>
-
-              <div>
-                <label class="text-xs font-bold text-slate-500 uppercase">Relation *</label>
-                <select id="f-nominee-relation" class="field">
-                  <option value="">Select</option>
-                  <option>Father</option><option>Mother</option><option>Spouse</option>
-                  <option>Son</option><option>Daughter</option>
-                  <option>Brother</option><option>Sister</option><option>Other</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="text-xs font-bold text-slate-500 uppercase">Nominee Date of Birth *</label>
-                <input id="f-nominee-dob" type="date" class="field"/>
-              </div>
-
-              <div>
-                <label class="text-xs font-bold text-slate-500 uppercase">Nominee Address *</label>
-                <input id="f-nominee-address" class="field" placeholder="Nominee address"/>
-              </div>
-            </div>
-
-            <div class="mt-6 flex justify-between">
-              <button onclick="prevStep()" class="px-6 py-3 rounded-xl font-bold border hover:bg-slate-50">← Back</button>
-              <button onclick="nextStep()" class="brand-gradient text-white font-bold px-6 py-3 rounded-xl hover:opacity-95">Next →</button>
-            </div>
-          </div>
-
-          <!-- STEP 5 -->
-          <div id="step-5" class="card p-6 hidden">
-            <div class="flex items-start justify-between gap-4">
-              <div>
-                <h2 class="text-xl font-extrabold text-slate-900">Upload Documents</h2>
-                <p class="text-sm text-slate-500 mt-1">PDF/JPG/PNG allowed (max 5MB each).</p>
-              </div>
-              <span class="chip bg-blue-50 text-blue-700 border border-blue-100">Step 5/6</span>
-            </div>
-
-            <div class="mt-6 grid md:grid-cols-2 gap-4">
-              <div class="rounded-2xl border p-4">
-                <div class="font-bold text-slate-800">Aadhaar</div>
-                <div class="text-xs text-slate-500 mt-1">PDF/JPG/PNG</div>
-                <input id="doc-aadhaar" type="file" accept=".pdf,.jpg,.jpeg,.png" class="mt-3 w-full"/>
-                <button type="button" onclick="uploadDoc('AADHAAR','doc-aadhaar')"
-                        class="mt-3 w-full bg-blue-600 text-white font-bold py-2.5 rounded-xl hover:bg-blue-700">
-                  Upload Aadhaar
-                </button>
-              </div>
-
-              <div class="rounded-2xl border p-4">
-                <div class="font-bold text-slate-800">PAN</div>
-                <div class="text-xs text-slate-500 mt-1">PDF/JPG/PNG</div>
-                <input id="doc-pan" type="file" accept=".pdf,.jpg,.jpeg,.png" class="mt-3 w-full"/>
-                <button type="button" onclick="uploadDoc('PAN','doc-pan')"
-                        class="mt-3 w-full bg-blue-600 text-white font-bold py-2.5 rounded-xl hover:bg-blue-700">
-                  Upload PAN
-                </button>
-              </div>
-
-              <div class="rounded-2xl border p-4">
-                <div class="font-bold text-slate-800">Bank Proof</div>
-                <div class="text-xs text-slate-500 mt-1">Cancelled cheque / passbook</div>
-                <input id="doc-bank" type="file" accept=".pdf,.jpg,.jpeg,.png" class="mt-3 w-full"/>
-                <button type="button" onclick="uploadDoc('BANK_PROOF','doc-bank')"
-                        class="mt-3 w-full bg-blue-600 text-white font-bold py-2.5 rounded-xl hover:bg-blue-700">
-                  Upload Bank Proof
-                </button>
-              </div>
-
-              <div class="rounded-2xl border p-4">
-                <div class="font-bold text-slate-800">Photo</div>
-                <div class="text-xs text-slate-500 mt-1">JPG/PNG</div>
-                <input id="doc-photo" type="file" accept=".jpg,.jpeg,.png" class="mt-3 w-full"/>
-                <button type="button" onclick="uploadDoc('PHOTO','doc-photo')"
-                        class="mt-3 w-full bg-blue-600 text-white font-bold py-2.5 rounded-xl hover:bg-blue-700">
-                  Upload Photo
-                </button>
-              </div>
-            </div>
-
-            <!-- Education / Employment Tabs -->
-            <div class="mt-5 rounded-2xl border p-4">
-              <div class="flex items-center justify-between gap-4 flex-wrap">
-                <div>
-                  <div class="font-extrabold text-slate-900">Education & Employment Documents</div>
-                  <div class="text-xs text-slate-500 mt-1">Multiple files allowed (PDF/JPG/PNG)</div>
-                </div>
-
-                <div class="inline-flex rounded-xl bg-slate-100 p-1">
-                  <button type="button" id="tab-edu"
-                          onclick="setDocTab('edu')"
-                          class="px-4 py-2 rounded-lg text-sm font-bold bg-white text-slate-900 shadow-sm">
-                    Education
-                  </button>
-
-                  <button type="button" id="tab-emp"
-                          onclick="setDocTab('emp')"
-                          class="px-4 py-2 rounded-lg text-sm font-bold text-slate-600 hover:text-slate-900">
-                    Employment
-                  </button>
-                </div>
-              </div>
-
-              <div id="panel-edu" class="mt-4">
-                <div class="rounded-xl bg-indigo-50 border border-indigo-100 p-4">
-                  <div class="font-bold text-indigo-900">Education Documents (Multiple)</div>
-                  <div class="text-xs text-indigo-800 mt-1">
-                    Examples: 10th/12th marksheet, graduation degree, diploma certificate, etc.
-                  </div>
-                  <input id="doc-education" type="file" multiple accept=".pdf,.jpg,.jpeg,.png" class="mt-3 w-full"/>
-                  <button type="button" onclick="uploadMultiple('EDUCATION','doc-education')"
-                          class="mt-3 w-full bg-indigo-600 text-white font-bold py-2.5 rounded-xl hover:bg-indigo-700">
-                    Upload Education Documents
-                  </button>
-                </div>
-              </div>
-
-              <div id="panel-emp" class="mt-4 hidden">
-                <div class="rounded-xl bg-emerald-50 border border-emerald-100 p-4">
-                  <div class="font-bold text-emerald-900">Employment Documents (Multiple)</div>
-                  <div class="text-xs text-emerald-800 mt-1">
-                    Examples: offer letter, relieving letter, experience letter, salary slips, Form‑16, etc.
-                  </div>
-                  <input id="doc-employment" type="file" multiple accept=".pdf,.jpg,.jpeg,.png" class="mt-3 w-full"/>
-                  <button type="button" onclick="uploadMultiple('EMPLOYMENT','doc-employment')"
-                          class="mt-3 w-full bg-emerald-600 text-white font-bold py-2.5 rounded-xl hover:bg-emerald-700">
-                    Upload Employment Documents
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div class="mt-4 flex items-center gap-2">
-              <button type="button" onclick="loadDocs()"
-                      class="bg-slate-900 text-white font-bold px-4 py-2.5 rounded-xl hover:bg-black">
-                Refresh Uploaded List
-              </button>
-              <span class="text-xs text-slate-500">Uploaded docs will appear below</span>
-            </div>
-
-            <div id="docs-list" class="mt-4 text-sm text-slate-700"></div>
-
-            <div class="mt-6 flex justify-between">
-              <button onclick="prevStep()" class="px-6 py-3 rounded-xl font-bold border hover:bg-slate-50">← Back</button>
-              <button onclick="nextStep()" class="brand-gradient text-white font-bold px-6 py-3 rounded-xl hover:opacity-95">Next →</button>
-            </div>
-          </div>
-
-          <!-- STEP 6 -->
-          <div id="step-6" class="card p-6 hidden">
-            <div class="flex items-start justify-between gap-4">
-              <div>
-                <h2 class="text-xl font-extrabold text-slate-900">Review & Submit</h2>
-                <p class="text-sm text-slate-500 mt-1">Confirm details and submit.</p>
-              </div>
-              <span class="chip bg-blue-50 text-blue-700 border border-blue-100">Step 6/6</span>
-            </div>
-
-            <div class="mt-6 rounded-2xl border bg-slate-50 p-5">
-              <label class="flex items-start gap-3 cursor-pointer">
-                <input type="checkbox" id="f-consent" class="mt-1 w-4 h-4"/>
-                <span class="text-sm text-slate-700">
-                  I declare that the details provided are true and correct. I consent to processing of my data for employment purposes.
-                </span>
-              </label>
-            </div>
-
-            <div class="mt-6 flex justify-between">
-              <button onclick="prevStep()" class="px-6 py-3 rounded-xl font-bold border hover:bg-slate-50">← Back</button>
-              <button id="btn-submit" onclick="submitForm()"
-                      class="brand-gradient text-white font-extrabold px-6 py-3 rounded-xl hover:opacity-95">
-                Submit Form ✅
-              </button>
-            </div>
-
-            <div class="mt-3 text-xs text-slate-500">After submission, HR will review and update your status.</div>
-          </div>
-
-        </section>
-      </div>
-    </section>
-  </main>
-
-  <!-- Toast -->
-  <div id="toast" class="fixed bottom-6 right-6 hidden z-50">
-    <div id="toast-box" class="bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl text-sm font-bold"></div>
+    <button onclick="logout()"
+            class="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-sm font-semibold transition">
+      🚪 Logout
+    </button>
   </div>
+</nav>
+
+<div class="max-w-7xl mx-auto px-4 py-6">
+
+  <!-- Stats -->
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+    <div class="card p-4 text-center">
+      <p class="text-2xl font-black text-gray-800" id="stat-total">–</p>
+      <p class="text-xs text-gray-500 font-semibold mt-1">Total</p>
+    </div>
+    <div class="card p-4 text-center">
+      <p class="text-2xl font-black text-blue-600" id="stat-initiated">–</p>
+      <p class="text-xs text-gray-500 font-semibold mt-1">Initiated</p>
+    </div>
+    <div class="card p-4 text-center">
+      <p class="text-2xl font-black text-purple-600" id="stat-submitted">–</p>
+      <p class="text-xs text-gray-500 font-semibold mt-1">Submitted</p>
+    </div>
+    <div class="card p-4 text-center">
+      <p class="text-2xl font-black text-green-600" id="stat-approved">–</p>
+      <p class="text-xs text-gray-500 font-semibold mt-1">Approved</p>
+    </div>
+    <div class="card p-4 text-center">
+      <p class="text-2xl font-black text-red-500" id="stat-rejected">–</p>
+      <p class="text-xs text-gray-500 font-semibold mt-1">Rejected</p>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="card px-5 py-4 mb-5 flex flex-col md:flex-row md:items-center gap-3">
+    <div class="flex gap-1 flex-wrap" id="tab-bar">
+      <button class="tab-btn active" data-status="" onclick="setTab(this,'')">All</button>
+      <button class="tab-btn" data-status="INITIATED"      onclick="setTab(this,'INITIATED')">Initiated</button>
+      <button class="tab-btn" data-status="FORM_SUBMITTED" onclick="setTab(this,'FORM_SUBMITTED')">Submitted</button>
+      <button class="tab-btn" data-status="SIGNED"         onclick="setTab(this,'SIGNED')">Signed</button>
+      <button class="tab-btn" data-status="APPROVED"       onclick="setTab(this,'APPROVED')">Approved</button>
+      <button class="tab-btn" data-status="REJECTED"       onclick="setTab(this,'REJECTED')">Rejected</button>
+    </div>
+    <div class="md:ml-auto flex gap-2">
+      <input id="search-input" class="ifield w-52" placeholder="🔍 Search name / mobile…" oninput="debounceSearch()"/>
+      <button onclick="loadCandidates(); loadStats()"
+              class="action-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4">↻ Refresh</button>
+      <button onclick="openInitiate()"
+              class="action-btn gbg text-white px-5 py-2 text-sm shadow">+ Initiate Candidate</button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="card overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-100">
+            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wide">#</th>
+            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wide">Employee</th>
+            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wide">Mobile</th>
+            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wide">Designation</th>
+            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wide">Assigned HR</th>
+            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wide">Status</th>
+            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wide">Link</th>
+            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wide">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="candidates-tbody">
+          <tr><td colspan="8" class="text-center py-14 text-gray-400">Loading candidates…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="flex items-center justify-between px-5 py-4 border-t border-gray-100">
+      <span class="text-xs text-gray-500" id="page-info">–</span>
+      <div class="flex gap-2">
+        <button onclick="prevPage()" id="btn-prev" class="action-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-2">← Prev</button>
+        <button onclick="nextPage()" id="btn-next" class="action-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-2">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: INITIATE -->
+<div class="overlay" id="modal-initiate">
+  <div class="card modal-box w-full max-w-lg mx-4 p-7 relative max-h-screen overflow-y-auto">
+    <button onclick="closeModal('modal-initiate')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+    <h2 class="text-lg font-bold text-gray-800 mb-5">➕ Initiate New Candidate</h2>
+    <div class="space-y-4">
+      <div>
+        <label class="lbl">Employee Name *</label>
+        <input class="ifield" id="i-name" placeholder="Full name"/>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="lbl">Mobile *</label>
+          <input class="ifield" id="i-mobile" placeholder="10-digit mobile" maxlength="10"/>
+        </div>
+        <div>
+          <label class="lbl">Aadhaar No</label>
+          <input class="ifield" id="i-aadhaar" placeholder="12-digit Aadhaar" maxlength="12"/>
+        </div>
+      </div>
+      <div>
+        <label class="lbl">Email ID</label>
+        <input type="email" class="ifield" id="i-email" placeholder="candidate@email.com"/>
+      </div>
+      <div>
+        <label class="lbl">Designation *</label>
+        <input class="ifield" id="i-designation" placeholder="e.g. Sales Executive"/>
+      </div>
+      <div>
+        <label class="lbl">Assign HR</label>
+        <select class="ifield" id="i-hr">
+          <option value="">Select HR (optional)</option>
+        </select>
+      </div>
+      <div>
+        <label class="lbl">Send Link via SMS</label>
+        <select class="ifield" id="i-sendlink">
+          <option value="true">Yes – Send immediately</option>
+          <option value="false">No – Send manually later</option>
+        </select>
+      </div>
+    </div>
+    <div id="initiate-error" class="hidden mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-xl text-sm"></div>
+    <div class="flex gap-3 mt-6">
+      <button onclick="closeModal('modal-initiate')" class="flex-1 bg-gray-100 text-gray-600 py-2.5 rounded-xl font-semibold hover:bg-gray-200 transition">Cancel</button>
+      <button id="submit-initiate" onclick="submitInitiate()" class="flex-1 gbg text-white py-2.5 rounded-xl font-bold hover:opacity-90 transition shadow">Initiate & Send Link</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DETAIL -->
+<div class="overlay" id="modal-detail">
+  <div class="card modal-box w-full max-w-2xl mx-4 p-7 relative max-h-[90vh] overflow-y-auto">
+    <button onclick="closeModal('modal-detail')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+    <h2 class="text-lg font-bold text-gray-800 mb-5">👤 Candidate Details</h2>
+    <div id="detail-body" class="text-sm text-gray-600 space-y-2"></div>
+    <div class="flex gap-3 mt-6" id="detail-actions"></div>
+  </div>
+</div>
+
+<!-- MODAL: REJECT -->
+<div class="overlay" id="modal-reject">
+  <div class="card modal-box w-full max-w-md mx-4 p-7 relative">
+    <button onclick="closeModal('modal-reject')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+    <h2 class="text-lg font-bold text-gray-800 mb-4">❌ Reject Candidate</h2>
+    <input type="hidden" id="reject-id"/>
+    <div>
+      <label class="lbl">Rejection Reason *</label>
+      <textarea class="ifield" id="reject-reason" rows="4" placeholder="Minimum 10 characters"></textarea>
+    </div>
+    <div id="reject-error" class="hidden mt-3 bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-xl text-xs"></div>
+    <div class="flex gap-3 mt-5">
+      <button onclick="closeModal('modal-reject')" class="flex-1 bg-gray-100 text-gray-600 py-2.5 rounded-xl font-semibold hover:bg-gray-200">Cancel</button>
+      <button onclick="submitReject()" class="flex-1 bg-red-600 text-white py-2.5 rounded-xl font-bold hover:bg-red-700">Confirm Reject</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="fixed bottom-6 right-6 z-50 hidden">
+  <div class="bg-gray-900 text-white px-5 py-3 rounded-xl shadow-2xl text-sm font-semibold"></div>
+</div>
 
 <script>
   const API = "https://rspl-hr-onboarding-backend-production.up.railway.app/api";
 
-  let TOKEN = null;
-  let CAND = null;
-  let STEP = 1;
-  let MODE = "new"; // "new" | "edit"
+  // ── Auth Guard ──────────────────────────────────────────────────────────────
+  const HR_TOKEN    = localStorage.getItem("hr_token");
+  const HR_NAME     = localStorage.getItem("hr_name")     || "HR User";
+  const HR_ROLE     = localStorage.getItem("hr_role")     || "HR";
+  const HR_USERNAME = localStorage.getItem("hr_username") || "";
 
-  function qs(k){ return new URLSearchParams(location.search).get(k); }
+  if (!HR_TOKEN) window.location.href = "login.html";
 
-  function toast(msg){
-    const t = document.getElementById("toast");
-    const box = document.getElementById("toast-box");
-    box.textContent = msg;
-    t.classList.remove("hidden");
-    setTimeout(()=>t.classList.add("hidden"), 2800);
-  }
+  document.getElementById("hr-user-name").textContent = HR_NAME;
+  document.getElementById("hr-user-role").textContent = HR_ROLE.replace("_", " ");
+  document.getElementById("user-avatar").textContent  = HR_NAME.charAt(0).toUpperCase();
 
-  function show(id){
-    ["scr-loading","scr-invalid","scr-welcome","scr-wizard","scr-done"].forEach(x=>{
-      const el=document.getElementById(x);
-      if(el) el.classList.add("hidden");
+  // ── authFetch ───────────────────────────────────────────────────────────────
+  function authFetch(url, options = {}) {
+    options.headers = options.headers || {};
+    options.headers["Authorization"] = "Bearer " + HR_TOKEN;
+    if (!options.headers["Content-Type"] && options.body) {
+      options.headers["Content-Type"] = "application/json";
+    }
+    return fetch(url, options).then(res => {
+      if (res.status === 401 || res.status === 403) {
+        localStorage.clear();
+        window.location.href = "login.html";
+        throw new Error("Session expired");
+      }
+      return res;
     });
-    document.getElementById(id).classList.remove("hidden");
   }
 
-  function setErr(msg){
-    const e = document.getElementById("err");
-    e.textContent = "⚠ " + msg;
-    e.classList.remove("hidden");
-    e.scrollIntoView({behavior:"smooth", block:"center"});
-    setTimeout(()=>e.classList.add("hidden"), 5000);
+  // ✅ FIX 1: Stateless JWT — no server logout call needed
+  function logout() {
+    localStorage.clear();
+    window.location.href = "login.html";
   }
 
-  function toggleUan(){
-    const v = document.querySelector('input[name="uanAvailable"]:checked')?.value || "NO";
-    const yes = document.getElementById("uan-yes");
-    const no = document.getElementById("uan-no");
+  // ── State ───────────────────────────────────────────────────────────────────
+  let currentPage   = 0;
+  let totalPages    = 1;
+  let currentStatus = "";
+  let searchTerm    = "";
+  let searchTimer   = null;
+  let hrTeam        = [];
 
-    if(v==="YES"){
-      yes.classList.remove("hidden");
-      no.classList.add("hidden");
-    } else {
-      yes.classList.add("hidden");
-      no.classList.remove("hidden");
-      const u=document.getElementById("f-uan");
-      if(u) u.value="";
-    }
-    updateProgress();
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+  function toast(msg, type = "green") {
+    const cols = { green:"#16a34a", red:"#dc2626", blue:"#2563eb" };
+    const t = document.getElementById("toast");
+    const b = t.querySelector("div");
+    b.style.background = cols[type] || cols.green;
+    b.textContent = msg;
+    t.classList.remove("hidden");
+    setTimeout(() => t.classList.add("hidden"), 3500);
   }
 
-  function setDocTab(tab){
-    const tabEdu = document.getElementById("tab-edu");
-    const tabEmp = document.getElementById("tab-emp");
-    const panelEdu = document.getElementById("panel-edu");
-    const panelEmp = document.getElementById("panel-emp");
-
-    if(tab === "edu"){
-      tabEdu.className = "px-4 py-2 rounded-lg text-sm font-bold bg-white text-slate-900 shadow-sm";
-      tabEmp.className = "px-4 py-2 rounded-lg text-sm font-bold text-slate-600 hover:text-slate-900";
-      panelEdu.classList.remove("hidden");
-      panelEmp.classList.add("hidden");
-    } else {
-      tabEmp.className = "px-4 py-2 rounded-lg text-sm font-bold bg-white text-slate-900 shadow-sm";
-      tabEdu.className = "px-4 py-2 rounded-lg text-sm font-bold text-slate-600 hover:text-slate-900";
-      panelEmp.classList.remove("hidden");
-      panelEdu.classList.add("hidden");
-    }
-  }
-
-  function openWizard(){
-    MODE = "new";
-    const btn = document.getElementById("btn-submit");
-    if(btn) btn.textContent = "Submit Form ✅";
-    show("scr-wizard");
-    goStep(1);
-  }
-
-  function goStep(n){
-    STEP=n;
-    for(let i=1;i<=6;i++){
-      document.getElementById(`step-${i}`).classList.toggle("hidden", i!==n);
-      document.getElementById(`stepbtn-${i}`).classList.toggle("bg-slate-50", i===n);
-      document.getElementById(`stepbtn-${i}`).classList.toggle("border-blue-200", i===n);
-    }
-    updateProgress();
-    window.scrollTo({top: 0, behavior: "smooth"});
-  }
-
-  function nextStep(){
-    if(!validateStep(STEP)) return;
-    goStep(Math.min(6, STEP+1));
-  }
-
-  function prevStep(){ goStep(Math.max(1, STEP-1)); }
-
-  function updateProgress(){
-    const ids = [
-      "f-fathers-name","f-dob","f-gender","f-marital","f-blood","f-education","f-pan",
-      "f-address","f-district","f-state","f-pin",
-      "f-bank-name","f-account","f-ifsc","f-branch",
-      "f-nominee-name","f-nominee-relation","f-nominee-dob","f-nominee-address"
-    ];
-
-    const uanYes = document.querySelector('input[name="uanAvailable"]:checked')?.value === "YES";
-    if(uanYes) ids.push("f-uan");
-
-    const filled = ids.filter(id => (document.getElementById(id)?.value || "").trim() !== "").length;
-    const total = ids.length + 1;
-    const consent = document.getElementById("f-consent")?.checked ? 1 : 0;
-    const pct = Math.round(((filled + consent) / total) * 100);
-
-    document.getElementById("pct").textContent = pct + "%";
-    document.getElementById("bar").style.width = pct + "%";
-  }
-
-  function validateStep(step){
-    const req = {
-      1: [
-        ["f-fathers-name","Father’s Name"],
-        ["f-dob","Date of Birth"],
-        ["f-gender","Gender"],
-        ["f-marital","Marital Status"],
-        ["f-blood","Blood Group"],
-        ["f-education","Highest Education"],
-        ["f-pan","PAN Number"]
-      ],
-      2: [["f-address","Permanent Address"],["f-district","District"],["f-state","State"],["f-pin","PIN Code"]],
-      3: [["f-bank-name","Bank Name"],["f-account","Account Number"],["f-ifsc","IFSC Code"],["f-branch","Branch Name"]],
-      4: [["f-nominee-name","Nominee Name"],["f-nominee-relation","Nominee Relation"],["f-nominee-dob","Nominee DOB"],["f-nominee-address","Nominee Address"]],
-      5: [],
-      6: []
+  function badgeClass(status) {
+    const map = {
+      INITIATED:      "b-initiated",
+      FORM_SUBMITTED: "b-form_submitted",
+      SIGNED:         "b-signed",
+      APPROVED:       "b-approved",
+      REJECTED:       "b-rejected"
     };
-
-    const checks = req[step] || [];
-    for(const [id,label] of checks){
-      const v = (document.getElementById(id)?.value || "").trim();
-      if(!v){ setErr(`Please fill: ${label}`); return false; }
-    }
-
-    if(step===1){
-      const pan = (document.getElementById("f-pan").value || "").toUpperCase();
-      if(!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan)){ setErr("Invalid PAN format. Expected ABCDE1234F"); return false; }
-      const uanYes = document.querySelector('input[name="uanAvailable"]:checked')?.value === "YES";
-      if(uanYes){
-        const uan = (document.getElementById("f-uan").value || "").trim();
-        if(!/^[0-9]{12}$/.test(uan)){ setErr("UAN must be exactly 12 digits"); return false; }
-      }
-    }
-
-    if(step===2){
-      const pin = (document.getElementById("f-pin").value || "").trim();
-      if(!/^[0-9]{6}$/.test(pin)){ setErr("PIN must be exactly 6 digits"); return false; }
-    }
-
-    if(step===3){
-      const ifsc = (document.getElementById("f-ifsc").value || "").toUpperCase();
-      if(!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc)){ setErr("Invalid IFSC format. Expected SBIN0001234"); return false; }
-    }
-
-    return true;
+    return map[status] || "bg-gray-100 text-gray-600";
   }
 
-  function fillForm(d){
-    document.getElementById("f-fathers-name").value = d.fathersName || "";
-    document.getElementById("f-dob").value = d.dob || "";
-    document.getElementById("f-gender").value = d.gender || "";
-    document.getElementById("f-marital").value = d.maritalStatus || "";
-    document.getElementById("f-blood").value = d.bloodGroup || "";
-    document.getElementById("f-education").value = d.higherEducation || "";
-    document.getElementById("f-pan").value = (d.panCardNo || "").toUpperCase();
-
-    const uan = (d.uanAvailable || "NO").toUpperCase();
-    const yesRadio = document.querySelector('input[name="uanAvailable"][value="YES"]');
-    const noRadio  = document.querySelector('input[name="uanAvailable"][value="NO"]');
-    if(uan === "YES") { if(yesRadio) yesRadio.checked = true; }
-    else { if(noRadio) noRadio.checked = true; }
-    toggleUan();
-    const u = document.getElementById("f-uan");
-    if(u) u.value = d.uanNo || "";
-
-    document.getElementById("f-address").value = d.permanentAddress || "";
-    document.getElementById("f-district").value = d.district || "";
-    document.getElementById("f-state").value = d.state || "";
-    document.getElementById("f-pin").value = d.pinCode || "";
-
-    document.getElementById("f-bank-name").value = d.bankName || "";
-    document.getElementById("f-account").value = d.bankAccountNo || "";
-    document.getElementById("f-ifsc").value = (d.ifscCode || "").toUpperCase();
-    document.getElementById("f-branch").value = d.branchName || "";
-
-    document.getElementById("f-nominee-name").value = d.nomineeName || "";
-    document.getElementById("f-nominee-relation").value = d.nomineeRelation || "";
-    document.getElementById("f-nominee-dob").value = d.nomineeDob || "";
-    document.getElementById("f-nominee-address").value = d.nomineeAddress || "";
-
-    updateProgress();
+  function linkBadge(ls) {
+    if (ls === "SENT") return '<span class="badge bg-green-100 text-green-700">✓ Sent</span>';
+    return '<span class="badge bg-gray-100 text-gray-500">Not Sent</span>';
   }
 
-  async function startEdit(){
-    MODE = "edit";
-    show("scr-wizard");
-    goStep(1);
+  function openModal(id)  { document.getElementById(id).classList.add("open"); }
+  function closeModal(id) { document.getElementById(id).classList.remove("open"); }
 
-    const btn = document.getElementById("btn-submit");
-    if(btn) btn.textContent = "Update Form ✏️";
+  function debounceSearch() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      searchTerm  = document.getElementById("search-input").value.trim();
+      currentPage = 0;
+      loadCandidates();
+    }, 400);
+  }
 
-    try{
-      const res = await fetch(`${API}/candidate/details?token=${TOKEN}`);
+  function setTab(el, status) {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    el.classList.add("active");
+    currentStatus = status;
+    currentPage   = 0;
+    loadCandidates();
+  }
+
+  function prevPage() { if (currentPage > 0) { currentPage--; loadCandidates(); } }
+  function nextPage() { if (currentPage < totalPages - 1) { currentPage++; loadCandidates(); } }
+
+  // ── Load Stats (FIX 2: real totals from backend) ────────────────────────────
+  async function loadStats() {
+    try {
+      const res  = await authFetch(`${API}/hr/candidates/stats`);
       const data = await res.json();
-      if(!data.success){
-        setErr(data.message || "Unable to load details");
+      if (data.success) {
+        const s = data.data;
+        document.getElementById("stat-total").textContent     = s.total          || 0;
+        document.getElementById("stat-initiated").textContent = s.INITIATED       || 0;
+        document.getElementById("stat-submitted").textContent = s.FORM_SUBMITTED  || 0;
+        document.getElementById("stat-approved").textContent  = s.APPROVED        || 0;
+        document.getElementById("stat-rejected").textContent  = s.REJECTED        || 0;
+      }
+    } catch(e) {}
+  }
+
+  // ── Load HR Team ────────────────────────────────────────────────────────────
+  async function loadHRTeam() {
+    try {
+      const res  = await authFetch(`${API}/hr/team`);
+      const data = await res.json();
+      if (data.success) {
+        hrTeam = data.data;
+        const sel = document.getElementById("i-hr");
+        hrTeam.forEach(hr => {
+          const opt = document.createElement("option");
+          opt.value       = hr.id;
+          opt.textContent = `${hr.name} (${hr.role})`;
+          sel.appendChild(opt);
+        });
+      }
+    } catch(e) {}
+  }
+
+  // ── Load Candidates ─────────────────────────────────────────────────────────
+  async function loadCandidates() {
+    const tbody = document.getElementById("candidates-tbody");
+    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-12 text-gray-400">Loading…</td></tr>`;
+
+    let url = `${API}/hr/candidates?page=${currentPage}&size=15`;
+    if (currentStatus) url += `&status=${currentStatus}`;
+    if (searchTerm)    url += `&search=${encodeURIComponent(searchTerm)}`;
+
+    try {
+      const res  = await authFetch(url);
+      const data = await res.json();
+
+      if (!data.success) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-red-400">Failed to load</td></tr>`;
         return;
       }
-      fillForm(data.data || {});
-      toast("Loaded your submitted details");
-    } catch(e){
-      setErr("Error loading details: " + e.message);
+
+      const page = data.data;
+      totalPages = page.totalPages || 1;
+
+      document.getElementById("page-info").textContent =
+        `Showing ${page.content.length} of ${page.totalElements} | Page ${page.page + 1}/${page.totalPages}`;
+      document.getElementById("btn-prev").disabled = currentPage === 0;
+      document.getElementById("btn-next").disabled = currentPage >= totalPages - 1;
+
+      if (!page.content.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-14 text-gray-400">No candidates found</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = page.content.map((c, i) => `
+        <tr class="border-b border-gray-50 cursor-pointer" onclick="viewDetail(${c.id})">
+          <td class="px-5 py-3.5 text-gray-400 font-mono text-xs">${currentPage * 15 + i + 1}</td>
+          <td class="px-5 py-3.5">
+            <div class="font-semibold text-gray-800">${c.employeeName || "–"}</div>
+            <div class="text-xs text-gray-400">${c.emailId || ""}</div>
+          </td>
+          <td class="px-5 py-3.5 text-gray-600">${c.mobileNo || "–"}</td>
+          <td class="px-5 py-3.5 text-gray-600">${c.designation || "–"}</td>
+          <td class="px-5 py-3.5 text-gray-500 text-xs">${c.assignedHr?.name || "–"}</td>
+          <td class="px-5 py-3.5">
+            <span class="badge ${badgeClass(c.joiningStatus)}">${(c.joiningStatus || "–").replace("_", " ")}</span>
+          </td>
+          <td class="px-5 py-3.5">${linkBadge(c.linkStatus)}</td>
+          <td class="px-5 py-3.5" onclick="event.stopPropagation()">
+            <div class="flex gap-1.5">
+              ${c.joiningStatus === "INITIATED" || c.linkStatus === "NOT_SENT" ? `
+                <button onclick="sendLink(${c.id})"
+                        class="action-btn bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs px-2 py-1">
+                  📱 Link
+                </button>` : ""}
+              ${c.joiningStatus === "SIGNED" ? `
+                <button onclick="approveCandidate(${c.id})"
+                        class="action-btn bg-green-600 text-white hover:bg-green-700 px-3 py-1">✓ Approve</button>
+                <button onclick="openReject(${c.id})"
+                        class="action-btn bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1">✕ Reject</button>` : ""}
+              ${c.joiningStatus === "FORM_SUBMITTED" ? `
+                <button onclick="openReject(${c.id})"
+                        class="action-btn bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1">✕ Reject</button>` : ""}
+              ${c.joiningStatus === "APPROVED" ? `
+                <span class="text-xs text-green-600 font-semibold">✓ ${c.employeeId || ""}</span>` : ""}
+            </div>
+          </td>
+        </tr>`).join("");
+    } catch(e) {
+      if (e.message !== "Session expired") {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-red-400">Error: ${e.message}</td></tr>`;
+      }
     }
   }
 
-  async function submitForm(){
-    if(!validateStep(1) || !validateStep(2) || !validateStep(3) || !validateStep(4)){
-      toast("Please complete required fields");
+  // ── Initiate ────────────────────────────────────────────────────────────────
+  function openInitiate() {
+    ["i-name","i-mobile","i-aadhaar","i-email","i-designation"].forEach(id => {
+      document.getElementById(id).value = "";
+    });
+    document.getElementById("i-hr").value       = "";
+    document.getElementById("i-sendlink").value = "true";
+    document.getElementById("initiate-error").classList.add("hidden");
+    openModal("modal-initiate");
+  }
+
+  async function submitInitiate() {
+    const name   = document.getElementById("i-name").value.trim();
+    const mobile = document.getElementById("i-mobile").value.trim();
+    const desig  = document.getElementById("i-designation").value.trim();
+    const errEl  = document.getElementById("initiate-error");
+
+    if (!name || !mobile || !desig) {
+      errEl.textContent = "⚠️ Name, Mobile and Designation are required";
+      errEl.classList.remove("hidden");
+      return;
+    }
+    if (!/^[6-9]\d{9}$/.test(mobile)) {
+      errEl.textContent = "⚠️ Mobile must be 10 digits starting with 6-9";
+      errEl.classList.remove("hidden");
       return;
     }
 
-    if(!document.getElementById("f-consent").checked){
-      setErr("Please accept consent to submit");
-      return;
-    }
+    const btn = document.getElementById("submit-initiate");
+    btn.disabled    = true;
+    btn.textContent = "Initiating…";
 
-    const uanAvailable = document.querySelector('input[name="uanAvailable"]:checked')?.value || "NO";
-    const uanNo = (uanAvailable === "YES") ? (document.getElementById("f-uan").value || "").trim() : "";
-
+    const hrId = document.getElementById("i-hr").value;
     const payload = {
-      token: TOKEN,
-      fathersName: document.getElementById("f-fathers-name").value.trim(),
-      dob: document.getElementById("f-dob").value,
-      gender: document.getElementById("f-gender").value,
-      maritalStatus: document.getElementById("f-marital").value,
-      bloodGroup: document.getElementById("f-blood").value,
-      higherEducation: document.getElementById("f-education").value,
-      panCardNo: document.getElementById("f-pan").value.toUpperCase(),
-      uanAvailable,
-      uanNo,
-      permanentAddress: document.getElementById("f-address").value.trim(),
-      district: document.getElementById("f-district").value.trim(),
-      state: document.getElementById("f-state").value.trim(),
-      pinCode: document.getElementById("f-pin").value.trim(),
-      bankName: document.getElementById("f-bank-name").value.trim(),
-      bankAccountNo: document.getElementById("f-account").value.trim(),
-      ifscCode: document.getElementById("f-ifsc").value.toUpperCase(),
-      branchName: document.getElementById("f-branch").value.trim(),
-      nomineeName: document.getElementById("f-nominee-name").value.trim(),
-      nomineeRelation: document.getElementById("f-nominee-relation").value,
-      nomineeDob: document.getElementById("f-nominee-dob").value,
-      nomineeAddress: document.getElementById("f-nominee-address").value.trim()
+      employeeName:        name,
+      mobileNo:            mobile,
+      aadhaarNo:           document.getElementById("i-aadhaar").value.trim(),
+      emailId:             document.getElementById("i-email").value.trim(),
+      designation:         desig,
+      assignedHRId:        hrId ? parseInt(hrId) : null,
+      initiatedBy:         HR_USERNAME,
+      sendLinkImmediately: document.getElementById("i-sendlink").value === "true"
     };
 
-    const btn = document.getElementById("btn-submit");
-    btn.disabled = true;
-    btn.textContent = (MODE === "edit") ? "Updating…" : "Submitting…";
-
-    try{
-      const endpoint = (MODE === "edit") ? `${API}/candidate/update-form` : `${API}/candidate/submit-form`;
-
-      const res = await fetch(endpoint, {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify(payload)
+    try {
+      const res  = await authFetch(`${API}/hr/candidates/initiate`, {
+        method: "POST",
+        body:   JSON.stringify(payload)
       });
-
       const data = await res.json();
-      if(data.success){
-        toast(MODE === "edit" ? "Updated successfully ✏️" : "Submitted successfully ✅");
-        location.reload();
+      if (data.success) {
+        toast("✅ Candidate initiated successfully!", "green");
+        closeModal("modal-initiate");
+        loadCandidates();
+        loadStats();
       } else {
-        setErr(data.message || "Submission failed");
-        btn.disabled = false;
-        btn.textContent = (MODE === "edit") ? "Update Form ✏️" : "Submit Form ✅";
+        errEl.textContent = "⚠️ " + (data.message || "Failed to initiate");
+        errEl.classList.remove("hidden");
       }
-    } catch(e){
-      setErr("Network error: " + e.message);
-      btn.disabled = false;
-      btn.textContent = (MODE === "edit") ? "Update Form ✏️" : "Submit Form ✅";
+    } catch(e) {
+      if (e.message !== "Session expired") {
+        errEl.textContent = "⚠️ Server error. Try again.";
+        errEl.classList.remove("hidden");
+      }
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = "Initiate & Send Link";
     }
   }
 
-  async function uploadDoc(docType, inputId){
-    const fi = document.getElementById(inputId);
-    if(!fi || !fi.files || fi.files.length===0){ toast("Choose a file first"); return; }
-
-    const f = fi.files[0];
-    const fd = new FormData();
-    fd.append("token", TOKEN);
-    fd.append("docType", docType);
-    fd.append("file", f);
-
-    try{
-      const res = await fetch(`${API}/candidate/documents/upload`, { method:"POST", body: fd });
+  // ── Send Link ───────────────────────────────────────────────────────────────
+  async function sendLink(id) {
+    try {
+      const res  = await authFetch(`${API}/hr/candidates/${id}/send-link`, { method:"POST" });
       const data = await res.json();
-      if(data.success){
-        toast(`${docType} uploaded`);
-        fi.value = "";
-        await loadDocs();
+      if (data.success) {
+        toast("📱 Link sent via SMS!", "blue");
+        loadCandidates();
       } else {
-        setErr(data.message || "Upload failed");
+        toast("❌ " + (data.message || "Failed"), "red");
       }
-    } catch(e){
-      setErr("Upload error: " + e.message);
-    }
+    } catch(e) {}
   }
 
-  async function uploadMultiple(docType, inputId){
-    const fi = document.getElementById(inputId);
-    if(!fi || !fi.files || fi.files.length===0){ toast("Choose files first"); return; }
+  // ── View Detail ─────────────────────────────────────────────────────────────
+  async function viewDetail(id) {
+    openModal("modal-detail");
+    document.getElementById("detail-body").innerHTML    = "<p class='text-gray-400'>Loading…</p>";
+    document.getElementById("detail-actions").innerHTML = "";
 
-    try{
-      for(const f of fi.files){
-        const fd = new FormData();
-        fd.append("token", TOKEN);
-        fd.append("docType", docType);
-        fd.append("file", f);
-
-        const res = await fetch(`${API}/candidate/documents/upload`, { method:"POST", body: fd });
-        const data = await res.json();
-        if(!data.success){
-          setErr(`Upload failed for ${f.name}: ${data.message || "Error"}`);
-          return;
-        }
-      }
-      toast(docType === "EDUCATION" ? "Education documents uploaded ✅" : "Employment documents uploaded ✅");
-      fi.value = "";
-      await loadDocs();
-    } catch(e){
-      setErr("Upload error: " + e.message);
-    }
-  }
-
-  async function loadDocs(){
-    try{
-      const res = await fetch(`${API}/candidate/documents/list?token=${TOKEN}`);
+    try {
+      const res  = await authFetch(`${API}/hr/candidates/${id}`);
       const data = await res.json();
-
-      if(!data.success){
-        document.getElementById("docs-list").innerHTML = "Unable to load documents";
+      if (!data.success) {
+        document.getElementById("detail-body").innerHTML = "<p class='text-red-400'>Failed to load</p>";
         return;
       }
 
-      const docs = data.data || [];
-      const groups = { AADHAAR:[], PAN:[], BANK_PROOF:[], PHOTO:[], EDUCATION:[], EMPLOYMENT:[] };
+      const c = data.data;
+      const rows = [
+        ["Employee Name", c.employeeName],
+        ["Mobile",        c.mobileNo],
+        ["Email",         c.emailId || "–"],
+        ["Designation",   c.designation],
+        ["Aadhaar",       c.aadhaarNo || "–"],
+        ["Status",        `<span class="badge ${badgeClass(c.joiningStatus)}">${(c.joiningStatus||"").replace("_"," ")}</span>`],
+        ["Link Status",   linkBadge(c.linkStatus)],
+        ["Employee ID",   c.employeeId ? `<strong class="text-green-600">${c.employeeId}</strong>` : "–"],
+        ["Assigned HR",   c.assignedHr?.name || "–"],   // ✅ FIX 4: lowercase 'r'
+        ["Initiated By",  c.initiatedBy || "–"],
+        ["Date",          c.createdAt ? c.createdAt.substring(0,10) : "–"],
+        ...(c.joiningStatus !== "INITIATED" ? [
+          ["Father's Name", c.fathersName || "–"],
+          ["Date of Birth", c.dob || "–"],
+          ["Gender",        c.gender || "–"],
+          ["Blood Group",   c.bloodGroup || "–"],
+          ["PAN",           c.panCardNo || "–"],
+          ["Bank",          c.bankName ? `${c.bankName} | A/C: ${c.bankAccountNo} | IFSC: ${c.ifscCode}` : "–"],
+          ["Nominee",       c.nomineeName ? `${c.nomineeName} (${c.nomineeRelation})` : "–"],
+          ["Address",       c.permanentAddress ? `${c.permanentAddress}, ${c.district}, ${c.state} – ${c.pinCode}` : "–"],
+        ] : []),
+        ...(c.rejectionReason ? [["Rejection Reason", `<span class="text-red-600">${c.rejectionReason}</span>`]] : [])
+      ];
 
-      docs.forEach(d=>{
-        const k = (d.docType || "").toUpperCase();
-        const key = (k === "EXPERIENCE") ? "EMPLOYMENT" : k;
-        (groups[key] = groups[key] || []).push(d);
-      });
+      document.getElementById("detail-body").innerHTML = rows.map(([k,v]) => `
+        <div class="flex gap-3 py-1.5 border-b border-gray-50">
+          <span class="w-36 flex-shrink-0 text-gray-400 font-semibold text-xs uppercase tracking-wide">${k}</span>
+          <span class="text-gray-700">${v || "–"}</span>
+        </div>`).join("");
 
-      const renderGroup = (title, items) => {
-        if(!items || items.length === 0) return "";
-        return `
-          <div class="mt-4">
-            <div class="text-sm font-extrabold text-slate-900 mb-2">${title}</div>
-            ${items.map(d => `
-              <div class="flex items-center justify-between rounded-xl border bg-white px-4 py-3 mb-2">
-                <div>
-                  <div class="font-bold text-slate-800">${d.originalName || "Document"}</div>
-                  <div class="text-xs text-slate-500">
-                    ${Math.round(((d.fileSize || 0)/1024))} KB • ${(d.uploadedAt || "")}
-                  </div>
-                </div>
-                <a class="text-blue-700 font-bold text-sm underline"
-                   href="${API}/candidate/documents/download/${d.id}" target="_blank" rel="noreferrer">
-                   Download
-                </a>
-              </div>
-            `).join("")}
-          </div>
-        `;
-      };
-
-      const html =
-        renderGroup("Aadhaar", groups.AADHAAR) +
-        renderGroup("PAN", groups.PAN) +
-        renderGroup("Bank Proof", groups.BANK_PROOF) +
-        renderGroup("Photo", groups.PHOTO) +
-        renderGroup("Education Documents", groups.EDUCATION) +
-        renderGroup("Employment Documents", groups.EMPLOYMENT);
-
-      document.getElementById("docs-list").innerHTML =
-        html || "<div class='text-slate-500'>No documents uploaded yet.</div>";
-
-    } catch(e){
-      document.getElementById("docs-list").innerHTML = "Error: " + e.message;
-    }
-  }
-
-  async function init(){
-    TOKEN = qs("token");
-    if(!TOKEN){ show("scr-invalid"); return; }
-
-    try{
-      const res = await fetch(`${API}/candidate/verify-token?token=${TOKEN}`);
-      const data = await res.json();
-
-      if(!data.success){ show("scr-invalid"); return; }
-
-      CAND = data.data;
-
-      document.getElementById("w-name").textContent = CAND.employeeName || "Candidate";
-      document.getElementById("w-desig").textContent = CAND.designation || "";
-      document.getElementById("w-status").textContent = CAND.joiningStatus || "INITIATED";
-
-      const badge = document.getElementById("badge-status");
-      badge.textContent = (CAND.joiningStatus || "INITIATED").replaceAll("_"," ");
-      badge.classList.remove("hidden");
-
-      document.getElementById("f-name").value = CAND.employeeName || "";
-
-      const done = ["FORM_SUBMITTED","SIGNED","APPROVED","REJECTED"];
-      if(done.includes((CAND.joiningStatus || "").toUpperCase())){
-        show("scr-done");
-
-        const canEdit = ["FORM_SUBMITTED","REJECTED"].includes((CAND.joiningStatus || "").toUpperCase());
-        if(canEdit){
-          document.getElementById("edit-actions").classList.remove("hidden");
-        }
-
-        try{
-          const sr = await fetch(`${API}/candidate/status?token=${TOKEN}`);
-          const sd = await sr.json();
-          if(sd.success){
-            const s = sd.data || {};
-            document.getElementById("done-box").innerHTML = `
-              <div class="inline-block chip bg-slate-100 text-slate-700 border">
-                ${(s.status || "").replaceAll("_"," ")}
-              </div>
-              ${s.employeeId ? `<div class="mt-3 text-lg font-extrabold text-emerald-700">Employee ID: ${s.employeeId}</div>` : ""}
-              ${s.rejectionReason ? `<div class="mt-3 text-sm text-red-700">Reason: ${s.rejectionReason}</div>` : ""}
-            `;
-          }
-        }catch(e){}
-
-        return;
+      let actions = "";
+      if (c.joiningStatus === "SIGNED") {
+        actions += `<button onclick="approveCandidate(${c.id})"
+          class="flex-1 gbg text-white py-2.5 rounded-xl font-bold hover:opacity-90 shadow">
+          ✓ Approve & Generate Employee ID</button>`;
+        actions += `<button onclick="closeModal('modal-detail');openReject(${c.id})"
+          class="flex-1 bg-red-600 text-white py-2.5 rounded-xl font-bold hover:bg-red-700">
+          ✕ Reject</button>`;
+      } else if (c.linkStatus === "NOT_SENT" || c.joiningStatus === "INITIATED") {
+        actions += `<button onclick="sendLink(${c.id})"
+          class="flex-1 gbg text-white py-2.5 rounded-xl font-bold hover:opacity-90">
+          📱 Send Onboarding Link</button>`;
       }
-
-      show("scr-welcome");
-    } catch(e){
-      show("scr-invalid");
-    }
+      document.getElementById("detail-actions").innerHTML = actions;
+    } catch(e) {}
   }
 
-  // Set DOB max to 18 years
-  const mx = new Date(); mx.setFullYear(mx.getFullYear()-18);
-  document.addEventListener("DOMContentLoaded", ()=>{
-    const dob = document.getElementById("f-dob");
-    if(dob) dob.max = mx.toISOString().split("T")[0];
+  // ── Approve ─────────────────────────────────────────────────────────────────
+  async function approveCandidate(id) {
+    if (!confirm("Approve this candidate and generate Employee ID?")) return;
+    try {
+      const res  = await authFetch(`${API}/hr/candidates/${id}/approve`, { method:"POST" });
+      const data = await res.json();
+      if (data.success) {
+        toast("✅ Approved! Employee ID: " + (data.data?.employeeId || ""), "green");
+        closeModal("modal-detail");
+        loadCandidates();
+        loadStats();
+      } else {
+        toast("❌ " + (data.message || "Failed to approve"), "red");
+      }
+    } catch(e) {}
+  }
 
-    document.addEventListener("input", updateProgress);
-    document.addEventListener("change", updateProgress);
+  // ── Reject ──────────────────────────────────────────────────────────────────
+  function openReject(id) {
+    document.getElementById("reject-id").value     = id;
+    document.getElementById("reject-reason").value = "";
+    document.getElementById("reject-error").classList.add("hidden");
+    openModal("modal-reject");
+  }
+
+  async function submitReject() {
+    const id     = document.getElementById("reject-id").value;
+    const reason = document.getElementById("reject-reason").value.trim();
+    const errEl  = document.getElementById("reject-error");
+
+    if (reason.length < 10) {
+      errEl.textContent = "⚠️ Reason must be at least 10 characters";
+      errEl.classList.remove("hidden");
+      return;
+    }
+
+    try {
+      const res  = await authFetch(`${API}/hr/candidates/${id}/reject`, {
+        method: "POST",
+        body:   JSON.stringify({ rejectionReason: reason })  // ✅ FIX 3: correct field name
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast("Candidate rejected", "red");
+        closeModal("modal-reject");
+        closeModal("modal-detail");
+        loadCandidates();
+        loadStats();
+      } else {
+        toast("❌ " + (data.message || "Failed"), "red");
+      }
+    } catch(e) {}
+  }
+
+  // ── Init ────────────────────────────────────────────────────────────────────
+  loadHRTeam();
+  loadCandidates();
+  loadStats();   // ✅ FIX 2: load real stats on startup
+
+  document.querySelectorAll(".overlay").forEach(el => {
+    el.addEventListener("click", e => { if (e.target === el) el.classList.remove("open"); });
   });
-
-  init();
 </script>
-
 </body>
 </html>
