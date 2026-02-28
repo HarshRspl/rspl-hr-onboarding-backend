@@ -4,9 +4,11 @@ import com.rspl.onboarding.domain.Candidate;
 import com.rspl.onboarding.service.OnboardingService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -19,23 +21,27 @@ public class HrController {
     @Autowired
     private OnboardingService service;
 
+    @Value("${app.base.url}")
+    private String baseUrl;
+
     @GetMapping("/team")
     public ResponseEntity<Map<String, Object>> getTeam() {
         return ResponseEntity.ok(
-            Map.of("success", true, "data", service.getHRTeam())
+                Map.of("success", true, "data", service.getHRTeam())
         );
     }
 
     @GetMapping("/candidates")
     public ResponseEntity<Map<String, Object>> listCandidates(
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "100") int size) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int size) {
 
         Page<Candidate> result = service.listCandidates(page, size);
+
         List<CandidateDto> list = result.getContent()
-            .stream()
-            .map(CandidateDto::from)
-            .collect(Collectors.toList());
+                .stream()
+                .map(c -> CandidateDto.from(c, baseUrl))   // ✅ pass baseUrl
+                .collect(Collectors.toList());
 
         PageDto<CandidateDto> pageDto = new PageDto<>();
         pageDto.setContent(list);
@@ -49,34 +55,36 @@ public class HrController {
 
     @PostMapping("/candidates/initiate")
     public ResponseEntity<Map<String, Object>> initiate(
-        @Valid @RequestBody InitiateCandidateRequest request) {
+            @Valid @RequestBody InitiateCandidateRequest request) {
+
         Candidate c = service.initiate(request);
+
         return ResponseEntity.ok(
-            Map.of("success", true, "data", CandidateDto.from(c))
+                Map.of("success", true, "data", CandidateDto.from(c, baseUrl)) // ✅ portalLink returned
         );
     }
 
     @PostMapping("/candidates/{id}/approve")
     public ResponseEntity<Map<String, Object>> approve(@PathVariable long id) {
         return ResponseEntity.ok(
-            Map.of("success", true, "data", CandidateDto.from(service.approve(id)))
+                Map.of("success", true, "data", CandidateDto.from(service.approve(id), baseUrl))
         );
     }
 
     @PostMapping("/candidates/{id}/reject")
     public ResponseEntity<Map<String, Object>> reject(
-        @PathVariable long id,
-        @RequestBody RejectRequest body) {
+            @PathVariable long id,
+            @RequestBody RejectRequest body) {
         return ResponseEntity.ok(
-            Map.of("success", true, "data",
-                CandidateDto.from(service.reject(id, body.getReason())))
+                Map.of("success", true, "data",
+                        CandidateDto.from(service.reject(id, body.getReason()), baseUrl))
         );
     }
 
     @PostMapping("/candidates/{id}/send-link")
     public ResponseEntity<Map<String, Object>> sendLink(@PathVariable long id) {
         return ResponseEntity.ok(
-            Map.of("success", true, "data", CandidateDto.from(service.sendLink(id)))
+                Map.of("success", true, "data", CandidateDto.from(service.sendLink(id), baseUrl))
         );
     }
 }
