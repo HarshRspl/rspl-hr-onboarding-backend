@@ -20,6 +20,7 @@ public class CandidatePortalController {
 
     @GetMapping("/verify-token")
     public ResponseEntity<Map<String, Object>> verifyToken(@RequestParam String token) {
+
         Optional<Candidate> opt = candidateRepository.findByOnboardingToken(token);
         if (opt.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of(
@@ -53,10 +54,12 @@ public class CandidatePortalController {
     }
 
     /**
-     * ✅ NEW: fetch candidate saved form details (for Edit Mode)
+     * ✅ Fetch candidate saved form details (for Edit Mode)
+     * FIXED: Do not use Map.of() with >10 pairs (compile error). Use LinkedHashMap instead.
      */
     @GetMapping("/details")
     public ResponseEntity<Map<String, Object>> getDetails(@RequestParam String token) {
+
         Optional<Candidate> opt = candidateRepository.findByOnboardingToken(token);
         if (opt.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("success", false, "message", "Invalid token"));
@@ -64,48 +67,49 @@ public class CandidatePortalController {
 
         Candidate c = opt.get();
 
-        return ResponseEntity.ok(Map.of(
-                "success", true,
-                "data", Map.of(
-                        "candidateId", c.getId(),
-                        "employeeName", c.getEmployeeName(),
-                        "designation", c.getDesignation() != null ? c.getDesignation() : "",
-                        "joiningStatus", c.getJoiningStatus() != null ? c.getJoiningStatus() : "",
+        // ✅ LinkedHashMap supports unlimited entries (fixes Map.of limit)
+        Map<String, Object> data = new java.util.LinkedHashMap<>();
 
-                        // Personal
-                        "fathersName", c.getFathersName() != null ? c.getFathersName() : "",
-                        "dob", c.getDob() != null ? c.getDob() : "",
-                        "gender", c.getGender() != null ? c.getGender() : "",
-                        "maritalStatus", c.getMaritalStatus() != null ? c.getMaritalStatus() : "",
-                        "bloodGroup", c.getBloodGroup() != null ? c.getBloodGroup() : "",
-                        "higherEducation", c.getHigherEducation() != null ? c.getHigherEducation() : "",
-                        "panCardNo", c.getPanCardNo() != null ? c.getPanCardNo() : "",
-                        "uanAvailable", c.getUanAvailable() != null ? c.getUanAvailable() : "NO",
-                        "uanNo", c.getUanNo() != null ? c.getUanNo() : "",
+        data.put("candidateId", c.getId());
+        data.put("employeeName", c.getEmployeeName());
+        data.put("designation", c.getDesignation() != null ? c.getDesignation() : "");
+        data.put("joiningStatus", c.getJoiningStatus() != null ? c.getJoiningStatus() : "");
 
-                        // Address
-                        "permanentAddress", c.getPermanentAddress() != null ? c.getPermanentAddress() : "",
-                        "district", c.getDistrict() != null ? c.getDistrict() : "",
-                        "state", c.getState() != null ? c.getState() : "",
-                        "pinCode", c.getPinCode() != null ? c.getPinCode() : "",
+        // Personal
+        data.put("fathersName", c.getFathersName() != null ? c.getFathersName() : "");
+        data.put("dob", c.getDob() != null ? c.getDob() : "");
+        data.put("gender", c.getGender() != null ? c.getGender() : "");
+        data.put("maritalStatus", c.getMaritalStatus() != null ? c.getMaritalStatus() : "");
+        data.put("bloodGroup", c.getBloodGroup() != null ? c.getBloodGroup() : "");
+        data.put("higherEducation", c.getHigherEducation() != null ? c.getHigherEducation() : "");
+        data.put("panCardNo", c.getPanCardNo() != null ? c.getPanCardNo() : "");
+        data.put("uanAvailable", c.getUanAvailable() != null ? c.getUanAvailable() : "NO");
+        data.put("uanNo", c.getUanNo() != null ? c.getUanNo() : "");
 
-                        // Bank
-                        "bankName", c.getBankName() != null ? c.getBankName() : "",
-                        "bankAccountNo", c.getBankAccountNo() != null ? c.getBankAccountNo() : "",
-                        "ifscCode", c.getIfscCode() != null ? c.getIfscCode() : "",
-                        "branchName", c.getBranchName() != null ? c.getBranchName() : "",
+        // Address
+        data.put("permanentAddress", c.getPermanentAddress() != null ? c.getPermanentAddress() : "");
+        data.put("district", c.getDistrict() != null ? c.getDistrict() : "");
+        data.put("state", c.getState() != null ? c.getState() : "");
+        data.put("pinCode", c.getPinCode() != null ? c.getPinCode() : "");
 
-                        // Nominee
-                        "nomineeName", c.getNomineeName() != null ? c.getNomineeName() : "",
-                        "nomineeRelation", c.getNomineeRelation() != null ? c.getNomineeRelation() : "",
-                        "nomineeDob", c.getNomineeDob() != null ? c.getNomineeDob() : "",
-                        "nomineeAddress", c.getNomineeAddress() != null ? c.getNomineeAddress() : ""
-                )
-        ));
+        // Bank
+        data.put("bankName", c.getBankName() != null ? c.getBankName() : "");
+        data.put("bankAccountNo", c.getBankAccountNo() != null ? c.getBankAccountNo() : "");
+        data.put("ifscCode", c.getIfscCode() != null ? c.getIfscCode() : "");
+        data.put("branchName", c.getBranchName() != null ? c.getBranchName() : "");
+
+        // Nominee
+        data.put("nomineeName", c.getNomineeName() != null ? c.getNomineeName() : "");
+        data.put("nomineeRelation", c.getNomineeRelation() != null ? c.getNomineeRelation() : "");
+        data.put("nomineeDob", c.getNomineeDob() != null ? c.getNomineeDob() : "");
+        data.put("nomineeAddress", c.getNomineeAddress() != null ? c.getNomineeAddress() : "");
+
+        return ResponseEntity.ok(Map.of("success", true, "data", data));
     }
 
     @PostMapping("/submit-form")
     public ResponseEntity<Map<String, Object>> submitForm(@RequestBody Map<String, String> body) {
+
         String token = body.get("token");
         Optional<Candidate> opt = candidateRepository.findByOnboardingToken(token);
 
@@ -117,8 +121,9 @@ public class CandidatePortalController {
 
         Candidate c = opt.get();
 
-        // Existing block: prevents re-submit when already submitted/signed/approved
-        if (java.util.Arrays.asList("FORM_SUBMITTED", "SIGNED", "APPROVED").contains(c.getJoiningStatus())) {
+        // ✅ fixed escaped values: FORM_SUBMITTED (not FORM\_SUBMITTED)
+        if (java.util.Arrays.asList("FORM_SUBMITTED", "SIGNED", "APPROVED")
+                .contains(c.getJoiningStatus())) {
             return ResponseEntity.badRequest().body(
                     Map.of("success", false, "message", "Form already submitted")
             );
@@ -197,12 +202,13 @@ public class CandidatePortalController {
     }
 
     /**
-     * ✅ NEW: Update submitted form (Edit Mode)
+     * ✅ Update submitted form (Edit Mode)
      * Allowed only when status is FORM_SUBMITTED or REJECTED.
      * Block if SIGNED/APPROVED.
      */
     @PostMapping("/update-form")
     public ResponseEntity<Map<String, Object>> updateForm(@RequestBody Map<String, String> body) {
+
         String token = body.get("token");
         Optional<Candidate> opt = candidateRepository.findByOnboardingToken(token);
 
@@ -212,14 +218,12 @@ public class CandidatePortalController {
 
         Candidate c = opt.get();
 
-        // Block edit after HR progress
         if (java.util.Arrays.asList("SIGNED", "APPROVED").contains(c.getJoiningStatus())) {
             return ResponseEntity.badRequest().body(
                     Map.of("success", false, "message", "Editing is disabled after signing/approval.")
             );
         }
 
-        // Allow edit only after submission (and optionally REJECTED)
         if (!java.util.Arrays.asList("FORM_SUBMITTED", "REJECTED").contains(c.getJoiningStatus())) {
             return ResponseEntity.badRequest().body(
                     Map.of("success", false, "message", "Form is not submitted yet. Please submit first.")
@@ -262,7 +266,6 @@ public class CandidatePortalController {
         c.setNomineeDob(val.apply("nomineeDob", c.getNomineeDob()));
         c.setNomineeAddress(val.apply("nomineeAddress", c.getNomineeAddress()));
 
-        // If REJECTED → re-submit to HR as FORM_SUBMITTED
         if ("REJECTED".equalsIgnoreCase(c.getJoiningStatus())) {
             c.setJoiningStatus("FORM_SUBMITTED");
         }
@@ -282,7 +285,9 @@ public class CandidatePortalController {
 
     @GetMapping("/status")
     public ResponseEntity<Map<String, Object>> getStatus(@RequestParam String token) {
+
         Optional<Candidate> opt = candidateRepository.findByOnboardingToken(token);
+
         if (opt.isEmpty()) {
             return ResponseEntity.status(401).body(
                     Map.of("success", false, "message", "Invalid token")
@@ -290,6 +295,7 @@ public class CandidatePortalController {
         }
 
         Candidate c = opt.get();
+
         return ResponseEntity.ok(Map.of(
                 "success", true,
                 "data", Map.of(
@@ -302,3 +308,4 @@ public class CandidatePortalController {
         ));
     }
 }
+``
