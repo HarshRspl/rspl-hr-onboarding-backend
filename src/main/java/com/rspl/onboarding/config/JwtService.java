@@ -1,4 +1,4 @@
-package com.rspl.onboarding.config;
+package com.rspl.onboarding.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -13,9 +13,10 @@ import java.util.Map;
 import java.util.function.Function;
 
 @Service
-public class JwtService {
+public class JwtTokenService {
+
     private static final SecretKey SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-    private static final long EXPIRATION_TIME = 1000 * 60 * 60 * 24; // 24h
+    private static final long EXPIRATION_TIME = 1000L * 60 * 60 * 24; // 24h
 
     public String generateToken(String username) {
         Map<String, Object> claims = new HashMap<>();
@@ -51,7 +52,7 @@ public class JwtService {
 
     public boolean isTokenValid(String token, String username) {
         final String extractedUsername = extractUsername(token);
-        return (extractedUsername.equals(username) && !isTokenExpired(token));
+        return extractedUsername.equals(username) && !isTokenExpired(token);
     }
 
     private boolean isTokenExpired(String token) {
