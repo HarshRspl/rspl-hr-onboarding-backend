@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RSPL HR – Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family:"Segoe UI",sans-serif; }
+    .gbg { background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%); }
+    .ifield {
+      width:100%; border:1.5px solid #e2e8f0; border-radius:10px;
+      padding:12px 14px; font-size:15px; outline:none;
+      transition:border-color .2s, box-shadow .2s;
+    }
+    .ifield:focus { border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.12); }
+    @keyframes fadeUp {
+      from{opacity:0;transform:translateY(24px)}
+      to{opacity:1;transform:translateY(0)}
+    }
+    .fu { animation:fadeUp .4s ease; }
+  </style>
+</head>
+<body class="min-h-screen gbg flex items-center justify-center px-4">
+
+  <div class="w-full max-w-sm fu">
+
+    <!-- Card -->
+    <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+
+      <!-- Header -->
+      <div class="gbg px-8 py-8 text-center">
+        <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center
+                    text-white font-black text-3xl mx-auto mb-3">R</div>
+        <h1 class="text-white font-bold text-xl">RSPL Health</h1>
+        <p class="text-blue-200 text-sm mt-1">HR Management Portal</p>
+      </div>
+
+      <!-- Form -->
+      <div class="px-8 py-8">
+        <h2 class="text-gray-800 font-bold text-lg mb-6 text-center">Sign In to Continue</h2>
+
+        <!-- Error -->
+        <div id="err-box"
+             class="hidden bg-red-50 border border-red-200 text-red-700
+                    px-4 py-3 rounded-xl mb-4 text-sm text-center">
+        </div>
+
+        <!-- Username -->
+        <div class="mb-4">
+          <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+            Username
+          </label>
+          <input id="inp-user" type="text" class="ifield"
+                 placeholder="Enter your username"
+                 onkeydown="if(event.key==='Enter')doLogin()"/>
+        </div>
+
+        <!-- Password -->
+        <div class="mb-6">
+          <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+            Password
+          </label>
+          <div class="relative">
+            <input id="inp-pass" type="password" class="ifield pr-12"
+                   placeholder="Enter your password"
+                   onkeydown="if(event.key==='Enter')doLogin()"/>
+            <button onclick="togglePass()"
+                    class="absolute right-3 top-1/2 -translate-y-1/2
+                           text-gray-400 hover:text-gray-600 text-lg"
+                    tabindex="-1">
+              👁
+            </button>
+          </div>
+        </div>
+
+        <!-- Button -->
+        <button id="login-btn" onclick="doLogin()"
+                class="w-full gbg text-white py-3.5 rounded-xl font-bold text-base
+                       hover:opacity-90 transition shadow-lg">
+          Sign In →
+        </button>
+
+        <!-- Note -->
+        <p class="text-center text-xs text-gray-400 mt-5">
+          🔒 Authorized HR personnel only.<br/>
+          Contact IT admin if you forgot your password.
+        </p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <p class="text-center text-blue-200 text-xs mt-5">
+      © 2026 RSPL Health · HR Automation System v1.0
+    </p>
+  </div>
+
+  <script>
+    const API = "https://rspl-hr-onboarding-backend-production.up.railway.app/api";
+
+    // If already logged in, redirect to dashboard
+    const existing = localStorage.getItem("hr_token");
+    if (existing) {
+      fetch(`${API}/auth/me`, { headers:{ Authorization:"Bearer "+existing } })
+        .then(r=>r.json())
+        .then(d=>{ if(d.success) window.location.href="main.html"; })
+        .catch(()=>{});
+    }
+
+    function togglePass() {
+      const p = document.getElementById("inp-pass");
+      p.type = p.type === "password" ? "text" : "password";
+    }
+
+    function showErr(msg) {
+      const el = document.getElementById("err-box");
+      el.textContent = "⚠️ " + msg;
+      el.classList.remove("hidden");
+    }
+
+    async function doLogin() {
+      const username = document.getElementById("inp-user").value.trim();
+      const password = document.getElementById("inp-pass").value;
+
+      if (!username || !password) {
+        showErr("Please enter both username and password");
+        return;
+      }
+
+      const btn = document.getElementById("login-btn");
+      btn.disabled    = true;
+      btn.textContent = "Signing in…";
+      document.getElementById("err-box").classList.add("hidden");
+
+      try {
+        const res  = await fetch(`${API}/auth/login`, {
+          method:  "POST",
+          headers: { "Content-Type":"application/json" },
+          body:    JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          // Save token + user info
+          localStorage.setItem("hr_token",    data.data.token);
+          localStorage.setItem("hr_username",  data.data.username);
+          localStorage.setItem("hr_name",      data.data.name);
+          localStorage.setItem("hr_role",      data.data.role);
+          // Redirect to dashboard
+          window.location.href = "main.html";
+        } else {
+          showErr(data.message || "Invalid credentials");
+          btn.disabled    = false;
+          btn.textContent = "Sign In →";
+        }
+      } catch (e) {
+        showErr("Cannot connect to server. Please try again.");
+        btn.disabled    = false;
+        btn.textContent = "Sign In →";
+      }
+    }
+  </script>
+</body>
+</html>
