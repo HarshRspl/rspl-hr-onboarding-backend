@@ -5,10 +5,12 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,10 +19,20 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    private static final long EXPIRATION_MS = 1000 * 60 * 60 * 24; // 24 hours
-    private final Key signingKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    // ✅ Reads from application.properties / Railway env var
+    @Value("${jwt.secret}")
+    private String secretKey;
 
-    // ── Called by AuthController ──────────────────────────────────────────────
+    @Value("${jwt.expiration}")
+    private long expirationMs;
+
+    private Key getSigningKey() {
+        byte[] keyBytes = Base64.getDecoder().decode(
+            Base64.getEncoder().encodeToString(secretKey.getBytes())
+        );
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+
     public String generateToken(UserDetails userDetails) {
         return generateToken(new HashMap<>(), userDetails);
     }
@@ -30,12 +42,11 @@ public class JwtService {
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_MS))
-                .signWith(signingKey)
+                .setExpiration(new Date(System.currentTimeMillis() + expirationMs))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // ── Called by JwtAuthenticationFilter ────────────────────────────────────
     public boolean isTokenValid(String token, UserDetails userDetails) {
         try {
             final String username = extractUsername(token);
@@ -45,7 +56,6 @@ public class JwtService {
         }
     }
 
-    // ── Called by JwtAuthFilter ───────────────────────────────────────────────
     public boolean isValid(String token) {
         try {
             extractAllClaims(token);
@@ -59,7 +69,6 @@ public class JwtService {
         return extractClaim(token, claims -> claims.get("role", String.class));
     }
 
-    // ── Shared helpers ────────────────────────────────────────────────────────
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
@@ -73,13 +82,12 @@ public class JwtService {
     }
 
     private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
+        return claimsResolver.apply(extractAllClaims(token));
     }
 
     private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(signingKey)
+                .setSigningKey(getSigningKey())
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
