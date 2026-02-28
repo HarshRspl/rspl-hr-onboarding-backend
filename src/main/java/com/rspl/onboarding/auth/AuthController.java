@@ -1,6 +1,6 @@
 package com.rspl.onboarding.auth;
 
-import com.rspl.onboarding.config.JwtService;
+import com.rspl.onboarding.config.JwtTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -47,7 +47,6 @@ public class AuthController {
         ));
     }
 
-    // You can move this into a separate file if you prefer: LoginRequest.java
     public static class LoginRequest {
         private String username;
         private String password;
