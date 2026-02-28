@@ -55,7 +55,7 @@ public class CandidatePortalController {
 
     /**
      * ✅ Fetch candidate saved form details (for Edit Mode)
-     * FIXED: Do not use Map.of() with >10 pairs (compile error). Use LinkedHashMap instead.
+     * FIXED: no Map.of() with >10 pairs
      */
     @GetMapping("/details")
     public ResponseEntity<Map<String, Object>> getDetails(@RequestParam String token) {
@@ -67,15 +67,12 @@ public class CandidatePortalController {
 
         Candidate c = opt.get();
 
-        // ✅ LinkedHashMap supports unlimited entries (fixes Map.of limit)
         Map<String, Object> data = new java.util.LinkedHashMap<>();
-
         data.put("candidateId", c.getId());
         data.put("employeeName", c.getEmployeeName());
         data.put("designation", c.getDesignation() != null ? c.getDesignation() : "");
         data.put("joiningStatus", c.getJoiningStatus() != null ? c.getJoiningStatus() : "");
 
-        // Personal
         data.put("fathersName", c.getFathersName() != null ? c.getFathersName() : "");
         data.put("dob", c.getDob() != null ? c.getDob() : "");
         data.put("gender", c.getGender() != null ? c.getGender() : "");
@@ -86,19 +83,16 @@ public class CandidatePortalController {
         data.put("uanAvailable", c.getUanAvailable() != null ? c.getUanAvailable() : "NO");
         data.put("uanNo", c.getUanNo() != null ? c.getUanNo() : "");
 
-        // Address
         data.put("permanentAddress", c.getPermanentAddress() != null ? c.getPermanentAddress() : "");
         data.put("district", c.getDistrict() != null ? c.getDistrict() : "");
         data.put("state", c.getState() != null ? c.getState() : "");
         data.put("pinCode", c.getPinCode() != null ? c.getPinCode() : "");
 
-        // Bank
         data.put("bankName", c.getBankName() != null ? c.getBankName() : "");
         data.put("bankAccountNo", c.getBankAccountNo() != null ? c.getBankAccountNo() : "");
         data.put("ifscCode", c.getIfscCode() != null ? c.getIfscCode() : "");
         data.put("branchName", c.getBranchName() != null ? c.getBranchName() : "");
 
-        // Nominee
         data.put("nomineeName", c.getNomineeName() != null ? c.getNomineeName() : "");
         data.put("nomineeRelation", c.getNomineeRelation() != null ? c.getNomineeRelation() : "");
         data.put("nomineeDob", c.getNomineeDob() != null ? c.getNomineeDob() : "");
@@ -114,29 +108,21 @@ public class CandidatePortalController {
         Optional<Candidate> opt = candidateRepository.findByOnboardingToken(token);
 
         if (opt.isEmpty()) {
-            return ResponseEntity.status(401).body(
-                    Map.of("success", false, "message", "Invalid token")
-            );
+            return ResponseEntity.status(401).body(Map.of("success", false, "message", "Invalid token"));
         }
 
         Candidate c = opt.get();
 
-        // ✅ fixed escaped values: FORM_SUBMITTED (not FORM\_SUBMITTED)
-        if (java.util.Arrays.asList("FORM_SUBMITTED", "SIGNED", "APPROVED")
-                .contains(c.getJoiningStatus())) {
-            return ResponseEntity.badRequest().body(
-                    Map.of("success", false, "message", "Form already submitted")
-            );
+        if (java.util.Arrays.asList("FORM_SUBMITTED", "SIGNED", "APPROVED").contains(c.getJoiningStatus())) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Form already submitted"));
         }
 
-        // Helper: avoid overwriting with null
         java.util.function.BiFunction<String, String, String> val =
                 (k, fallback) -> {
                     String v = body.get(k);
                     return (v == null) ? fallback : v;
                 };
 
-        // ===== Personal =====
         c.setAadhaarNo(val.apply("aadhaarNo", c.getAadhaarNo()));
         c.setMobileNo(val.apply("mobileNo", c.getMobileNo()));
         c.setPersonalEmail(val.apply("personalEmail", c.getPersonalEmail()));
@@ -153,7 +139,6 @@ public class CandidatePortalController {
         c.setUanNo(val.apply("uanNo", c.getUanNo()));
         c.setEsiNo(val.apply("esiNo", c.getEsiNo()));
 
-        // ===== Address =====
         c.setPermanentAddress(val.apply("permanentAddress", c.getPermanentAddress()));
         c.setDistrict(val.apply("district", c.getDistrict()));
         c.setState(val.apply("state", c.getState()));
@@ -161,7 +146,6 @@ public class CandidatePortalController {
         c.setWorkingState(val.apply("workingState", c.getWorkingState()));
         c.setHqDistrict(val.apply("hqDistrict", c.getHqDistrict()));
 
-        // ===== Employment =====
         c.setDepartment(val.apply("department", c.getDepartment()));
         c.setDateOfJoining(val.apply("dateOfJoining", c.getDateOfJoining()));
         c.setPrevOrgName(val.apply("prevOrgName", c.getPrevOrgName()));
@@ -172,20 +156,17 @@ public class CandidatePortalController {
         c.setPrevSalary(val.apply("prevSalary", c.getPrevSalary()));
         c.setPrevReasonLeaving(val.apply("prevReasonLeaving", c.getPrevReasonLeaving()));
 
-        // ===== Bank =====
         c.setBankName(val.apply("bankName", c.getBankName()));
         c.setBankAccountNo(val.apply("bankAccountNo", c.getBankAccountNo()));
         c.setIfscCode(val.apply("ifscCode", c.getIfscCode()));
         c.setBranchName(val.apply("branchName", c.getBranchName()));
 
-        // ===== Nominee =====
         c.setNomineeName(val.apply("nomineeName", c.getNomineeName()));
         c.setNomineeGender(val.apply("nomineeGender", c.getNomineeGender()));
         c.setNomineeRelation(val.apply("nomineeRelation", c.getNomineeRelation()));
         c.setNomineeDob(val.apply("nomineeDob", c.getNomineeDob()));
         c.setNomineeAddress(val.apply("nomineeAddress", c.getNomineeAddress()));
 
-        // ===== Status =====
         c.setJoiningStatus("FORM_SUBMITTED");
         c.setUpdatedAt(LocalDateTime.now());
         candidateRepository.save(c);
@@ -201,11 +182,6 @@ public class CandidatePortalController {
         ));
     }
 
-    /**
-     * ✅ Update submitted form (Edit Mode)
-     * Allowed only when status is FORM_SUBMITTED or REJECTED.
-     * Block if SIGNED/APPROVED.
-     */
     @PostMapping("/update-form")
     public ResponseEntity<Map<String, Object>> updateForm(@RequestBody Map<String, String> body) {
 
@@ -230,14 +206,12 @@ public class CandidatePortalController {
             );
         }
 
-        // Helper: avoid overwriting with null
         java.util.function.BiFunction<String, String, String> val =
                 (k, fallback) -> {
                     String v = body.get(k);
                     return (v == null) ? fallback : v;
                 };
 
-        // ===== Personal =====
         c.setFathersName(val.apply("fathersName", c.getFathersName()));
         c.setDob(val.apply("dob", c.getDob()));
         c.setGender(val.apply("gender", c.getGender()));
@@ -248,19 +222,16 @@ public class CandidatePortalController {
         c.setUanAvailable(val.apply("uanAvailable", c.getUanAvailable()));
         c.setUanNo(val.apply("uanNo", c.getUanNo()));
 
-        // ===== Address =====
         c.setPermanentAddress(val.apply("permanentAddress", c.getPermanentAddress()));
         c.setDistrict(val.apply("district", c.getDistrict()));
         c.setState(val.apply("state", c.getState()));
         c.setPinCode(val.apply("pinCode", c.getPinCode()));
 
-        // ===== Bank =====
         c.setBankName(val.apply("bankName", c.getBankName()));
         c.setBankAccountNo(val.apply("bankAccountNo", c.getBankAccountNo()));
         c.setIfscCode(val.apply("ifscCode", c.getIfscCode()));
         c.setBranchName(val.apply("branchName", c.getBranchName()));
 
-        // ===== Nominee =====
         c.setNomineeName(val.apply("nomineeName", c.getNomineeName()));
         c.setNomineeRelation(val.apply("nomineeRelation", c.getNomineeRelation()));
         c.setNomineeDob(val.apply("nomineeDob", c.getNomineeDob()));
@@ -287,11 +258,8 @@ public class CandidatePortalController {
     public ResponseEntity<Map<String, Object>> getStatus(@RequestParam String token) {
 
         Optional<Candidate> opt = candidateRepository.findByOnboardingToken(token);
-
         if (opt.isEmpty()) {
-            return ResponseEntity.status(401).body(
-                    Map.of("success", false, "message", "Invalid token")
-            );
+            return ResponseEntity.status(401).body(Map.of("success", false, "message", "Invalid token"));
         }
 
         Candidate c = opt.get();
@@ -308,4 +276,3 @@ public class CandidatePortalController {
         ));
     }
 }
-``
