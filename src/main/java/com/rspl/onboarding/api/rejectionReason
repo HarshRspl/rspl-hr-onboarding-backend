@@ -5,12 +5,12 @@ import jakarta.validation.constraints.NotBlank;
 public class RejectRequest {
 
     @NotBlank(message = "Rejection reason is required")
-    private String reason;
+    private String rejectionReason;  // ✅ matches HrController + frontend JSON
 
     private String rejectedBy;
 
-    public String getReason() { return reason; }
-    public void setReason(String v) { this.reason = v; }
+    public String getRejectionReason() { return rejectionReason; }
+    public void setRejectionReason(String v) { this.rejectionReason = v; }
 
     public String getRejectedBy() { return rejectedBy; }
     public void setRejectedBy(String v) { this.rejectedBy = v; }
