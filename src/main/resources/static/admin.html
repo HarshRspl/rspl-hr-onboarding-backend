@@ -1,163 +1,251 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RSPL HR Dashboard</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <style>
-    :root { --primary: #3b82f6; --success: #10b981; --danger: #ef4444; }
-    .stats-card { transition: all 0.3s; }
-    .stats-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
-    .table-hover tbody tr:hover { background-color: #f8fafc; }
-  </style>
-</head>
-<body class="bg-light">
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-    <div class="container">
-      <a class="navbar-brand fw-bold fs-4" href="/">
-        <i class="fas fa-users me-2"></i>RSPL HR Dashboard
-      </a>
-      <div class="navbar-nav ms-auto">
-        <button id="logoutBtn" class="btn btn-outline-light">
-          <i class="fas fa-sign-out-alt me-1"></i>Logout
-        </button>
-      </div>
-    </div>
-  </nav>
+<script>
+const API_BASE = '/api';
+let token = localStorage.getItem('token');
+let currentCandidates = [];
 
-  <div class="container-fluid py-4">
-    <!-- Stats Cards -->
-    <div class="row mb-5" id="statsSection">
-      <div class="col-lg-3 col-md-6 mb-4">
-        <div class="card stats-card border-0 shadow-sm h-100 text-center bg-white">
-          <div class="card-body">
-            <i class="fas fa-users fa-3x text-primary mb-3"></i>
-            <h3 id="totalCount" class="text-primary mb-1">0</h3>
-            <p class="text-muted mb-0">Total Candidates</p>
-          </div>
-        </div>
-      </div>
-      <!-- Add more stats cards here -->
-    </div>
-
-    <!-- Candidates Table -->
-    <div class="card shadow-sm border-0">
-      <div class="card-header bg-white border-0 pb-0">
-        <h5 class="mb-3">
-          <i class="fas fa-table me-2 text-primary"></i>Candidates List
-        </h5>
-        <div class="row g-3 mb-4">
-          <div class="col-md-4">
-            <input type="text" id="searchInput" class="form-control" placeholder="Search name/email...">
-          </div>
-          <div class="col-md-3">
-            <select id="statusFilter" class="form-select">
-              <option value="">All Status</option>
-              <option value="INITIATED">Initiated</option>
-              <option value="FORM_SUBMITTED">Submitted</option>
-              <option value="APPROVED">Approved</option>
-              <option value="REJECTED">Rejected</option>
-            </select>
-          </div>
-          <div class="col-md-2">
-            <button id="createBtn" class="btn btn-primary w-100">
-              <i class="fas fa-plus me-2"></i>Create
-            </button>
-          </div>
-        </div>
-      </div>
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-hover mb-0">
-            <thead class="table-light sticky-top">
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Status</th>
-                <th>HR</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="candidatesTableBody">
-              <tr><td colspan="7" class="text-center py-5 text-muted">Loading...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Create Modal -->
-  <div class="modal fade" id="createModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Create Candidate</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <form id="createForm">
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Employee Name</label>
-                <input type="text" class="form-control" name="employeeName" required>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Email</label>
-                <input type="email" class="form-control" name="email" required>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Mobile</label>
-                <input type="tel" class="form-control" name="mobileNo" required>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Designation</label>
-                <input type="text" class="form-control" name="designation" required>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Assigned HR</label>
-                <select class="form-select" name="assignedHRId" required>
-                  <option value="1">Sneha Kapoor</option>
-                  <option value="2">Arjun Mehta</option>
-                  <option value="3">Pooja Nair</option>
-                </select>
-              </div>
-              <div class="col-12 mb-3">
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" name="sendLinkImmediately" checked>
-                  <label class="form-check-label">Send onboarding link immediately</label>
-                </div>
-              </div>
-            </div>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" id="saveCandidate" class="btn btn-primary">Create</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    // Your existing JS code goes here - I'll provide the complete script next!
-    const API_BASE = '/api';
-    let token = localStorage.getItem('token');
+// 🔄 Load dashboard data
+async function loadDashboard() {
+  try {
+    if (!token) throw new Error('No token');
     
-    // Auto-login check
-    if (token) loadDashboard();
+    // Load stats
+    const stats = await fetchJSON('/hr/candidates/stats');
+    document.getElementById('totalCount').textContent = stats.data.total || 0;
     
-    // Logout
-    document.getElementById('logoutBtn').onclick = () => {
-      localStorage.removeItem('token');
-      window.location.href = '/login.html';
+    // Load candidates
+    await loadCandidates();
+  } catch (err) {
+    console.error('Dashboard load failed:', err);
+    window.location.href = '/login.html';
+  }
+}
+
+// 📋 Load candidates table
+async function loadCandidates(status = '', search = '') {
+  try {
+    const params = new URLSearchParams({ page: 0, size: 50 });
+    if (status) params.append('status', status);
+    if (search) params.append('search', search);
+    
+    const response = await fetch(`${API_BASE}/hr/candidates?${params}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    if (!response.ok) throw new Error('Failed to load candidates');
+    
+    const data = await response.json();
+    currentCandidates = data.data.content || [];
+    renderTable(currentCandidates);
+  } catch (err) {
+    console.error('Load candidates failed:', err);
+    document.getElementById('candidatesTableBody').innerHTML = 
+      '<tr><td colspan="7" class="text-center py-5 text-muted">Error loading data</td></tr>';
+  }
+}
+
+// 🖼️ Render table rows
+function renderTable(candidates) {
+  const tbody = document.getElementById('candidatesTableBody');
+  
+  if (!candidates.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-5 text-muted">No candidates found</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = candidates.map(c => `
+    <tr>
+      <td>${c.id}</td>
+      <td>${c.employeeName || 'N/A'}</td>
+      <td>${c.emailId || 'N/A'}</td>
+      <td>${c.mobileNo || 'N/A'}</td>
+      <td>
+        <span class="badge ${
+          c.joiningStatus === 'APPROVED' ? 'bg-success' :
+          c.joiningStatus === 'REJECTED' ? 'bg-danger' :
+          c.joiningStatus === 'INITIATED' ? 'bg-warning' : 'bg-secondary'
+        }">${c.joiningStatus || 'N/A'}</span>
+      </td>
+      <td>${c.assignedHRName || 'N/A'}</td>
+      <td>
+        <div class="btn-group btn-group-sm" role="group">
+          <button class="btn btn-outline-primary view-btn" data-id="${c.id}">
+            <i class="fas fa-eye"></i>
+          </button>
+          ${c.joiningStatus !== 'APPROVED' && c.joiningStatus !== 'REJECTED' ? 
+            `<button class="btn btn-outline-success approve-btn" data-id="${c.id}">
+               <i class="fas fa-check"></i>
+             </button>` : ''
+          }
+          ${c.joiningStatus === 'INITIATED' ? 
+            `<button class="btn btn-outline-info send-link-btn" data-id="${c.id}">
+               <i class="fas fa-paper-plane"></i>
+             </button>` : ''
+          }
+          <button class="btn btn-outline-danger reject-btn" data-id="${c.id}">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+  
+  // Add event listeners
+  document.querySelectorAll('.approve-btn').forEach(btn => 
+    btn.addEventListener('click', handleApprove));
+  document.querySelectorAll('.reject-btn').forEach(btn => 
+    btn.addEventListener('click', handleReject));
+  document.querySelectorAll('.send-link-btn').forEach(btn => 
+    btn.addEventListener('click', handleSendLink));
+  document.querySelectorAll('.view-btn').forEach(btn => 
+    btn.addEventListener('click', handleView));
+}
+
+// ➕ Create candidate
+async function createCandidate() {
+  const form = document.getElementById('createForm');
+  const formData = new FormData(form);
+  const data = Object.fromEntries(formData);
+  data.sendLinkImmediately = formData.get('sendLinkImmediately') === 'on';
+  
+  try {
+    const response = await fetch(`${API_BASE}/hr/candidates/initiate`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+    
+    if (response.ok) {
+      bootstrap.Modal.getInstance(document.getElementById('createModal')).hide();
+      form.reset();
+      loadCandidates();
+      showToast('Candidate created successfully!', 'success');
+    }
+  } catch (err) {
+    showToast('Failed to create candidate', 'error');
+  }
+}
+
+// ✅ Approve
+async function handleApprove(e) {
+  const id = e.target.closest('button').dataset.id;
+  if (confirm('Approve this candidate?')) {
+    try {
+      await fetch(`${API_BASE}/hr/candidates/${id}/approve`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      loadCandidates();
+      showToast('Candidate approved!', 'success');
+    } catch (err) {
+      showToast('Approve failed', 'error');
+    }
+  }
+}
+
+// ❌ Reject
+async function handleReject(e) {
+  const id = e.target.closest('button').dataset.id;
+  const reason = prompt('Rejection reason:');
+  if (reason) {
+    try {
+      await fetch(`${API_BASE}/hr/candidates/${id}/reject`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ rejectionReason: reason })
+      });
+      loadCandidates();
+      showToast('Candidate rejected', 'success');
+    } catch (err) {
+      showToast('Reject failed', 'error');
+    }
+  }
+}
+
+// 📱 Send link
+async function handleSendLink(e) {
+  const id = e.target.closest('button').dataset.id;
+  try {
+    await fetch(`${API_BASE}/hr/candidates/${id}/send-link`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    showToast('SMS link sent!', 'success');
+  } catch (err) {
+    showToast('Send link failed', 'error');
+  }
+}
+
+// 👁️ View details (placeholder)
+function handleView(e) {
+  const id = e.target.closest('button').dataset.id;
+  alert(`View candidate ${id} details - implement modal here`);
+}
+
+// 🔍 Search/Filter
+document.getElementById('searchInput').oninput = debounce(function() {
+  loadCandidates(document.getElementById('statusFilter').value, this.value);
+}, 300);
+
+document.getElementById('statusFilter').onchange = function() {
+  loadCandidates(this.value, document.getElementById('searchInput').value);
+};
+
+// ➕ Create button
+document.getElementById('createBtn').onclick = () => {
+  new bootstrap.Modal(document.getElementById('createModal')).show();
+};
+
+// 💾 Save button
+document.getElementById('saveCandidate').onclick = createCandidate;
+
+// 🔔 Toast notifications
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'primary'} border-0`;
+  toast.role = 'alert';
+  toast.innerHTML = `
+    <div class="d-flex">
+      <div class="toast-body">${message}</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  `;
+  document.body.appendChild(toast);
+  const bsToast = new bootstrap.Toast(toast);
+  bsToast.show();
+  toast.addEventListener('hidden.bs.toast', () => toast.remove());
+}
+
+// 🔧 Utility functions
+function fetchJSON(url) {
+  return fetch(url, { headers: { 'Authorization': `Bearer ${token}` } })
+    .then(res => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    });
+}
+
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
     };
-  </script>
-</body>
-</html>
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+// 🚀 Auto-start
+if (token) {
+  loadDashboard();
+} else {
+  window.location.href = '/login.html';
+}
+</script>
