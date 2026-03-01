@@ -20,6 +20,7 @@
     }
     .fu { animation:fadeUp .4s ease; }
   </style>
+  <script src="config.js"></script>
 </head>
 <body class="min-h-screen gbg flex items-center justify-center px-4">
 
@@ -96,14 +97,17 @@
   </div>
 
   <script>
-    const API = "https://rspl-hr-onboarding-backend-production.up.railway.app/api";
+    const API = (window.API_BASE || "https://rspl-hr-onboarding-backend-production.up.railway.app/api");
+// Where to go after login
+const NEXT = (new URLSearchParams(window.location.search)).get('next') || 'dashboard.html';
+function isAdminRole(role) { return (role || '').toUpperCase() === 'HR_ADMIN'; }
 
     // If already logged in, redirect to dashboard
     const existing = localStorage.getItem("hr_token");
     if (existing) {
       fetch(`${API}/auth/me`, { headers:{ Authorization:"Bearer "+existing } })
         .then(r=>r.json())
-        .then(d=>{ if(d.success) window.location.href="main.html"; })
+        .then(d=>{ if(d.success) window.location.href = NEXT; })
         .catch(()=>{});
     }
 
@@ -146,8 +150,14 @@
           localStorage.setItem("hr_username",  data.data.username);
           localStorage.setItem("hr_name",      data.data.name);
           localStorage.setItem("hr_role",      data.data.role);
+      if (NEXT === 'admin.html' && !isAdminRole(data.data.role)) {
+        showErr('Access denied: Admin portal requires HR_ADMIN role');
+        btn.disabled = false;
+        btn.textContent = 'Sign In →';
+        return;
+      }
           // Redirect to dashboard
-          window.location.href = "main.html";
+          window.location.href = NEXT;
         } else {
           showErr(data.message || "Invalid credentials");
           btn.disabled    = false;
