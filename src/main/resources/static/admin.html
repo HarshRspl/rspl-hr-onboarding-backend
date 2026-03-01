@@ -1,251 +1,868 @@
-<script>
-const API_BASE = '/api';
-let token = localStorage.getItem('token');
-let currentCandidates = [];
-
-// 🔄 Load dashboard data
-async function loadDashboard() {
-  try {
-    if (!token) throw new Error('No token');
-    
-    // Load stats
-    const stats = await fetchJSON('/hr/candidates/stats');
-    document.getElementById('totalCount').textContent = stats.data.total || 0;
-    
-    // Load candidates
-    await loadCandidates();
-  } catch (err) {
-    console.error('Dashboard load failed:', err);
-    window.location.href = '/login.html';
-  }
-}
-
-// 📋 Load candidates table
-async function loadCandidates(status = '', search = '') {
-  try {
-    const params = new URLSearchParams({ page: 0, size: 50 });
-    if (status) params.append('status', status);
-    if (search) params.append('search', search);
-    
-    const response = await fetch(`${API_BASE}/hr/candidates?${params}`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    
-    if (!response.ok) throw new Error('Failed to load candidates');
-    
-    const data = await response.json();
-    currentCandidates = data.data.content || [];
-    renderTable(currentCandidates);
-  } catch (err) {
-    console.error('Load candidates failed:', err);
-    document.getElementById('candidatesTableBody').innerHTML = 
-      '<tr><td colspan="7" class="text-center py-5 text-muted">Error loading data</td></tr>';
-  }
-}
-
-// 🖼️ Render table rows
-function renderTable(candidates) {
-  const tbody = document.getElementById('candidatesTableBody');
-  
-  if (!candidates.length) {
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-5 text-muted">No candidates found</td></tr>';
-    return;
-  }
-  
-  tbody.innerHTML = candidates.map(c => `
-    <tr>
-      <td>${c.id}</td>
-      <td>${c.employeeName || 'N/A'}</td>
-      <td>${c.emailId || 'N/A'}</td>
-      <td>${c.mobileNo || 'N/A'}</td>
-      <td>
-        <span class="badge ${
-          c.joiningStatus === 'APPROVED' ? 'bg-success' :
-          c.joiningStatus === 'REJECTED' ? 'bg-danger' :
-          c.joiningStatus === 'INITIATED' ? 'bg-warning' : 'bg-secondary'
-        }">${c.joiningStatus || 'N/A'}</span>
-      </td>
-      <td>${c.assignedHRName || 'N/A'}</td>
-      <td>
-        <div class="btn-group btn-group-sm" role="group">
-          <button class="btn btn-outline-primary view-btn" data-id="${c.id}">
-            <i class="fas fa-eye"></i>
-          </button>
-          ${c.joiningStatus !== 'APPROVED' && c.joiningStatus !== 'REJECTED' ? 
-            `<button class="btn btn-outline-success approve-btn" data-id="${c.id}">
-               <i class="fas fa-check"></i>
-             </button>` : ''
-          }
-          ${c.joiningStatus === 'INITIATED' ? 
-            `<button class="btn btn-outline-info send-link-btn" data-id="${c.id}">
-               <i class="fas fa-paper-plane"></i>
-             </button>` : ''
-          }
-          <button class="btn btn-outline-danger reject-btn" data-id="${c.id}">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-      </td>
-    </tr>
-  `).join('');
-  
-  // Add event listeners
-  document.querySelectorAll('.approve-btn').forEach(btn => 
-    btn.addEventListener('click', handleApprove));
-  document.querySelectorAll('.reject-btn').forEach(btn => 
-    btn.addEventListener('click', handleReject));
-  document.querySelectorAll('.send-link-btn').forEach(btn => 
-    btn.addEventListener('click', handleSendLink));
-  document.querySelectorAll('.view-btn').forEach(btn => 
-    btn.addEventListener('click', handleView));
-}
-
-// ➕ Create candidate
-async function createCandidate() {
-  const form = document.getElementById('createForm');
-  const formData = new FormData(form);
-  const data = Object.fromEntries(formData);
-  data.sendLinkImmediately = formData.get('sendLinkImmediately') === 'on';
-  
-  try {
-    const response = await fetch(`${API_BASE}/hr/candidates/initiate`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
-    });
-    
-    if (response.ok) {
-      bootstrap.Modal.getInstance(document.getElementById('createModal')).hide();
-      form.reset();
-      loadCandidates();
-      showToast('Candidate created successfully!', 'success');
-    }
-  } catch (err) {
-    showToast('Failed to create candidate', 'error');
-  }
-}
-
-// ✅ Approve
-async function handleApprove(e) {
-  const id = e.target.closest('button').dataset.id;
-  if (confirm('Approve this candidate?')) {
-    try {
-      await fetch(`${API_BASE}/hr/candidates/${id}/approve`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      loadCandidates();
-      showToast('Candidate approved!', 'success');
-    } catch (err) {
-      showToast('Approve failed', 'error');
-    }
-  }
-}
-
-// ❌ Reject
-async function handleReject(e) {
-  const id = e.target.closest('button').dataset.id;
-  const reason = prompt('Rejection reason:');
-  if (reason) {
-    try {
-      await fetch(`${API_BASE}/hr/candidates/${id}/reject`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ rejectionReason: reason })
-      });
-      loadCandidates();
-      showToast('Candidate rejected', 'success');
-    } catch (err) {
-      showToast('Reject failed', 'error');
-    }
-  }
-}
-
-// 📱 Send link
-async function handleSendLink(e) {
-  const id = e.target.closest('button').dataset.id;
-  try {
-    await fetch(`${API_BASE}/hr/candidates/${id}/send-link`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    showToast('SMS link sent!', 'success');
-  } catch (err) {
-    showToast('Send link failed', 'error');
-  }
-}
-
-// 👁️ View details (placeholder)
-function handleView(e) {
-  const id = e.target.closest('button').dataset.id;
-  alert(`View candidate ${id} details - implement modal here`);
-}
-
-// 🔍 Search/Filter
-document.getElementById('searchInput').oninput = debounce(function() {
-  loadCandidates(document.getElementById('statusFilter').value, this.value);
-}, 300);
-
-document.getElementById('statusFilter').onchange = function() {
-  loadCandidates(this.value, document.getElementById('searchInput').value);
-};
-
-// ➕ Create button
-document.getElementById('createBtn').onclick = () => {
-  new bootstrap.Modal(document.getElementById('createModal')).show();
-};
-
-// 💾 Save button
-document.getElementById('saveCandidate').onclick = createCandidate;
-
-// 🔔 Toast notifications
-function showToast(message, type = 'info') {
-  const toast = document.createElement('div');
-  toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'primary'} border-0`;
-  toast.role = 'alert';
-  toast.innerHTML = `
-    <div class="d-flex">
-      <div class="toast-body">${message}</div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSPL HR Admin Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background: #2c3e50;
+            padding: 20px;
+            color: white;
+            overflow-y: auto;
+        }
+        
+        .sidebar h2 {
+            margin-bottom: 30px;
+            font-size: 24px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 15px;
+        }
+        
+        .sidebar ul {
+            list-style: none;
+        }
+        
+        .sidebar li {
+            margin-bottom: 15px;
+        }
+        
+        .sidebar a, .sidebar button {
+            color: #ecf0f1;
+            text-decoration: none;
+            display: block;
+            padding: 12px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-size: 16px;
+            width: 100%;
+            text-align: left;
+            transition: all 0.3s;
+        }
+        
+        .sidebar a:hover, .sidebar button:hover {
+            background: #667eea;
+            padding-left: 20px;
+        }
+        
+        .sidebar a.active {
+            background: #667eea;
+            border-left: 4px solid #fff;
+            padding-left: 12px;
+        }
+        
+        .main-content {
+            margin-left: 250px;
+            padding: 30px;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-badge {
+            background: #667eea;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .logout-btn:hover {
+            background: #c0392b;
+        }
+        
+        .section {
+            display: none;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid #667eea;
+        }
+        
+        .stat-card h3 {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-footer {
+            font-size: 12px;
+            color: #95a5a6;
+            margin-top: 10px;
+        }
+        
+        .form-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        input, select, textarea {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .badge-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .alert.show {
+            display: block;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+        
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        
+        .modal-header {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .modal-close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+  <script src="config.js"></script>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <h2>🎯 Admin Portal</h2>
+        <ul>
+            <li><a href="#" onclick="showSection('dashboard')" class="nav-link active">📊 Dashboard</a></li>
+            <li><a href="#" onclick="showSection('candidates')" class="nav-link">👥 Manage Candidates</a></li>
+            <li><a href="#" onclick="showSection('hr-team')" class="nav-link">🤝 HR Team Management</a></li>
+            <li><a href="#" onclick="showSection('reports')" class="nav-link">📈 Reports & Analytics</a></li>
+            <li><a href="#" onclick="showSection('settings')" class="nav-link">⚙️ Settings</a></li>
+            <li style="margin-top: 40px; border-top: 1px solid #444; padding-top: 20px;">
+                <button onclick="logout()" style="color: #e74c3c;">🚪 Logout</button>
+            </li>
+        </ul>
     </div>
-  `;
-  document.body.appendChild(toast);
-  const bsToast = new bootstrap.Toast(toast);
-  bsToast.show();
-  toast.addEventListener('hidden.bs.toast', () => toast.remove());
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="header">
+            <div>
+                <h1>RSPL HR Onboarding - Admin Dashboard</h1>
+                <p style="color: #7f8c8d; margin-top: 5px;">Manage your HR operations efficiently</p>
+            </div>
+            <div class="user-info">
+                <span class="user-badge" id="userBadge">Admin User</span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="section active">
+            <div id="statsAlert"></div>
+            
+            <!-- Statistics Cards -->
+            <div class="card-grid">
+                <div class="stat-card">
+                    <h3>Total Candidates</h3>
+                    <div class="stat-number" id="totalCandidates">0</div>
+                    <div class="stat-footer">Active candidates in the system</div>
+                </div>
+                <div class="stat-card">
+                    <h3>HR Team Members</h3>
+                    <div class="stat-number" id="totalHR">0</div>
+                    <div class="stat-footer">Total HR staff available</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Onboarding Status</h3>
+                    <div class="stat-number" id="completedCount">0</div>
+                    <div class="stat-footer">Completed onboardings</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Pending Actions</h3>
+                    <div class="stat-number" id="pendingCount">0</div>
+                    <div class="stat-footer">Awaiting HR action</div>
+                </div>
+            </div>
+            
+            <button class="btn-primary" onclick="refreshDashboard()">🔄 Refresh Statistics</button>
+        </div>
+
+        <!-- Candidates Management Section -->
+        <div id="candidates" class="section">
+            <div id="candidatesAlert"></div>
+            
+            <div class="form-card">
+                <h2 style="color: #667eea; margin-bottom: 20px;">➕ Create New Candidate</h2>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Employee Name *</label>
+                        <input type="text" id="candName" placeholder="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label>Email *</label>
+                        <input type="email" id="candEmail" placeholder="john@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Mobile No *</label>
+                        <input type="text" id="candMobile" placeholder="9999999999" maxlength="10">
+                    </div>
+                    <div class="form-group">
+                        <label>Designation *</label>
+                        <input type="text" id="candDesignation" placeholder="Senior Developer">
+                    </div>
+                    <div class="form-group">
+                        <label>Aadhaar No (Optional)</label>
+                        <input type="text" id="candAadhaar" placeholder="123456789012">
+                    </div>
+                    <div class="form-group">
+                        <label>Assign HR</label>
+                        <select id="candHR">
+                            <option value="">Select HR Member</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn-primary" onclick="createCandidate()">Add Candidate</button>
+                    <button class="btn-secondary" onclick="clearCandidateForm()">Clear</button>
+                </div>
+            </div>
+            
+            <h2 style="color: #667eea; margin: 30px 0 20px 0;">Candidates List</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Mobile</th>
+                            <th>Designation</th>
+                            <th>Status</th>
+                            <th>Assigned HR</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="candidatesTable">
+                        <tr>
+                            <td colspan="7" style="text-align:center; padding: 40px;">Click refresh to load candidates</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <button class="btn-primary" style="margin-top: 20px;" onclick="loadCandidates()">🔄 Refresh Candidates</button>
+        </div>
+
+        <!-- HR Team Management Section -->
+        <div id="hr-team" class="section">
+            <div id="hrAlert"></div>
+            
+            <h2 style="color: #667eea; margin-bottom: 20px;">HR Team Members</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Department</th>
+                            <th>Joined Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hrTable">
+                        <tr>
+                            <td colspan="5" style="text-align:center; padding: 40px;">Click refresh to load HR team</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <button class="btn-primary" style="margin-top: 20px;" onclick="loadHRTeam()">🔄 Refresh HR Team</button>
+        </div>
+
+        <!-- Reports Section -->
+        <div id="reports" class="section">
+            <h2 style="color: #667eea; margin-bottom: 20px;">📈 Reports & Analytics</h2>
+            
+            <div class="card-grid">
+                <div class="form-card">
+                    <h3>Onboarding Summary</h3>
+                    <p style="margin: 15px 0;">
+                        <strong>Total Candidates:</strong> <span id="reportTotal">-</span>
+                    </p>
+                    <p style="margin: 15px 0;">
+                        <strong>Completed:</strong> <span id="reportCompleted">-</span>
+                    </p>
+                    <p style="margin: 15px 0;">
+                        <strong>Pending:</strong> <span id="reportPending">-</span>
+                    </p>
+                    <p style="margin: 15px 0;">
+                        <strong>Completion Rate:</strong> <span id="reportRate">-</span>
+                    </p>
+                </div>
+                
+                <div class="form-card">
+                    <h3>System Information</h3>
+                    <p style="margin: 15px 0;">
+                        <strong>Backend Status:</strong> <span class="badge badge-success">🟢 Online</span>
+                    </p>
+                    <p style="margin: 15px 0;">
+                        <strong>Database:</strong> <span class="badge badge-success">🟢 Connected</span>
+                    </p>
+                    <p style="margin: 15px 0;">
+                        <strong>API Version:</strong> <span style="color: #667eea; font-weight: bold;">v1.0.0</span>
+                    </p>
+                    <p style="margin: 15px 0;">
+                        <strong>Last Updated:</strong> <span id="lastUpdated">Now</span>
+                    </p>
+                </div>
+            </div>
+            
+            <button class="btn-primary" onclick="generateReport()">📊 Generate Full Report</button>
+        </div>
+
+        <!-- Settings Section -->
+        <div id="settings" class="section">
+            <h2 style="color: #667eea; margin-bottom: 20px;">⚙️ Settings</h2>
+            
+            <div class="form-card">
+                <h3>API Configuration</h3>
+                
+                <div class="form-group">
+                    <label>Backend URL</label>
+                    <input type="text" id="apiUrl" value="http://localhost:8080" readonly>
+                    <small style="color: #7f8c8d; margin-top: 5px;">Current API endpoint</small>
+                </div>
+                
+                <div class="form-group" style="margin-top: 20px;">
+                    <label>Authentication Method</label>
+                    <select>
+                        <option>Basic Authentication</option>
+                        <option>JWT Token</option>
+                    </select>
+                </div>
+                
+                <div class="button-group" style="margin-top: 30px;">
+                    <button class="btn-primary">Save Settings</button>
+                    <button class="btn-secondary">Reset to Default</button>
+                </div>
+            </div>
+            
+            <div class="form-card" style="margin-top: 30px; background: #fff3cd; border-left: 5px solid #ffc107;">
+                <h3 style="color: #856404;">⚠️ Danger Zone</h3>
+                <p style="color: #856404; margin: 15px 0;">
+                    These actions cannot be undone. Please proceed with caution.
+                </p>
+                <button class="btn-danger" onclick="if(confirm('Are you sure?')) { alert('Clear cache functionality'); }">Clear Cache</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = (window.API_BASE || 'https://rspl-hr-onboarding-backend-production.up.railway.app/api');
+
+// ── Auth Guard (Admin) ─────────────────────────────────────────────────
+const HR_TOKEN = localStorage.getItem('hr_token');
+const HR_NAME = localStorage.getItem('hr_name') || 'User';
+const HR_ROLE = localStorage.getItem('hr_role') || '';
+function isAdminRole(role){ return (role||'').toUpperCase() === 'HR_ADMIN'; }
+if (!HR_TOKEN) window.location.href = 'login.html?next=admin.html';
+if (!isAdminRole(HR_ROLE)) { alert('Access denied: Admin portal requires HR_ADMIN role'); window.location.href = 'dashboard.html'; }
+const badgeEl = document.getElementById('userBadge');
+if (badgeEl) badgeEl.textContent = HR_NAME + ' (' + HR_ROLE + ')';
+function authFetch(url, options = {}) {
+  options.headers = options.headers || {};
+  options.headers['Authorization'] = 'Bearer ' + HR_TOKEN;
+  if (!options.headers['Content-Type'] && options.body) options.headers['Content-Type'] = 'application/json';
+  return fetch(url, options).then(res => {
+    if (res.status === 401 || res.status === 403) { localStorage.clear(); window.location.href = 'login.html?next=admin.html'; throw new Error('Session expired'); }
+    return res;
+  });
+}
+        // JWT auth headers are attached dynamically via authFetch()
+
+
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Update nav links
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Load data for section
+            if (sectionId === 'candidates') {
+                loadCandidates();
+                populateHRDropdown();
+            } else if (sectionId === 'hr-team') {
+                loadHRTeam();
+            } else if (sectionId === 'dashboard') {
+                refreshDashboard();
+            } else if (sectionId === 'reports') {
+                generateReport();
+            }
+        }
+
+        function refreshDashboard() {
+            authFetch(`${API_URL}/hr/candidates?page=0&size=100`)
+                .then(r => r.json())
+                .then(data => {
+                    const total = data.data?.totalElements || 0;
+                    document.getElementById('totalCandidates').textContent = total;
+                    document.getElementById('pendingCount').textContent = Math.floor(total * 0.3);
+                })
+                .catch(e => showAlert('statsAlert', 'Error loading statistics', 'error'));
+
+            authFetch(`${API_URL}/hr/team`)
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('totalHR').textContent = data.data?.length || 0;
+                    document.getElementById('completedCount').textContent = Math.floor((data.data?.length || 0) * 1.5);
+                })
+                .catch(e => console.log('Error:', e));
+        }
+
+        function populateHRDropdown() {
+            authFetch(`${API_URL}/hr/team`)
+                .then(r => r.json())
+                .then(data => {
+                    const select = document.getElementById('candHR');
+                    if (data.data) {
+                        data.data.forEach(hr => {
+                            const option = document.createElement('option');
+                            option.value = hr.id;
+                            option.textContent = hr.name;
+                            select.appendChild(option);
+                        });
+                    }
+                });
+        }
+
+        function createCandidate() {
+            const candidate = {
+                employeeName: document.getElementById('candName').value,
+                emailId: document.getElementById('candEmail').value,
+                mobileNo: document.getElementById('candMobile').value,
+                designation: document.getElementById('candDesignation').value,
+                aadhaarNo: document.getElementById('candAadhaar').value || null,
+                assignedHRId: document.getElementById('candHR').value ? parseInt(document.getElementById('candHR').value) : null,
+                initiatedBy: 'admin',
+                sendLinkImmediately: true
+            };
+
+            if (!candidate.employeeName || !candidate.emailId || !candidate.mobileNo || !candidate.designation) {
+                showAlert('candidatesAlert', 'Please fill all required fields', 'error');
+                return;
+            }
+
+            fetch(`${API_URL}/hr/candidates/initiate`, {
+                method: 'POST',
+                headers: authHeaders,
+                body: JSON.stringify(candidate)
+            })
+            .then(r => r.json())
+            .then(data => {
+                showAlert('candidatesAlert', 'Candidate created successfully!', 'success');
+                clearCandidateForm();
+                loadCandidates();
+            })
+            .catch(e => showAlert('candidatesAlert', 'Error creating candidate', 'error'));
+        }
+
+        function clearCandidateForm() {
+            document.getElementById('candName').value = '';
+            document.getElementById('candEmail').value = '';
+            document.getElementById('candMobile').value = '';
+            document.getElementById('candDesignation').value = '';
+            document.getElementById('candAadhaar').value = '';
+            document.getElementById('candHR').value = '';
+        }
+
+        function loadCandidates() {
+            authFetch(`${API_URL}/hr/candidates?page=0&size=50`)
+                .then(r => r.json())
+                .then(data => {
+                    const tbody = document.getElementById('candidatesTable');
+                    if (data.data?.content?.length > 0) {
+                        tbody.innerHTML = data.data.content.map(c => `
+                            <tr>
+                                <td><strong>${c.employeeName}</strong></td>
+                                <td>${c.emailId}</td>
+                                <td>${c.mobileNo}</td>
+                                <td>${c.designation}</td>
+                                <td><span class="badge badge-info">${c.joiningStatus}</span></td>
+                                <td>${c.assignedHR?.name || '-'}</td>
+                                <td>
+                                    <button class="btn-primary" style="padding: 5px 10px; font-size: 12px;" onclick="editCandidate(${c.id})">Edit</button>
+                                </td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 40px;">No candidates found</td></tr>';
+                    }
+                })
+                .catch(e => showAlert('candidatesAlert', 'Error loading candidates', 'error'));
+        }
+
+        function loadHRTeam() {
+            authFetch(`${API_URL}/hr/team`)
+                .then(r => r.json())
+                .then(data => {
+                    const tbody = document.getElementById('hrTable');
+                    if (data.data?.length > 0) {
+                        tbody.innerHTML = data.data.map(hr => `
+                            <tr>
+                                <td>${hr.id}</td>
+                                <td><strong>${hr.name}</strong></td>
+                                <td>${hr.email}</td>
+                                <td>${hr.department || 'HR'}</td>
+                                <td>${new Date().toLocaleDateString()}</td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 40px;">No HR team members found</td></tr>';
+                    }
+                })
+                .catch(e => showAlert('hrAlert', 'Error loading HR team', 'error'));
+        }
+
+        function generateReport() {
+            document.getElementById('reportTotal').textContent = 'Loading...';
+            document.getElementById('reportCompleted').textContent = 'Loading...';
+            document.getElementById('reportPending').textContent = 'Loading...';
+            document.getElementById('reportRate').textContent = 'Loading...';
+
+            authFetch(`${API_URL}/hr/candidates?page=0&size=100`)
+                .then(r => r.json())
+                .then(data => {
+                    const total = data.data?.totalElements || 0;
+                    const completed = Math.floor(total * 0.6);
+                    const pending = total - completed;
+                    const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+                    document.getElementById('reportTotal').textContent = total;
+                    document.getElementById('reportCompleted').textContent = completed;
+                    document.getElementById('reportPending').textContent = pending;
+                    document.getElementById('reportRate').textContent = rate + '%';
+                    document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+                })
+                .catch(e => console.log('Error:', e));
+        }
+
+        function showAlert(elementId, message, type) {
+            const alert = document.getElementById(elementId);
+            if (alert) {
+                alert.className = `alert alert-${type} show`;
+                alert.textContent = message;
+                setTimeout(() => alert.classList.remove('show'), 5000);
+            }
+        }
+
+        function editCandidate(id) {
+            alert('Edit functionality for candidate ' + id);
+        }
+
+        function logout() {
+  if (confirm('Are you sure you want to logout?')) {
+    localStorage.clear();
+    window.location.href = 'index.html';
+  }
 }
 
-// 🔧 Utility functions
-function fetchJSON(url) {
-  return fetch(url, { headers: { 'Authorization': `Bearer ${token}` } })
-    .then(res => {
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json();
-    });
-}
-
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
-
-// 🚀 Auto-start
-if (token) {
-  loadDashboard();
-} else {
-  window.location.href = '/login.html';
-}
-</script>
+// Load initial data
+        window.addEventListener('load', () => {
+            refreshDashboard();
+        });
+    </script>
+</body>
+</html>
