@@ -1,6 +1,6 @@
 package com.rspl.onboarding.config;
 
-import com.rspl.onboarding.config.JwtAuthenticationFilter; // ✅ FIXED import
+import com.rspl.onboarding.config.JwtAuthenticationFilter; // ✅ FIXED
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,7 +26,64 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthFilter; // ✅ FIXED class name
+    private final JwtAuthenticationFilter jwtAuthFilter; // ✅ FIXED
 
-    // ... rest stays same
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of(
+            "https://rspl-hr-onboarding-backend-production.up.railway.app",
+            "http://localhost:8080",
+            "http://localhost:5173",
+            "http://localhost:3000"
+        ));
+        config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS","PATCH"));
+        config.setAllowedHeaders(List.of("Authorization","Content-Type","Accept","X-Requested-With"));
+        config.setExposedHeaders(List.of("Authorization"));
+        config.setAllowCredentials(false);
+        config.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())
+            .cors(Customizer.withDefaults())
+            .sessionManagement(sess -> sess
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers(
+                    "/", "/index.html", "/onboarding.html",
+                    "/hr-dashboard.html", "/login.html",
+                    "/health", "/favicon.ico", "/error"
+                ).permitAll()
+                .requestMatchers(
+                    "/static/**", "/css/**", "/js/**",
+                    "/images/**", "/*.js", "/*.css", "/*.png", "/*.ico"
+                ).permitAll()
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/candidate/**").permitAll()
+                .requestMatchers("/api/hr/**").authenticated()
+                .anyRequest().authenticated()
+            )
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder(); // ✅ supports {noop}
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
 }
