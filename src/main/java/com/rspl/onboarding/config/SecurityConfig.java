@@ -1,6 +1,5 @@
 package com.rspl.onboarding.config;
 
-import com.rspl.onboarding.config.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,7 +43,7 @@ public class SecurityConfig {
         config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS","PATCH"));
         config.setAllowedHeaders(List.of("Authorization","Content-Type","Accept","X-Requested-With"));
         config.setExposedHeaders(List.of("Authorization"));
-        config.setAllowCredentials(false);
+        config.setAllowCredentials(false); // JWT in header, no cookies
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -57,33 +56,49 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .cors(Customizer.withDefaults())
-            .sessionManagement(sess -> sess
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .sessionManagement(sess ->
+                sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
             .authorizeHttpRequests(auth -> auth
+                // Allow CORS preflight
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                // ✅ ALL PUBLIC HTML PAGES
+                // ✅ Public HTML pages (explicit)
                 .requestMatchers(
-                    "/", "/index.html", "/onboarding.html",
-                    "/admin.html", "/login.html", "/hr-dashboard.html",
-                    "/health", "/favicon.ico", "/error"
+                    "/",
+                    "/index.html",
+                    "/login.html",
+                    "/main.html",       // HR dashboard
+                    "/admin.html",      // admin shell (data still protected by /api)
+                    "/onboarding.html",
+                    "/hr-dashboard.html",
+                    "/health",
+                    "/favicon.ico",
+                    "/error"
                 ).permitAll()
 
-                // ✅ ALL STATIC ASSETS + HTML FILES
+                // ✅ All static assets (CSS, JS, images, other HTML)
                 .requestMatchers(
-                    "/static/**", "/css/**", "/js/**",
-                    "/images/**", "/*.js", "/*.css", "/*.png", "/*.ico",
-                    "/*.html"  // ✅ ADDED — all HTML files
+                    "/static/**",
+                    "/css/**",
+                    "/js/**",
+                    "/images/**",
+                    "/webjars/**",
+                    "/**/*.js",
+                    "/**/*.css",
+                    "/**/*.png",
+                    "/**/*.ico",
+                    "/**/*.html"
                 ).permitAll()
 
-                // ✅ PUBLIC APIs
+                // ✅ Public APIs
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/candidate/**").permitAll()
 
-                // 🔐 PROTECTED HR APIs
+                // 🔐 Protected HR APIs (require JWT)
                 .requestMatchers("/api/hr/**").authenticated()
 
-                // 🔒 Everything else requires login
+                // 🔒 Everything else requires authentication
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
@@ -105,3 +120,4 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 }
+``
