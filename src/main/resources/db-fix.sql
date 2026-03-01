@@ -1,0 +1,3 @@
+ALTER TABLE candidates DROP FOREIGN KEY IF EXISTS FKrr08oyfnru6hn009lrimfgai8;
+ALTER TABLE candidates DROP INDEX IF EXISTS FKrr08oyfnru6hn009lrimfgai8;
+
