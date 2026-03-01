@@ -61,18 +61,29 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                // ✅ ALL PUBLIC HTML PAGES
                 .requestMatchers(
                     "/", "/index.html", "/onboarding.html",
-                    "/hr-dashboard.html", "/login.html",
+                    "/admin.html", "/login.html", "/hr-dashboard.html",
                     "/health", "/favicon.ico", "/error"
                 ).permitAll()
+
+                // ✅ ALL STATIC ASSETS + HTML FILES
                 .requestMatchers(
                     "/static/**", "/css/**", "/js/**",
-                    "/images/**", "/*.js", "/*.css", "/*.png", "/*.ico"
+                    "/images/**", "/*.js", "/*.css", "/*.png", "/*.ico",
+                    "/*.html"  // ✅ ADDED — all HTML files
                 ).permitAll()
+
+                // ✅ PUBLIC APIs
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/candidate/**").permitAll()
+
+                // 🔐 PROTECTED HR APIs
                 .requestMatchers("/api/hr/**").authenticated()
+
+                // 🔒 Everything else requires login
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
@@ -85,7 +96,7 @@ public class SecurityConfig {
         Map<String, PasswordEncoder> encoders = new HashMap<>();
         encoders.put("bcrypt", new BCryptPasswordEncoder());
         encoders.put("noop", NoOpPasswordEncoder.getInstance());
-        return new DelegatingPasswordEncoder("bcrypt", encoders); // ✅ supports {noop} and {bcrypt}
+        return new DelegatingPasswordEncoder("bcrypt", encoders);
     }
 
     @Bean
