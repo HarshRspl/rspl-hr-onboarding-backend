@@ -1,3 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RSPL HR – Admin Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family:"Segoe UI",sans-serif; background:#f1f5f9; }
+    .gbg { background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%); }
+    .card { background:white; border-radius:14px; box-shadow:0 2px 14px rgba(0,0,0,.07); }
+    .section { display:none; }
+    .section.active { display:block; }
+    .nav-link { padding:10px 16px; border-radius:9px; font-size:13px; font-weight:600;
+                color:#64748b; cursor:pointer; transition:all .2s; display:block; }
+    .nav-link.active { background:#eff6ff; color:#2563eb; }
+    .nav-link:hover:not(.active) { background:#f8fafc; }
+    .badge { display:inline-flex; align-items:center; padding:3px 10px;
+             border-radius:999px; font-size:11px; font-weight:700; }
+    .badge-info    { background:#eff6ff; color:#2563eb; }
+    .badge-success { background:#f0fdf4; color:#16a34a; }
+    .badge-danger  { background:#fef2f2; color:#dc2626; }
+    .ifield { width:100%; border:1.5px solid #e2e8f0; border-radius:9px;
+              padding:10px 13px; font-size:14px; outline:none;
+              transition:border-color .2s,box-shadow .2s; }
+    .ifield:focus { border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.12); }
+    .lbl { display:block; font-size:11px; font-weight:700; color:#64748b;
+           text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; }
+    .btn-primary { background:#2563eb; color:white; border:none; border-radius:8px;
+                   padding:9px 18px; font-size:13px; font-weight:700; cursor:pointer; }
+    .btn-primary:hover { opacity:.9; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th { text-align:left; padding:12px 16px; font-size:11px; font-weight:700;
+         color:#64748b; text-transform:uppercase; border-bottom:2px solid #f1f5f9; }
+    td { padding:12px 16px; border-bottom:1px solid #f8fafc; color:#374151; }
+    tr:hover td { background:#f8fafc; }
+    .alert { padding:10px 16px; border-radius:9px; font-size:13px; font-weight:600;
+             display:none; margin-bottom:12px; }
+    .alert.show { display:block; }
+    .alert-success { background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; }
+    .alert-error   { background:#fef2f2; color:#dc2626; border:1px solid #fecaca; }
+  </style>
+  <script src="config.js"></script>
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="gbg text-white px-6 py-3.5 flex items-center gap-4 shadow-lg sticky top-0 z-30">
+  <div class="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center font-black text-xl">R</div>
+  <div>
+    <div class="font-bold text-base leading-tight">RSPL Health</div>
+    <div class="text-xs text-blue-200">Admin Portal</div>
+  </div>
+  <div class="ml-auto flex items-center gap-4">
+    <div class="hidden md:flex items-center gap-2 bg-white/10 rounded-xl px-4 py-2">
+      <div class="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-sm font-bold">A</div>
+      <span class="text-sm font-semibold" id="userBadge">Admin</span>
+    </div>
+    <button onclick="logout()"
+            class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-sm font-semibold transition">
+      🚪 Logout
+    </button>
+  </div>
+</nav>
+
+<div class="flex max-w-7xl mx-auto px-4 py-6 gap-6">
+
+  <!-- Sidebar -->
+  <aside class="w-52 flex-shrink-0">
+    <div class="card p-3 space-y-1">
+      <a class="nav-link active" onclick="showSection('dashboard',this)">📊 Dashboard</a>
+      <a class="nav-link" onclick="showSection('candidates',this)">👥 Candidates</a>
+      <a class="nav-link" onclick="showSection('hr-team',this)">🧑‍💼 HR Team</a>
+      <a class="nav-link" onclick="showSection('reports',this)">📈 Reports</a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 min-w-0">
+
+    <!-- ── DASHBOARD ── -->
+    <div id="dashboard" class="section active">
+      <h2 class="text-xl font-bold text-gray-800 mb-5">📊 Dashboard Overview</h2>
+      <div id="statsAlert" class="alert"></div>
+
+      <!-- Stat Cards -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="card p-5 text-center">
+          <p class="text-3xl font-black text-blue-600" id="totalCandidates">–</p>
+          <p class="text-xs text-gray-500 font-semibold mt-1">Total Candidates</p>
+        </div>
+        <div class="card p-5 text-center">
+          <p class="text-3xl font-black text-indigo-600" id="totalHR">–</p>
+          <p class="text-xs text-gray-500 font-semibold mt-1">HR Team Members</p>
+        </div>
+        <div class="card p-5 text-center">
+          <p class="text-3xl font-black text-amber-500" id="pendingCount">–</p>
+          <p class="text-xs text-gray-500 font-semibold mt-1">Initiated</p>
+        </div>
+        <div class="card p-5 text-center">
+          <p class="text-3xl font-black text-green-600" id="completedCount">–</p>
+          <p class="text-xs text-gray-500 font-semibold mt-1">Approved</p>
+        </div>
+      </div>
+
+      <button onclick="refreshDashboard()"
+              class="btn-primary">↻ Refresh Stats</button>
+    </div>
+
+    <!-- ── CANDIDATES ── -->
+    <div id="candidates" class="section">
+      <h2 class="text-xl font-bold text-gray-800 mb-5">👥 Manage Candidates</h2>
+      <div id="candidatesAlert" class="alert"></div>
+
+      <!-- Create Form -->
+      <div class="card p-6 mb-6">
+        <h3 class="font-bold text-gray-700 mb-4">➕ Add New Candidate</h3>
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="lbl">Name *</label>
+            <input class="ifield" id="candName" placeholder="Full name"/>
+          </div>
+          <div>
+            <label class="lbl">Email *</label>
+            <input type="email" class="ifield" id="candEmail" placeholder="email@example.com"/>
+          </div>
+          <div>
+            <label class="lbl">Mobile *</label>
+            <input class="ifield" id="candMobile" placeholder="10-digit mobile" maxlength="10"/>
+          </div>
+          <div>
+            <label class="lbl">Designation *</label>
+            <input class="ifield" id="candDesignation" placeholder="e.g. Sales Executive"/>
+          </div>
+          <div>
+            <label class="lbl">Aadhaar</label>
+            <input class="ifield" id="candAadhaar" placeholder="12-digit Aadhaar" maxlength="12"/>
+          </div>
+          <div>
+            <label class="lbl">Assign HR</label>
+            <select class="ifield" id="candHR">
+              <option value="">Select HR Member</option>
+            </select>
+          </div>
+        </div>
+        <button onclick="createCandidate()" class="btn-primary">Create Candidate</button>
+      </div>
+
+      <!-- Table -->
+      <div class="card overflow-hidden">
+        <div class="overflow-x-auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th><th>Email</th><th>Mobile</th>
+                <th>Designation</th><th>Status</th><th>Assigned HR</th><th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="candidatesTable">
+              <tr><td colspan="7" class="text-center py-10 text-gray-400">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── HR TEAM ── -->
+    <div id="hr-team" class="section">
+      <h2 class="text-xl font-bold text-gray-800 mb-5">🧑‍💼 HR Team</h2>
+      <div id="hrAlert" class="alert"></div>
+      <div class="card overflow-hidden">
+        <div class="overflow-x-auto">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th><th>Name</th><th>Email</th><th>Department</th><th>Role</th>
+              </tr>
+            </thead>
+            <tbody id="hrTable">
+              <tr><td colspan="5" class="text-center py-10 text-gray-400">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REPORTS ── -->
+    <div id="reports" class="section">
+      <h2 class="text-xl font-bold text-gray-800 mb-5">📈 Reports & Analytics</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="card p-5 text-center">
+          <p class="text-3xl font-black text-gray-800" id="reportTotal">–</p>
+          <p class="text-xs text-gray-500 font-semibold mt-1">Total</p>
+        </div>
+        <div class="card p-5 text-center">
+          <p class="text-3xl font-black text-green-600" id="reportCompleted">–</p>
+          <p class="text-xs text-gray-500 font-semibold mt-1">Approved</p>
+        </div>
+        <div class="card p-5 text-center">
+          <p class="text-3xl font-black text-amber-500" id="reportPending">–</p>
+          <p class="text-xs text-gray-500 font-semibold mt-1">Pending</p>
+        </div>
+        <div class="card p-5 text-center">
+          <p class="text-3xl font-black text-blue-600" id="reportRate">–</p>
+          <p class="text-xs text-gray-500 font-semibold mt-1">Approval Rate</p>
+        </div>
+      </div>
+      <p class="text-xs text-gray-400">Last updated: <span id="lastUpdated">–</span></p>
+      <button onclick="generateReport()" class="btn-primary mt-4">↻ Refresh Report</button>
+    </div>
+
+  </main>
+</div>
+
 <script>
   const API_URL = window.APP_CONFIG?.API_BASE
                || window.API_BASE
@@ -34,8 +248,6 @@
   }
 
   window.addEventListener("DOMContentLoaded", () => {
-    const apiInput = document.getElementById("apiUrl");
-    if (apiInput) apiInput.value = API_URL.replace("/api", "");
     refreshDashboard();
   });
 
@@ -45,7 +257,6 @@
     document.getElementById(sectionId).classList.add("active");
     document.querySelectorAll(".nav-link").forEach(n => n.classList.remove("active"));
     if (el) el.classList.add("active");
-
     const loaders = {
       candidates: () => { loadCandidates(); populateHRDropdown(); },
       "hr-team":  () => loadHRTeam(),
@@ -55,25 +266,28 @@
     loaders[sectionId]?.();
   }
 
-  // ── Dashboard Stats (real data) ─────────────────────────────────────────────
+  // ── Dashboard Stats ─────────────────────────────────────────────────────────
+  function set(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  }
+
   function refreshDashboard() {
     authFetch(`${API_URL}/hr/candidates/stats`)
       .then(r => r.json())
       .then(data => {
         if (data.success) {
           const s = data.data;
-          document.getElementById("totalCandidates").textContent = s.total         || 0;
-          document.getElementById("pendingCount").textContent    = s.INITIATED      || 0;
-          document.getElementById("completedCount").textContent  = s.APPROVED       || 0;
+          set("totalCandidates", s.total        || 0);
+          set("pendingCount",    s.INITIATED     || 0);
+          set("completedCount",  s.APPROVED      || 0);
         }
       })
       .catch(() => showAlert("statsAlert", "Error loading statistics", "error"));
 
     authFetch(`${API_URL}/hr/team`)
       .then(r => r.json())
-      .then(data => {
-        document.getElementById("totalHR").textContent = data.data?.length || 0;
-      })
+      .then(data => set("totalHR", data.data?.length || 0))
       .catch(e => console.error("HR team error:", e));
   }
 
@@ -141,7 +355,6 @@
       .then(data => {
         const tbody   = document.getElementById("candidatesTable");
         const content = data.data?.content || [];
-
         tbody.innerHTML = content.length
           ? content.map(c => `
               <tr>
@@ -156,7 +369,7 @@
                           onclick="editCandidate(${c.id})">Edit</button>
                 </td>
               </tr>`).join("")
-          : '<tr><td colspan="7" style="text-align:center;padding:40px;">No candidates found</td></tr>';
+          : '<tr><td colspan="7" class="text-center py-10 text-gray-400">No candidates found</td></tr>';
       })
       .catch(() => showAlert("candidatesAlert", "Error loading candidates", "error"));
   }
@@ -168,7 +381,6 @@
       .then(data => {
         const tbody = document.getElementById("hrTable");
         const team  = data.data || [];
-
         tbody.innerHTML = team.length
           ? team.map(hr => `
               <tr>
@@ -178,7 +390,7 @@
                 <td>${hr.department || "HR"}</td>
                 <td>${hr.role || "–"}</td>
               </tr>`).join("")
-          : '<tr><td colspan="5" style="text-align:center;padding:40px;">No HR team members found</td></tr>';
+          : '<tr><td colspan="5" class="text-center py-10 text-gray-400">No HR team members found</td></tr>';
       })
       .catch(() => showAlert("hrAlert", "Error loading HR team", "error"));
   }
@@ -191,11 +403,11 @@
         if (data.success) {
           const s    = data.data;
           const rate = s.total > 0 ? Math.round((s.APPROVED / s.total) * 100) : 0;
-          document.getElementById("reportTotal").textContent     = s.total         || 0;
-          document.getElementById("reportCompleted").textContent = s.APPROVED       || 0;
-          document.getElementById("reportPending").textContent   = s.INITIATED      || 0;
-          document.getElementById("reportRate").textContent      = rate + "%";
-          document.getElementById("lastUpdated").textContent     = new Date().toLocaleTimeString();
+          set("reportTotal",     s.total     || 0);
+          set("reportCompleted", s.APPROVED  || 0);
+          set("reportPending",   s.INITIATED || 0);
+          set("reportRate",      rate + "%");
+          set("lastUpdated",     new Date().toLocaleTimeString());
         }
       })
       .catch(e => console.error("Report error:", e));
@@ -222,3 +434,5 @@
     }
   }
 </script>
+</body>
+</html>
