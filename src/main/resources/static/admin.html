@@ -1,265 +1,224 @@
-
 <script>
-  // Use API_BASE from config.js if present, otherwise default to Railway API
-  const API_URL = (window.API_BASE || 'https://rspl-hr-onboarding-backend-production.up.railway.app/api');
+  const API_URL = window.APP_CONFIG?.API_BASE
+               || window.API_BASE
+               || "https://rspl-hr-onboarding-backend-production.up.railway.app/api";
 
-  // ── Auth Guard (Admin) ─────────────────────────────────────────────────
-  const HR_TOKEN = localStorage.getItem('hr_token');
-  const HR_NAME  = localStorage.getItem('hr_name')  || 'User';
-  const HR_ROLE  = localStorage.getItem('hr_role')  || '';
+  // ── Auth Guard ──────────────────────────────────────────────────────────────
+  const HR_TOKEN = localStorage.getItem("hr_token");
+  const HR_NAME  = localStorage.getItem("hr_name") || "User";
+  const HR_ROLE  = localStorage.getItem("hr_role") || "";
 
-  function isAdminRole(role) {
-    return (role || '').toUpperCase() === 'HR_ADMIN';
+  if (!HR_TOKEN) window.location.href = "login.html?next=admin.html";
+  if ((HR_ROLE || "").toUpperCase() !== "HR_ADMIN") {
+    alert("Access denied: Admin portal requires HR_ADMIN role");
+    window.location.href = "dashboard.html";
   }
 
-  // If not logged in → back to login
-  if (!HR_TOKEN) {
-    window.location.href = 'login.html?next=admin.html';
-  }
+  const badgeEl = document.getElementById("userBadge");
+  if (badgeEl) badgeEl.textContent = `${HR_NAME} (${HR_ROLE})`;
 
-  // If not admin → send to main dashboard (change to your real dashboard filename)
-  if (!isAdminRole(HR_ROLE)) {
-    alert('Access denied: Admin portal requires HR_ADMIN role');
-    // If your HR dashboard is main.html or onboarding.html, adjust here:
-    window.location.href = 'main.html';
-  }
-
-  // Show user badge in header
-  const badgeEl = document.getElementById('userBadge');
-  if (badgeEl) {
-    badgeEl.textContent = HR_NAME + ' (' + HR_ROLE + ')';
-  }
-
-  // Attach JWT token to all API calls
+  // ── authFetch ───────────────────────────────────────────────────────────────
   function authFetch(url, options = {}) {
     options.headers = options.headers || {};
-    options.headers['Authorization'] = 'Bearer ' + HR_TOKEN;
-    if (!options.headers['Content-Type'] && options.body) {
-      options.headers['Content-Type'] = 'application/json';
-    }
+    options.headers["Authorization"] = "Bearer " + HR_TOKEN;
+    if (!options.headers["Content-Type"] && options.body)
+      options.headers["Content-Type"] = "application/json";
     return fetch(url, options).then(res => {
       if (res.status === 401 || res.status === 403) {
         localStorage.clear();
-        window.location.href = 'login.html?next=admin.html';
-        throw new Error('Session expired');
+        window.location.href = "login.html?next=admin.html";
+        throw new Error("Session expired");
       }
       return res;
     });
   }
 
-  // Initialize page when DOM is ready
-  window.addEventListener('DOMContentLoaded', () => {
-    // Show current backend URL in Settings section (without /api)
-    const apiInput = document.getElementById('apiUrl');
-    if (apiInput) apiInput.value = API_URL.replace('/api', '');
-    // Load dashboard stats
+  window.addEventListener("DOMContentLoaded", () => {
+    const apiInput = document.getElementById("apiUrl");
+    if (apiInput) apiInput.value = API_URL.replace("/api", "");
     refreshDashboard();
   });
 
-  // ── Navigation between sections ───────────────────────────────────────
+  // ── Navigation ──────────────────────────────────────────────────────────────
   function showSection(sectionId, el) {
-    // Hide all sections
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.getElementById(sectionId).classList.add('active');
+    document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+    document.getElementById(sectionId).classList.add("active");
+    document.querySelectorAll(".nav-link").forEach(n => n.classList.remove("active"));
+    if (el) el.classList.add("active");
 
-    // Update active nav link
-    document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-    if (el) el.classList.add('active');
-
-    // Lazy load data per section
-    if (sectionId === 'candidates') {
-      loadCandidates();
-      populateHRDropdown();
-    } else if (sectionId === 'hr-team') {
-      loadHRTeam();
-    } else if (sectionId === 'dashboard') {
-      refreshDashboard();
-    } else if (sectionId === 'reports') {
-      generateReport();
-    }
+    const loaders = {
+      candidates: () => { loadCandidates(); populateHRDropdown(); },
+      "hr-team":  () => loadHRTeam(),
+      dashboard:  () => refreshDashboard(),
+      reports:    () => generateReport()
+    };
+    loaders[sectionId]?.();
   }
 
-  // ── Dashboard stats ───────────────────────────────────────────────────
+  // ── Dashboard Stats (real data) ─────────────────────────────────────────────
   function refreshDashboard() {
-    authFetch(`${API_URL}/hr/candidates?page=0&size=100`)
+    authFetch(`${API_URL}/hr/candidates/stats`)
       .then(r => r.json())
       .then(data => {
-        const total = data.data?.totalElements || 0;
-        document.getElementById('totalCandidates').textContent = total;
-        // Pending is still a simple heuristic
-        document.getElementById('pendingCount').textContent   = Math.floor(total * 0.3);
+        if (data.success) {
+          const s = data.data;
+          document.getElementById("totalCandidates").textContent = s.total         || 0;
+          document.getElementById("pendingCount").textContent    = s.INITIATED      || 0;
+          document.getElementById("completedCount").textContent  = s.APPROVED       || 0;
+        }
       })
-      .catch(e => showAlert('statsAlert', 'Error loading statistics', 'error'));
+      .catch(() => showAlert("statsAlert", "Error loading statistics", "error"));
 
     authFetch(`${API_URL}/hr/team`)
       .then(r => r.json())
       .then(data => {
-        const teamSize = data.data?.length || 0;
-        document.getElementById('totalHR').textContent        = teamSize;
-        document.getElementById('completedCount').textContent = Math.floor(teamSize * 1.5);
+        document.getElementById("totalHR").textContent = data.data?.length || 0;
       })
-      .catch(e => console.log('Error:', e));
+      .catch(e => console.error("HR team error:", e));
   }
 
-  // ── HR dropdown for candidate creation ────────────────────────────────
+  // ── HR Dropdown ─────────────────────────────────────────────────────────────
   function populateHRDropdown() {
     authFetch(`${API_URL}/hr/team`)
       .then(r => r.json())
       .then(data => {
-        const select = document.getElementById('candHR');
+        const select = document.getElementById("candHR");
         select.innerHTML = '<option value="">Select HR Member</option>';
         (data.data || []).forEach(hr => {
-          const option = document.createElement('option');
-          option.value = hr.id;
-          option.textContent = hr.name;
-          select.appendChild(option);
+          const opt = document.createElement("option");
+          opt.value = hr.id;
+          opt.textContent = hr.name;
+          select.appendChild(opt);
         });
       });
   }
 
-  // ── Candidate creation ────────────────────────────────────────────────
+  // ── Create Candidate ────────────────────────────────────────────────────────
   function createCandidate() {
     const candidate = {
-      employeeName: document.getElementById('candName').value.trim(),
-      emailId:      document.getElementById('candEmail').value.trim(),
-      mobileNo:     document.getElementById('candMobile').value.trim(),
-      designation:  document.getElementById('candDesignation').value.trim(),
-      aadhaarNo:    document.getElementById('candAadhaar').value.trim() || null,
-      assignedHRId: document.getElementById('candHR').value
-                    ? parseInt(document.getElementById('candHR').value, 10)
-                    : null,
-      initiatedBy:  'admin',
+      employeeName:        document.getElementById("candName").value.trim(),
+      emailId:             document.getElementById("candEmail").value.trim(),
+      mobileNo:            document.getElementById("candMobile").value.trim(),
+      designation:         document.getElementById("candDesignation").value.trim(),
+      aadhaarNo:           document.getElementById("candAadhaar").value.trim() || null,
+      assignedHRId:        document.getElementById("candHR").value
+                           ? parseInt(document.getElementById("candHR").value, 10) : null,
+      initiatedBy:         "admin",
       sendLinkImmediately: true
     };
 
-    if (!candidate.employeeName || !candidate.emailId || !candidate.mobileNo || !candidate.designation) {
-      showAlert('candidatesAlert', 'Please fill all required fields', 'error');
+    if (!candidate.employeeName || !candidate.emailId ||
+        !candidate.mobileNo     || !candidate.designation) {
+      showAlert("candidatesAlert", "Please fill all required fields", "error");
       return;
     }
 
     authFetch(`${API_URL}/hr/candidates/initiate`, {
-      method: 'POST',
-      body: JSON.stringify(candidate)
+      method: "POST", body: JSON.stringify(candidate)
     })
     .then(r => r.json())
     .then(data => {
       if (data.success) {
-        showAlert('candidatesAlert', 'Candidate created successfully!', 'success');
+        showAlert("candidatesAlert", "Candidate created successfully!", "success");
         clearCandidateForm();
         loadCandidates();
       } else {
-        showAlert('candidatesAlert', data.message || 'Error creating candidate', 'error');
+        showAlert("candidatesAlert", data.message || "Error creating candidate", "error");
       }
     })
-    .catch(e => showAlert('candidatesAlert', 'Error creating candidate', 'error'));
+    .catch(() => showAlert("candidatesAlert", "Error creating candidate", "error"));
   }
 
   function clearCandidateForm() {
-    document.getElementById('candName').value        = '';
-    document.getElementById('candEmail').value       = '';
-    document.getElementById('candMobile').value      = '';
-    document.getElementById('candDesignation').value = '';
-    document.getElementById('candAadhaar').value     = '';
-    document.getElementById('candHR').value          = '';
+    ["candName","candEmail","candMobile","candDesignation","candAadhaar","candHR"]
+      .forEach(id => document.getElementById(id).value = "");
   }
 
-  // ── Load Candidates table ─────────────────────────────────────────────
+  // ── Candidates Table ─────────────────────────────────────────────────────────
   function loadCandidates() {
     authFetch(`${API_URL}/hr/candidates?page=0&size=50`)
       .then(r => r.json())
       .then(data => {
-        const tbody   = document.getElementById('candidatesTable');
+        const tbody   = document.getElementById("candidatesTable");
         const content = data.data?.content || [];
 
-        if (content.length > 0) {
-          tbody.innerHTML = content.map(c => `
-            <tr>
-              <td><strong>${c.employeeName}</strong></td>
-              <td>${c.emailId}</td>
-              <td>${c.mobileNo}</td>
-              <td>${c.designation}</td>
-              <td><span class="badge badge-info">${c.joiningStatus}</span></td>
-              <td>${c.assignedHr?.name || '-'}</td>
-              <td>
-                <button class="btn-primary" style="padding:5px 10px;font-size:12px;"
-                        onclick="editCandidate(${c.id})">Edit</button>
-              </td>
-            </tr>
-          `).join('');
-        } else {
-          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px;">No candidates found</td></tr>';
-        }
+        tbody.innerHTML = content.length
+          ? content.map(c => `
+              <tr>
+                <td><strong>${c.employeeName}</strong></td>
+                <td>${c.emailId || "–"}</td>
+                <td>${c.mobileNo || "–"}</td>
+                <td>${c.designation || "–"}</td>
+                <td><span class="badge badge-info">${(c.joiningStatus||"").replace(/_/g," ")}</span></td>
+                <td>${c.assignedHr?.name || "–"}</td>
+                <td>
+                  <button class="btn-primary" style="padding:5px 10px;font-size:12px;"
+                          onclick="editCandidate(${c.id})">Edit</button>
+                </td>
+              </tr>`).join("")
+          : '<tr><td colspan="7" style="text-align:center;padding:40px;">No candidates found</td></tr>';
       })
-      .catch(e => showAlert('candidatesAlert', 'Error loading candidates', 'error'));
+      .catch(() => showAlert("candidatesAlert", "Error loading candidates", "error"));
   }
 
-  // ── Load HR Team table ────────────────────────────────────────────────
+  // ── HR Team Table ────────────────────────────────────────────────────────────
   function loadHRTeam() {
     authFetch(`${API_URL}/hr/team`)
       .then(r => r.json())
       .then(data => {
-        const tbody = document.getElementById('hrTable');
+        const tbody = document.getElementById("hrTable");
         const team  = data.data || [];
 
-        if (team.length > 0) {
-          tbody.innerHTML = team.map(hr => `
-            <tr>
-              <td>${hr.id}</td>
-              <td><strong>${hr.name}</strong></td>
-              <td>${hr.email}</td>
-              <td>${hr.department || 'HR'}</td>
-              <td>${new Date().toLocaleDateString()}</td>
-            </tr>
-          `).join('');
-        } else {
-          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px;">No HR team members found</td></tr>';
-        }
+        tbody.innerHTML = team.length
+          ? team.map(hr => `
+              <tr>
+                <td>${hr.id}</td>
+                <td><strong>${hr.name}</strong></td>
+                <td>${hr.email || "–"}</td>
+                <td>${hr.department || "HR"}</td>
+                <td>${hr.role || "–"}</td>
+              </tr>`).join("")
+          : '<tr><td colspan="5" style="text-align:center;padding:40px;">No HR team members found</td></tr>';
       })
-      .catch(e => showAlert('hrAlert', 'Error loading HR team', 'error'));
+      .catch(() => showAlert("hrAlert", "Error loading HR team", "error"));
   }
 
-  // ── Reports & Analytics ───────────────────────────────────────────────
+  // ── Reports ──────────────────────────────────────────────────────────────────
   function generateReport() {
-    document.getElementById('reportTotal').textContent     = 'Loading...';
-    document.getElementById('reportCompleted').textContent = 'Loading...';
-    document.getElementById('reportPending').textContent   = 'Loading...';
-    document.getElementById('reportRate').textContent      = 'Loading...';
-
-    authFetch(`${API_URL}/hr/candidates?page=0&size=100`)
+    authFetch(`${API_URL}/hr/candidates/stats`)
       .then(r => r.json())
       .then(data => {
-        const total     = data.data?.totalElements || 0;
-        const completed = Math.floor(total * 0.6); // still heuristic
-        const pending   = total - completed;
-        const rate      = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-        document.getElementById('reportTotal').textContent     = total;
-        document.getElementById('reportCompleted').textContent = completed;
-        document.getElementById('reportPending').textContent   = pending;
-        document.getElementById('reportRate').textContent      = rate + '%';
-        document.getElementById('lastUpdated').textContent     = new Date().toLocaleTimeString();
+        if (data.success) {
+          const s    = data.data;
+          const rate = s.total > 0 ? Math.round((s.APPROVED / s.total) * 100) : 0;
+          document.getElementById("reportTotal").textContent     = s.total         || 0;
+          document.getElementById("reportCompleted").textContent = s.APPROVED       || 0;
+          document.getElementById("reportPending").textContent   = s.INITIATED      || 0;
+          document.getElementById("reportRate").textContent      = rate + "%";
+          document.getElementById("lastUpdated").textContent     = new Date().toLocaleTimeString();
+        }
       })
-      .catch(e => console.log('Error:', e));
+      .catch(e => console.error("Report error:", e));
   }
 
-  // ── Misc helpers ──────────────────────────────────────────────────────
+  // ── Helpers ──────────────────────────────────────────────────────────────────
   function showAlert(elementId, message, type) {
-    const alert = document.getElementById(elementId);
-    if (alert) {
-      alert.className = `alert alert-${type} show`;
-      alert.textContent = message;
-      setTimeout(() => alert.classList.remove('show'), 5000);
+    const el = document.getElementById(elementId);
+    if (el) {
+      el.className = `alert alert-${type} show`;
+      el.textContent = message;
+      setTimeout(() => el.classList.remove("show"), 5000);
     }
   }
 
   function editCandidate(id) {
-    alert('Edit functionality for candidate ' + id);
+    alert("Edit functionality for candidate " + id);
   }
 
   function logout() {
-    if (confirm('Are you sure you want to logout?')) {
+    if (confirm("Are you sure you want to logout?")) {
       localStorage.clear();
-      window.location.href = 'login.html';
+      window.location.href = "login.html";
     }
   }
 </script>
