@@ -4,7 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.io.Decoders;          // ✅ JJWT built-in Base64 decoder
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,8 +25,6 @@ public class JwtService {
     @Value("${jwt.expiration}")
     private long expirationMs;
 
-    // ✅ FIXED: Uses JJWT's Decoders.BASE64 — no more double encode/decode
-    //           Secret MUST be a Base64 string that decodes to >= 32 bytes
     private Key getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
