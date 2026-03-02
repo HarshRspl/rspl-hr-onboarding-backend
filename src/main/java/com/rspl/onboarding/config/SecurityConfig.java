@@ -99,32 +99,22 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .cors(Customizer.withDefaults())
-            .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .sessionManagement(sess -> sess
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-                // ✅ Public pages
                 .requestMatchers(
                     "/", "/index.html", "/login.html", "/main.html",
-                    "/onboarding.html", "/health", "/error",
+                    "/dashboard.html", "/admin.html", "/onboarding.html",
+                    "/onboarding-form.html", "/health", "/error",
                     "/favicon.ico", "/config.js"
                 ).permitAll()
-
-                // ✅ Static assets — valid patterns only
-                .requestMatchers("/static/**").permitAll()
-                .requestMatchers("/css/**").permitAll()
-                .requestMatchers("/js/**").permitAll()
-                .requestMatchers("/images/**").permitAll()
-                .requestMatchers("/webjars/**").permitAll()
-
-                // ✅ Public APIs
+                .requestMatchers("/static/**", "/css/**", "/js/**",
+                                 "/images/**", "/webjars/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/candidate/**").permitAll()
-
-                // 🔐 Protected APIs
                 .requestMatchers("/api/hr/**").authenticated()
-
-                .anyRequest().authenticated()
+                .anyRequest().permitAll()
             )
             .authenticationProvider(authenticationProvider)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
