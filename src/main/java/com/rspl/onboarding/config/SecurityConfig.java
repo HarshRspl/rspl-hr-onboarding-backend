@@ -14,7 +14,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
@@ -38,22 +37,23 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
 
+    // ✅ All users synced with HrUserService
     @Bean
     public UserDetailsService userDetailsService() {
-        UserDetails admin = User.builder()
-                .username("admin")
-                .password("{noop}admin123") // for quick testing
-                .roles("HR")
-                .build();
-
-        return new InMemoryUserDetailsManager(admin);
+        return new InMemoryUserDetailsManager(
+            User.builder().username("hradmin").password("{noop}Admin@2026").roles("HR_ADMIN").build(),
+            User.builder().username("sneha")  .password("{noop}Sneha@2026").roles("HR").build(),
+            User.builder().username("arjun")  .password("{noop}Arjun@2026").roles("HR").build(),
+            User.builder().username("pooja")  .password("{noop}Pooja@2026").roles("HR").build(),
+            User.builder().username("kunal")  .password("{noop}Kunal@2026").roles("HR").build(),
+            User.builder().username("divya")  .password("{noop}Divya@2026").roles("HR_MANAGER").build()
+        );
     }
 
     @Bean
     public AuthenticationProvider authenticationProvider(
             UserDetailsService userDetailsService,
-            PasswordEncoder passwordEncoder
-    ) {
+            PasswordEncoder passwordEncoder) {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder);
@@ -69,7 +69,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
@@ -95,34 +96,34 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
-                                          AuthenticationProvider authenticationProvider) throws Exception {
+                                           AuthenticationProvider authenticationProvider) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
-                .cors(Customizer.withDefaults())
-                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+            .csrf(csrf -> csrf.disable())
+            .cors(Customizer.withDefaults())
+            .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Static + pages
-                        .requestMatchers(
-                                "/", "/index.html", "/login.html", "/main.html",
-                                "/onboarding.html", "/health", "/error",
-                                "/favicon.ico", "/config.js",
-                                "/static/**", "/css/**", "/js/**", "/images/**", "/webjars/**",
-                                "/**/*.js", "/**/*.css", "/**/*.png", "/**/*.ico", "/**/*.html"
-                        ).permitAll()
+                // Static pages
+                .requestMatchers(
+                    "/", "/index.html", "/login.html", "/main.html",
+                    "/onboarding.html", "/health", "/error",
+                    "/favicon.ico", "/config.js",
+                    "/static/**", "/css/**", "/js/**", "/images/**", "/webjars/**",
+                    "/**/*.js", "/**/*.css", "/**/*.png", "/**/*.ico", "/**/*.html"
+                ).permitAll()
 
-                        // Public APIs
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/candidate/**").permitAll()
+                // Public APIs
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/candidate/**").permitAll()
 
-                        // Protected APIs
-                        .requestMatchers("/api/hr/**").authenticated()
+                // Protected APIs
+                .requestMatchers("/api/hr/**").authenticated()
 
-                        .anyRequest().authenticated()
-                )
-                .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .anyRequest().authenticated()
+            )
+            .authenticationProvider(authenticationProvider)
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
