@@ -3,6 +3,8 @@ package com.rspl.onboarding.auth;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,56 +16,72 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
-    private final UserDetailsService userDetailsService;
-    private final JwtService jwtService;
-    private final HrUserService hrUserService;
+    private final UserDetailsService    userDetailsService;
+    private final JwtService            jwtService;
+    private final HrUserService         hrUserService;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest request) {
-        // Authenticate
-        Authentication auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getUsername(), request.getPassword()
-                )
-        );
 
-        String username = request.getUsername().toLowerCase();
-        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-
-        // Get HR user meta
-        Map<String, String> user = hrUserService.getUser(username);
-        if (user == null) {
-            return ResponseEntity.status(401).body(
-                    Map.of("success", false, "message", "Invalid credentials")
+        if (request.getUsername() == null || request.getPassword() == null) {
+            return ResponseEntity.badRequest().body(
+                    Map.of("success", false, "message", "Username and password are required")
             );
         }
 
-        String appRole = user.get("role");      // HR_ADMIN / HR / HR_MANAGER
-        String displayName = user.get("name");  // e.g., Sneha Kapoor
+        String username = request.getUsername().toLowerCase().trim();
 
-        // Add ROLE_ prefix for Spring authorities in token
+        // ✅ FIX 1 — wrap in try-catch so bad credentials return 401, not 500
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(username, request.getPassword())
+            );
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(401).body(
+                    Map.of("success", false, "message", "Invalid username or password")
+            );
+        } catch (DisabledException e) {
+            return ResponseEntity.status(403).body(
+                    Map.of("success", false, "message", "Account is disabled")
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(
+                    Map.of("success", false, "message", "Authentication error: " + e.getMessage())
+            );
+        }
+
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+        // ✅ FIX 2 — null-safe check on HrUserService
+        Map<String, String> user = hrUserService.getUser(username);
+        if (user == null) {
+            return ResponseEntity.status(401).body(
+                    Map.of("success", false, "message", "HR user not found")
+            );
+        }
+
+        String appRole    = user.get("role");
+        String displayName = user.get("name");
+
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", "ROLE_" + appRole);
 
         String token = jwtService.generateToken(claims, userDetails);
 
         Map<String, Object> data = new HashMap<>();
-        data.put("token", token);
+        data.put("token",    token);
         data.put("username", username);
-        data.put("name", displayName);
-        data.put("role", appRole);
+        data.put("name",     displayName);
+        data.put("role",     appRole);
 
-        return ResponseEntity.ok(Map.of(
-                "success", true,
-                "data", data
-        ));
+        return ResponseEntity.ok(Map.of("success", true, "data", data));
     }
 
-    // Used by login.html to verify token and auto-redirect
     @GetMapping("/me")
     public ResponseEntity<?> me(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -72,22 +90,21 @@ public class AuthController {
             );
         }
 
-        String username = (String) authentication.getPrincipal();
-        Map<String, String> user = hrUserService.getUser(username.toLowerCase());
+        String username = authentication.getName().toLowerCase();
+        Map<String, String> user = hrUserService.getUser(username);
         if (user == null) {
             return ResponseEntity.status(401).body(
                     Map.of("success", false, "message", "User not found")
             );
         }
 
-        Map<String, Object> data = new HashMap<>();
-        data.put("username", username);
-        data.put("name", user.get("name"));
-        data.put("role", user.get("role"));
-
         return ResponseEntity.ok(Map.of(
                 "success", true,
-                "data", data
+                "data", Map.of(
+                        "username", username,
+                        "name",     user.get("name"),
+                        "role",     user.get("role")
+                )
         ));
     }
 }
