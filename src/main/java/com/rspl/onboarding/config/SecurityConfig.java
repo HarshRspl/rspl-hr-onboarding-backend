@@ -37,7 +37,6 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
 
-    // ✅ All users synced with HrUserService
     @Bean
     public UserDetailsService userDetailsService() {
         return new InMemoryUserDetailsManager(
@@ -104,20 +103,25 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                // Static pages
+                // ✅ Public pages
                 .requestMatchers(
                     "/", "/index.html", "/login.html", "/main.html",
                     "/onboarding.html", "/health", "/error",
-                    "/favicon.ico", "/config.js",
-                    "/static/**", "/css/**", "/js/**", "/images/**", "/webjars/**",
-                    "/**/*.js", "/**/*.css", "/**/*.png", "/**/*.ico", "/**/*.html"
+                    "/favicon.ico", "/config.js"
                 ).permitAll()
 
-                // Public APIs
+                // ✅ Static assets — valid patterns only
+                .requestMatchers("/static/**").permitAll()
+                .requestMatchers("/css/**").permitAll()
+                .requestMatchers("/js/**").permitAll()
+                .requestMatchers("/images/**").permitAll()
+                .requestMatchers("/webjars/**").permitAll()
+
+                // ✅ Public APIs
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/candidate/**").permitAll()
 
-                // Protected APIs
+                // 🔐 Protected APIs
                 .requestMatchers("/api/hr/**").authenticated()
 
                 .anyRequest().authenticated()
