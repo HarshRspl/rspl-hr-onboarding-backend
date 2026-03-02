@@ -40,14 +40,15 @@
   </div>
   <div class="ml-auto flex items-center gap-4">
     <div class="hidden md:flex items-center gap-2 bg-white/10 rounded-xl px-4 py-2">
-      <div class="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-sm font-bold" id="user-avatar">?</div>
+      <div class="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-sm font-bold"
+           id="user-avatar">?</div>
       <div>
         <p class="text-xs font-bold leading-tight" id="hr-user-name">Loading…</p>
         <p class="text-xs text-blue-200 leading-tight" id="hr-user-role"></p>
       </div>
     </div>
     <button onclick="logout()"
-            class="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-sm font-semibold transition">
+            class="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-sm font-semibold transition">
       🚪 Logout
     </button>
   </div>
@@ -82,16 +83,17 @@
   <!-- Toolbar -->
   <div class="card px-5 py-4 mb-5 flex flex-col md:flex-row md:items-center gap-3">
     <div class="flex gap-1 flex-wrap" id="tab-bar">
-      <button class="tab-btn active" data-status="" onclick="setTab(this,'')">All</button>
-      <button class="tab-btn" data-status="INITIATED"      onclick="setTab(this,'INITIATED')">Initiated</button>
-      <button class="tab-btn" data-status="FORM_SUBMITTED" onclick="setTab(this,'FORM_SUBMITTED')">Submitted</button>
-      <button class="tab-btn" data-status="SIGNED"         onclick="setTab(this,'SIGNED')">Signed</button>
-      <button class="tab-btn" data-status="APPROVED"       onclick="setTab(this,'APPROVED')">Approved</button>
-      <button class="tab-btn" data-status="REJECTED"       onclick="setTab(this,'REJECTED')">Rejected</button>
+      <button class="tab-btn active" onclick="setTab(this,'')">All</button>
+      <button class="tab-btn" onclick="setTab(this,'INITIATED')">Initiated</button>
+      <button class="tab-btn" onclick="setTab(this,'FORM_SUBMITTED')">Submitted</button>
+      <button class="tab-btn" onclick="setTab(this,'SIGNED')">Signed</button>
+      <button class="tab-btn" onclick="setTab(this,'APPROVED')">Approved</button>
+      <button class="tab-btn" onclick="setTab(this,'REJECTED')">Rejected</button>
     </div>
     <div class="md:ml-auto flex gap-2">
-      <input id="search-input" class="ifield w-52" placeholder="🔍 Search name / mobile…" oninput="debounceSearch()"/>
-      <button onclick="loadCandidates(); loadStats()"
+      <input id="search-input" class="ifield w-52"
+             placeholder="🔍 Search name / mobile…" oninput="debounceSearch()"/>
+      <button onclick="loadCandidates();loadStats()"
               class="action-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4">↻ Refresh</button>
       <button onclick="openInitiate()"
               class="action-btn gbg text-white px-5 py-2 text-sm shadow">+ Initiate Candidate</button>
@@ -104,14 +106,14 @@
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100">
-            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wide">#</th>
-            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wide">Employee</th>
-            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wide">Mobile</th>
-            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wide">Designation</th>
-            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wide">Assigned HR</th>
-            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wide">Status</th>
-            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wide">Link</th>
-            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wide">Actions</th>
+            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase">#</th>
+            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase">Employee</th>
+            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase">Mobile</th>
+            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase">Designation</th>
+            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase">Assigned HR</th>
+            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase">Status</th>
+            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase">Link</th>
+            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase">Actions</th>
           </tr>
         </thead>
         <tbody id="candidates-tbody">
@@ -122,8 +124,10 @@
     <div class="flex items-center justify-between px-5 py-4 border-t border-gray-100">
       <span class="text-xs text-gray-500" id="page-info">–</span>
       <div class="flex gap-2">
-        <button onclick="prevPage()" id="btn-prev" class="action-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-2">← Prev</button>
-        <button onclick="nextPage()" id="btn-next" class="action-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-2">Next →</button>
+        <button onclick="prevPage()" id="btn-prev"
+                class="action-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-2">← Prev</button>
+        <button onclick="nextPage()" id="btn-next"
+                class="action-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-2">Next →</button>
       </div>
     </div>
   </div>
@@ -132,7 +136,8 @@
 <!-- MODAL: INITIATE -->
 <div class="overlay" id="modal-initiate">
   <div class="card modal-box w-full max-w-lg mx-4 p-7 relative max-h-screen overflow-y-auto">
-    <button onclick="closeModal('modal-initiate')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+    <button onclick="closeModal('modal-initiate')"
+            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
     <h2 class="text-lg font-bold text-gray-800 mb-5">➕ Initiate New Candidate</h2>
     <div class="space-y-4">
       <div>
@@ -171,10 +176,14 @@
         </select>
       </div>
     </div>
-    <div id="initiate-error" class="hidden mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-xl text-sm"></div>
+    <div id="initiate-error"
+         class="hidden mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-xl text-sm"></div>
     <div class="flex gap-3 mt-6">
-      <button onclick="closeModal('modal-initiate')" class="flex-1 bg-gray-100 text-gray-600 py-2.5 rounded-xl font-semibold hover:bg-gray-200 transition">Cancel</button>
-      <button id="submit-initiate" onclick="submitInitiate()" class="flex-1 gbg text-white py-2.5 rounded-xl font-bold hover:opacity-90 transition shadow">Initiate & Send Link</button>
+      <button onclick="closeModal('modal-initiate')"
+              class="flex-1 bg-gray-100 text-gray-600 py-2.5 rounded-xl font-semibold hover:bg-gray-200">Cancel</button>
+      <button id="submit-initiate" onclick="submitInitiate()"
+              class="flex-1 gbg text-white py-2.5 rounded-xl font-bold hover:opacity-90 shadow">
+        Initiate & Send Link</button>
     </div>
   </div>
 </div>
@@ -182,7 +191,8 @@
 <!-- MODAL: DETAIL -->
 <div class="overlay" id="modal-detail">
   <div class="card modal-box w-full max-w-2xl mx-4 p-7 relative max-h-[90vh] overflow-y-auto">
-    <button onclick="closeModal('modal-detail')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+    <button onclick="closeModal('modal-detail')"
+            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
     <h2 class="text-lg font-bold text-gray-800 mb-5">👤 Candidate Details</h2>
     <div id="detail-body" class="text-sm text-gray-600 space-y-2"></div>
     <div class="flex gap-3 mt-6" id="detail-actions"></div>
@@ -192,17 +202,23 @@
 <!-- MODAL: REJECT -->
 <div class="overlay" id="modal-reject">
   <div class="card modal-box w-full max-w-md mx-4 p-7 relative">
-    <button onclick="closeModal('modal-reject')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+    <button onclick="closeModal('modal-reject')"
+            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
     <h2 class="text-lg font-bold text-gray-800 mb-4">❌ Reject Candidate</h2>
     <input type="hidden" id="reject-id"/>
     <div>
       <label class="lbl">Rejection Reason *</label>
-      <textarea class="ifield" id="reject-reason" rows="4" placeholder="Minimum 10 characters"></textarea>
+      <textarea class="ifield" id="reject-reason" rows="4"
+                placeholder="Minimum 10 characters"></textarea>
     </div>
-    <div id="reject-error" class="hidden mt-3 bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-xl text-xs"></div>
+    <div id="reject-error"
+         class="hidden mt-3 bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-xl text-xs"></div>
     <div class="flex gap-3 mt-5">
-      <button onclick="closeModal('modal-reject')" class="flex-1 bg-gray-100 text-gray-600 py-2.5 rounded-xl font-semibold hover:bg-gray-200">Cancel</button>
-      <button onclick="submitReject()" class="flex-1 bg-red-600 text-white py-2.5 rounded-xl font-bold hover:bg-red-700">Confirm Reject</button>
+      <button onclick="closeModal('modal-reject')"
+              class="flex-1 bg-gray-100 text-gray-600 py-2.5 rounded-xl font-semibold hover:bg-gray-200">Cancel</button>
+      <button onclick="submitReject()"
+              class="flex-1 bg-red-600 text-white py-2.5 rounded-xl font-bold hover:bg-red-700">
+        Confirm Reject</button>
     </div>
   </div>
 </div>
@@ -213,7 +229,9 @@
 </div>
 
 <script>
-  const API = (window.API_BASE || "https://rspl-hr-onboarding-backend-production.up.railway.app/api");
+  const API = window.APP_CONFIG?.API_BASE
+           || window.API_BASE
+           || "https://rspl-hr-onboarding-backend-production.up.railway.app/api";
 
   // ── Auth Guard ──────────────────────────────────────────────────────────────
   const HR_TOKEN    = localStorage.getItem("hr_token");
@@ -224,16 +242,15 @@
   if (!HR_TOKEN) window.location.href = "login.html";
 
   document.getElementById("hr-user-name").textContent = HR_NAME;
-  document.getElementById("hr-user-role").textContent = HR_ROLE.replace("_", " ");
+  document.getElementById("hr-user-role").textContent = HR_ROLE.replace(/_/g, " ");
   document.getElementById("user-avatar").textContent  = HR_NAME.charAt(0).toUpperCase();
 
   // ── authFetch ───────────────────────────────────────────────────────────────
   function authFetch(url, options = {}) {
     options.headers = options.headers || {};
     options.headers["Authorization"] = "Bearer " + HR_TOKEN;
-    if (!options.headers["Content-Type"] && options.body) {
+    if (!options.headers["Content-Type"] && options.body)
       options.headers["Content-Type"] = "application/json";
-    }
     return fetch(url, options).then(res => {
       if (res.status === 401 || res.status === 403) {
         localStorage.clear();
@@ -244,7 +261,6 @@
     });
   }
 
-  // ✅ FIX 1: Stateless JWT — no server logout call needed
   function logout() {
     localStorage.clear();
     window.location.href = "login.html";
@@ -256,33 +272,27 @@
   let currentStatus = "";
   let searchTerm    = "";
   let searchTimer   = null;
-  let hrTeam        = [];
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
   function toast(msg, type = "green") {
     const cols = { green:"#16a34a", red:"#dc2626", blue:"#2563eb" };
     const t = document.getElementById("toast");
-    const b = t.querySelector("div");
-    b.style.background = cols[type] || cols.green;
-    b.textContent = msg;
+    t.querySelector("div").style.background = cols[type] || cols.green;
+    t.querySelector("div").textContent = msg;
     t.classList.remove("hidden");
     setTimeout(() => t.classList.add("hidden"), 3500);
   }
 
-  function badgeClass(status) {
-    const map = {
-      INITIATED:      "b-initiated",
-      FORM_SUBMITTED: "b-form_submitted",
-      SIGNED:         "b-signed",
-      APPROVED:       "b-approved",
-      REJECTED:       "b-rejected"
-    };
-    return map[status] || "bg-gray-100 text-gray-600";
+  function badgeClass(s) {
+    return { INITIATED:"b-initiated", FORM_SUBMITTED:"b-form_submitted",
+             SIGNED:"b-signed", APPROVED:"b-approved", REJECTED:"b-rejected" }[s]
+           || "bg-gray-100 text-gray-600";
   }
 
   function linkBadge(ls) {
-    if (ls === "SENT") return '<span class="badge bg-green-100 text-green-700">✓ Sent</span>';
-    return '<span class="badge bg-gray-100 text-gray-500">Not Sent</span>';
+    return ls === "SENT"
+      ? '<span class="badge bg-green-100 text-green-700">✓ Sent</span>'
+      : '<span class="badge bg-gray-100 text-gray-500">Not Sent</span>';
   }
 
   function openModal(id)  { document.getElementById(id).classList.add("open"); }
@@ -308,7 +318,7 @@
   function prevPage() { if (currentPage > 0) { currentPage--; loadCandidates(); } }
   function nextPage() { if (currentPage < totalPages - 1) { currentPage++; loadCandidates(); } }
 
-  // ── Load Stats (FIX 2: real totals from backend) ────────────────────────────
+  // ── Stats ───────────────────────────────────────────────────────────────────
   async function loadStats() {
     try {
       const res  = await authFetch(`${API}/hr/candidates/stats`);
@@ -324,15 +334,14 @@
     } catch(e) {}
   }
 
-  // ── Load HR Team ────────────────────────────────────────────────────────────
+  // ── HR Team Dropdown ────────────────────────────────────────────────────────
   async function loadHRTeam() {
     try {
       const res  = await authFetch(`${API}/hr/team`);
       const data = await res.json();
       if (data.success) {
-        hrTeam = data.data;
         const sel = document.getElementById("i-hr");
-        hrTeam.forEach(hr => {
+        (data.data || []).forEach(hr => {
           const opt = document.createElement("option");
           opt.value       = hr.id;
           opt.textContent = `${hr.name} (${hr.role})`;
@@ -342,7 +351,7 @@
     } catch(e) {}
   }
 
-  // ── Load Candidates ─────────────────────────────────────────────────────────
+  // ── Candidates Table ────────────────────────────────────────────────────────
   async function loadCandidates() {
     const tbody = document.getElementById("candidates-tbody");
     tbody.innerHTML = `<tr><td colspan="8" class="text-center py-12 text-gray-400">Loading…</td></tr>`;
@@ -384,7 +393,7 @@
           <td class="px-5 py-3.5 text-gray-600">${c.designation || "–"}</td>
           <td class="px-5 py-3.5 text-gray-500 text-xs">${c.assignedHr?.name || "–"}</td>
           <td class="px-5 py-3.5">
-            <span class="badge ${badgeClass(c.joiningStatus)}">${(c.joiningStatus || "–").replace("_", " ")}</span>
+            <span class="badge ${badgeClass(c.joiningStatus)}">${(c.joiningStatus||"–").replace(/_/g," ")}</span>
           </td>
           <td class="px-5 py-3.5">${linkBadge(c.linkStatus)}</td>
           <td class="px-5 py-3.5" onclick="event.stopPropagation()">
@@ -392,8 +401,7 @@
               ${c.joiningStatus === "INITIATED" || c.linkStatus === "NOT_SENT" ? `
                 <button onclick="sendLink(${c.id})"
                         class="action-btn bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs px-2 py-1">
-                  📱 Link
-                </button>` : ""}
+                  📱 Link</button>` : ""}
               ${c.joiningStatus === "SIGNED" ? `
                 <button onclick="approveCandidate(${c.id})"
                         class="action-btn bg-green-600 text-white hover:bg-green-700 px-3 py-1">✓ Approve</button>
@@ -408,17 +416,15 @@
           </td>
         </tr>`).join("");
     } catch(e) {
-      if (e.message !== "Session expired") {
+      if (e.message !== "Session expired")
         tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-red-400">Error: ${e.message}</td></tr>`;
-      }
     }
   }
 
   // ── Initiate ────────────────────────────────────────────────────────────────
   function openInitiate() {
-    ["i-name","i-mobile","i-aadhaar","i-email","i-designation"].forEach(id => {
-      document.getElementById(id).value = "";
-    });
+    ["i-name","i-mobile","i-aadhaar","i-email","i-designation"]
+      .forEach(id => document.getElementById(id).value = "");
     document.getElementById("i-hr").value       = "";
     document.getElementById("i-sendlink").value = "true";
     document.getElementById("initiate-error").classList.add("hidden");
@@ -433,18 +439,15 @@
 
     if (!name || !mobile || !desig) {
       errEl.textContent = "⚠️ Name, Mobile and Designation are required";
-      errEl.classList.remove("hidden");
-      return;
+      errEl.classList.remove("hidden"); return;
     }
     if (!/^[6-9]\d{9}$/.test(mobile)) {
       errEl.textContent = "⚠️ Mobile must be 10 digits starting with 6-9";
-      errEl.classList.remove("hidden");
-      return;
+      errEl.classList.remove("hidden"); return;
     }
 
     const btn = document.getElementById("submit-initiate");
-    btn.disabled    = true;
-    btn.textContent = "Initiating…";
+    btn.disabled = true; btn.textContent = "Initiating…";
 
     const hrId = document.getElementById("i-hr").value;
     const payload = {
@@ -460,15 +463,13 @@
 
     try {
       const res  = await authFetch(`${API}/hr/candidates/initiate`, {
-        method: "POST",
-        body:   JSON.stringify(payload)
+        method: "POST", body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (data.success) {
         toast("✅ Candidate initiated successfully!", "green");
         closeModal("modal-initiate");
-        loadCandidates();
-        loadStats();
+        loadCandidates(); loadStats();
       } else {
         errEl.textContent = "⚠️ " + (data.message || "Failed to initiate");
         errEl.classList.remove("hidden");
@@ -479,8 +480,7 @@
         errEl.classList.remove("hidden");
       }
     } finally {
-      btn.disabled    = false;
-      btn.textContent = "Initiate & Send Link";
+      btn.disabled = false; btn.textContent = "Initiate & Send Link";
     }
   }
 
@@ -489,12 +489,9 @@
     try {
       const res  = await authFetch(`${API}/hr/candidates/${id}/send-link`, { method:"POST" });
       const data = await res.json();
-      if (data.success) {
-        toast("📱 Link sent via SMS!", "blue");
-        loadCandidates();
-      } else {
-        toast("❌ " + (data.message || "Failed"), "red");
-      }
+      data.success
+        ? (toast("📱 Link sent via SMS!", "blue"), loadCandidates())
+        : toast("❌ " + (data.message || "Failed"), "red");
     } catch(e) {}
   }
 
@@ -519,10 +516,10 @@
         ["Email",         c.emailId || "–"],
         ["Designation",   c.designation],
         ["Aadhaar",       c.aadhaarNo || "–"],
-        ["Status",        `<span class="badge ${badgeClass(c.joiningStatus)}">${(c.joiningStatus||"").replace("_"," ")}</span>`],
+        ["Status",        `<span class="badge ${badgeClass(c.joiningStatus)}">${(c.joiningStatus||"").replace(/_/g," ")}</span>`],
         ["Link Status",   linkBadge(c.linkStatus)],
         ["Employee ID",   c.employeeId ? `<strong class="text-green-600">${c.employeeId}</strong>` : "–"],
-        ["Assigned HR",   c.assignedHr?.name || "–"],   // ✅ FIX 4: lowercase 'r'
+        ["Assigned HR",   c.assignedHr?.name || "–"],
         ["Initiated By",  c.initiatedBy || "–"],
         ["Date",          c.createdAt ? c.createdAt.substring(0,10) : "–"],
         ...(c.joiningStatus !== "INITIATED" ? [
@@ -570,8 +567,7 @@
       if (data.success) {
         toast("✅ Approved! Employee ID: " + (data.data?.employeeId || ""), "green");
         closeModal("modal-detail");
-        loadCandidates();
-        loadStats();
+        loadCandidates(); loadStats();
       } else {
         toast("❌ " + (data.message || "Failed to approve"), "red");
       }
@@ -593,22 +589,20 @@
 
     if (reason.length < 10) {
       errEl.textContent = "⚠️ Reason must be at least 10 characters";
-      errEl.classList.remove("hidden");
-      return;
+      errEl.classList.remove("hidden"); return;
     }
 
     try {
       const res  = await authFetch(`${API}/hr/candidates/${id}/reject`, {
         method: "POST",
-        body:   JSON.stringify({ rejectionReason: reason })  // ✅ FIX 3: correct field name
+        body:   JSON.stringify({ rejectionReason: reason })
       });
       const data = await res.json();
       if (data.success) {
         toast("Candidate rejected", "red");
         closeModal("modal-reject");
         closeModal("modal-detail");
-        loadCandidates();
-        loadStats();
+        loadCandidates(); loadStats();
       } else {
         toast("❌ " + (data.message || "Failed"), "red");
       }
@@ -618,7 +612,7 @@
   // ── Init ────────────────────────────────────────────────────────────────────
   loadHRTeam();
   loadCandidates();
-  loadStats();   // ✅ FIX 2: load real stats on startup
+  loadStats();
 
   document.querySelectorAll(".overlay").forEach(el => {
     el.addEventListener("click", e => { if (e.target === el) el.classList.remove("open"); });
