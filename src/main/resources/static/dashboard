@@ -6,139 +6,270 @@
   <title>RSPL HR – Onboarding Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { font-family:"Segoe UI",sans-serif; background:#f1f5f9; }
-    .gbg  { background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%); }
-    .card { background:white; border-radius:14px; box-shadow:0 2px 14px rgba(0,0,0,.07); }
-    .badge { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700; }
+    * { box-sizing: border-box; }
+    body { font-family:"Segoe UI",sans-serif; background:#f0f4f8; }
+
+    /* Gradients */
+    .gbg   { background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%); }
+    .gbg2  { background:linear-gradient(135deg,#7c3aed 0%,#a855f7 100%); }
+    .gbg3  { background:linear-gradient(135deg,#059669 0%,#10b981 100%); }
+    .gbg4  { background:linear-gradient(135deg,#dc2626 0%,#f87171 100%); }
+    .gbg5  { background:linear-gradient(135deg,#d97706 0%,#fbbf24 100%); }
+
+    .card  { background:white; border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,.06); }
+
+    /* Stat cards */
+    .stat-card {
+      border-radius:16px; padding:24px; color:white; position:relative;
+      overflow:hidden; transition:transform .2s,box-shadow .2s;
+    }
+    .stat-card:hover { transform:translateY(-4px); box-shadow:0 12px 32px rgba(0,0,0,.15); }
+    .stat-card::after {
+      content:''; position:absolute; right:-20px; top:-20px;
+      width:100px; height:100px; border-radius:50%;
+      background:rgba(255,255,255,.1);
+    }
+    .stat-card::before {
+      content:''; position:absolute; right:20px; bottom:-30px;
+      width:80px; height:80px; border-radius:50%;
+      background:rgba(255,255,255,.07);
+    }
+
+    /* Badges */
+    .badge { display:inline-flex; align-items:center; gap:4px; padding:4px 12px;
+             border-radius:999px; font-size:11px; font-weight:700; }
     .b-initiated      { background:#eff6ff; color:#2563eb; }
     .b-form_submitted { background:#f5f3ff; color:#7c3aed; }
     .b-signed         { background:#fefce8; color:#b45309; }
     .b-approved       { background:#f0fdf4; color:#16a34a; }
     .b-rejected       { background:#fef2f2; color:#dc2626; }
-    .ifield { width:100%; border:1.5px solid #e2e8f0; border-radius:9px; padding:10px 13px; font-size:14px; outline:none; transition:border-color .2s,box-shadow .2s; }
-    .ifield:focus { border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.12); }
-    .lbl { display:block; font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; }
-    .overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; z-index:50; align-items:center; justify-content:center; }
+
+    /* Form fields */
+    .ifield { width:100%; border:1.5px solid #e2e8f0; border-radius:10px;
+              padding:10px 14px; font-size:14px; outline:none; background:#fafafa;
+              transition:border-color .2s,box-shadow .2s,background .2s; }
+    .ifield:focus { border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.12);
+                    background:white; }
+    .lbl { display:block; font-size:11px; font-weight:700; color:#64748b;
+           text-transform:uppercase; letter-spacing:.06em; margin-bottom:5px; }
+
+    /* Modals */
+    .overlay { position:fixed; inset:0; background:rgba(15,23,42,.6);
+               backdrop-filter:blur(4px); display:none; z-index:50;
+               align-items:center; justify-content:center; }
     .overlay.open { display:flex; }
-    @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
-    .modal-box { animation:fadeUp .3s ease; }
-    .tab-btn { padding:8px 18px; border-radius:8px; font-size:13px; font-weight:600; color:#64748b; cursor:pointer; transition:all .2s; }
-    .tab-btn.active { background:#2563eb; color:white; }
-    .tab-btn:not(.active):hover { background:#f1f5f9; }
-    .action-btn { padding:5px 14px; border-radius:7px; font-size:12px; font-weight:700; cursor:pointer; transition:all .15s; border:none; }
-    tr:hover td { background:#f8fafc; }
+    @keyframes slideUp {
+      from { opacity:0; transform:translateY(30px) scale(.97); }
+      to   { opacity:1; transform:translateY(0) scale(1); }
+    }
+    .modal-box { animation:slideUp .3s cubic-bezier(.34,1.56,.64,1); }
+
+    /* Tabs */
+    .tab-btn { padding:7px 16px; border-radius:8px; font-size:12px; font-weight:700;
+               color:#64748b; cursor:pointer; transition:all .2s; border:none;
+               background:transparent; }
+    .tab-btn.active { background:#2563eb; color:white;
+                      box-shadow:0 4px 12px rgba(37,99,235,.35); }
+    .tab-btn:not(.active):hover { background:#f1f5f9; color:#374151; }
+
+    /* Action buttons */
+    .action-btn { padding:6px 14px; border-radius:8px; font-size:12px; font-weight:700;
+                  cursor:pointer; transition:all .15s; border:none; }
+
+    /* Table */
+    thead tr { background:#f8fafc; }
+    tr { transition:background .15s; }
+    tr:hover td { background:#f0f7ff; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width:6px; height:6px; }
+    ::-webkit-scrollbar-track { background:#f1f5f9; }
+    ::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:99px; }
+
+    /* Nav pulse dot */
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .pulse { animation:pulse 2s infinite; }
+
+    /* Progress bar */
+    .progress-bar { height:6px; border-radius:99px; background:#e2e8f0; overflow:hidden; }
+    .progress-fill { height:100%; border-radius:99px; transition:width .6s ease; }
   </style>
   <script src="config.js"></script>
 </head>
 <body>
 
-<nav class="gbg text-white px-6 py-3.5 flex items-center gap-4 shadow-lg sticky top-0 z-30">
-  <div class="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center font-black text-xl">R</div>
+<!-- ── NAVBAR ── -->
+<nav class="gbg text-white px-6 py-3 flex items-center gap-4 shadow-xl sticky top-0 z-30">
+  <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center font-black text-xl shadow-inner">R</div>
   <div>
-    <div class="font-bold text-base leading-tight">RSPL Health</div>
-    <div class="text-xs text-blue-200">HR Onboarding Dashboard</div>
+    <div class="font-bold text-base leading-tight tracking-wide">RSPL Health</div>
+    <div class="text-xs text-blue-200 flex items-center gap-1.5">
+      <span class="w-1.5 h-1.5 bg-green-400 rounded-full pulse"></span>
+      HR Onboarding Dashboard
+    </div>
   </div>
-  <div class="ml-auto flex items-center gap-4">
-    <div class="hidden md:flex items-center gap-2 bg-white/10 rounded-xl px-4 py-2">
-      <div class="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-sm font-bold"
+
+  <!-- Quick stats in nav -->
+  <div class="hidden lg:flex items-center gap-6 ml-8">
+    <div class="text-center">
+      <div class="text-lg font-black" id="nav-total">–</div>
+      <div class="text-xs text-blue-200">Total</div>
+    </div>
+    <div class="w-px h-8 bg-white/20"></div>
+    <div class="text-center">
+      <div class="text-lg font-black text-green-300" id="nav-approved">–</div>
+      <div class="text-xs text-blue-200">Approved</div>
+    </div>
+    <div class="w-px h-8 bg-white/20"></div>
+    <div class="text-center">
+      <div class="text-lg font-black text-yellow-300" id="nav-pending">–</div>
+      <div class="text-xs text-blue-200">Pending</div>
+    </div>
+  </div>
+
+  <div class="ml-auto flex items-center gap-3">
+    <!-- Admin link (HR_ADMIN only) -->
+    <a id="admin-link" href="admin.html"
+       class="hidden bg-white/10 hover:bg-white/20 px-3 py-2 rounded-xl text-xs font-bold transition">
+      ⚙️ Admin
+    </a>
+    <div class="flex items-center gap-2 bg-white/10 rounded-xl px-4 py-2">
+      <div class="w-8 h-8 gbg rounded-full flex items-center justify-center text-sm font-black border-2 border-white/30"
            id="user-avatar">?</div>
-      <div>
+      <div class="hidden md:block">
         <p class="text-xs font-bold leading-tight" id="hr-user-name">Loading…</p>
         <p class="text-xs text-blue-200 leading-tight" id="hr-user-role"></p>
       </div>
     </div>
     <button onclick="logout()"
-            class="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-sm font-semibold transition">
-      🚪 Logout
+            class="bg-white/10 hover:bg-red-500/70 px-3 py-2 rounded-xl text-sm font-semibold transition">
+      🚪
     </button>
   </div>
 </nav>
 
-<div class="max-w-7xl mx-auto px-4 py-6">
+<div class="max-w-7xl mx-auto px-4 py-6 space-y-5">
 
-  <!-- Stats -->
-  <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-    <div class="card p-4 text-center">
-      <p class="text-2xl font-black text-gray-800" id="stat-total">–</p>
-      <p class="text-xs text-gray-500 font-semibold mt-1">Total</p>
+  <!-- ── STAT CARDS ── -->
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+    <div class="stat-card gbg col-span-2 md:col-span-1">
+      <div class="text-4xl font-black mb-1" id="stat-total">–</div>
+      <div class="text-sm font-semibold opacity-80">Total Candidates</div>
+      <div class="text-3xl absolute right-5 top-5 opacity-20">👥</div>
     </div>
-    <div class="card p-4 text-center">
-      <p class="text-2xl font-black text-blue-600" id="stat-initiated">–</p>
-      <p class="text-xs text-gray-500 font-semibold mt-1">Initiated</p>
+    <div class="stat-card" style="background:linear-gradient(135deg,#2563eb,#60a5fa)">
+      <div class="text-4xl font-black mb-1" id="stat-initiated">–</div>
+      <div class="text-sm font-semibold opacity-80">Initiated</div>
+      <div class="text-3xl absolute right-5 top-5 opacity-20">🚀</div>
     </div>
-    <div class="card p-4 text-center">
-      <p class="text-2xl font-black text-purple-600" id="stat-submitted">–</p>
-      <p class="text-xs text-gray-500 font-semibold mt-1">Submitted</p>
+    <div class="stat-card gbg2">
+      <div class="text-4xl font-black mb-1" id="stat-submitted">–</div>
+      <div class="text-sm font-semibold opacity-80">Submitted</div>
+      <div class="text-3xl absolute right-5 top-5 opacity-20">📋</div>
     </div>
-    <div class="card p-4 text-center">
-      <p class="text-2xl font-black text-green-600" id="stat-approved">–</p>
-      <p class="text-xs text-gray-500 font-semibold mt-1">Approved</p>
+    <div class="stat-card gbg3">
+      <div class="text-4xl font-black mb-1" id="stat-approved">–</div>
+      <div class="text-sm font-semibold opacity-80">Approved</div>
+      <div class="text-3xl absolute right-5 top-5 opacity-20">✅</div>
     </div>
-    <div class="card p-4 text-center">
-      <p class="text-2xl font-black text-red-500" id="stat-rejected">–</p>
-      <p class="text-xs text-gray-500 font-semibold mt-1">Rejected</p>
+    <div class="stat-card gbg4">
+      <div class="text-4xl font-black mb-1" id="stat-rejected">–</div>
+      <div class="text-sm font-semibold opacity-80">Rejected</div>
+      <div class="text-3xl absolute right-5 top-5 opacity-20">❌</div>
     </div>
   </div>
 
-  <!-- Toolbar -->
-  <div class="card px-5 py-4 mb-5 flex flex-col md:flex-row md:items-center gap-3">
-    <div class="flex gap-1 flex-wrap" id="tab-bar">
+  <!-- ── PROGRESS BAR ── -->
+  <div class="card px-6 py-4">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-sm font-bold text-gray-600">Onboarding Progress</span>
+      <span class="text-sm font-black text-blue-600" id="progress-pct">0%</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill gbg" id="progress-fill" style="width:0%"></div>
+    </div>
+    <div class="flex justify-between mt-2 text-xs text-gray-400 font-semibold">
+      <span>Initiated</span><span>Submitted</span><span>Signed</span><span>Approved</span>
+    </div>
+  </div>
+
+  <!-- ── TOOLBAR ── -->
+  <div class="card px-5 py-4 flex flex-col md:flex-row md:items-center gap-3">
+    <div class="flex gap-1.5 flex-wrap">
       <button class="tab-btn active" onclick="setTab(this,'')">All</button>
-      <button class="tab-btn" onclick="setTab(this,'INITIATED')">Initiated</button>
-      <button class="tab-btn" onclick="setTab(this,'FORM_SUBMITTED')">Submitted</button>
-      <button class="tab-btn" onclick="setTab(this,'SIGNED')">Signed</button>
-      <button class="tab-btn" onclick="setTab(this,'APPROVED')">Approved</button>
-      <button class="tab-btn" onclick="setTab(this,'REJECTED')">Rejected</button>
+      <button class="tab-btn" onclick="setTab(this,'INITIATED')">🚀 Initiated</button>
+      <button class="tab-btn" onclick="setTab(this,'FORM_SUBMITTED')">📋 Submitted</button>
+      <button class="tab-btn" onclick="setTab(this,'SIGNED')">✍️ Signed</button>
+      <button class="tab-btn" onclick="setTab(this,'APPROVED')">✅ Approved</button>
+      <button class="tab-btn" onclick="setTab(this,'REJECTED')">❌ Rejected</button>
     </div>
-    <div class="md:ml-auto flex gap-2">
-      <input id="search-input" class="ifield w-52"
-             placeholder="🔍 Search name / mobile…" oninput="debounceSearch()"/>
+    <div class="md:ml-auto flex gap-2 flex-wrap">
+      <div class="relative">
+        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+        <input id="search-input" class="ifield pl-8 w-52"
+               placeholder="Search name / mobile…" oninput="debounceSearch()"/>
+      </div>
       <button onclick="loadCandidates();loadStats()"
-              class="action-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4">↻ Refresh</button>
+              class="action-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-2">
+        ↻ Refresh</button>
       <button onclick="openInitiate()"
-              class="action-btn gbg text-white px-5 py-2 text-sm shadow">+ Initiate Candidate</button>
+              class="action-btn gbg text-white px-5 py-2.5 shadow-lg hover:opacity-90
+                     flex items-center gap-2">
+        <span class="text-lg leading-none">+</span> Initiate Candidate
+      </button>
     </div>
   </div>
 
-  <!-- Table -->
+  <!-- ── TABLE ── -->
   <div class="card overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead>
-          <tr class="border-b border-gray-100">
-            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase">#</th>
-            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase">Employee</th>
-            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase">Mobile</th>
-            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase">Designation</th>
-            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase">Assigned HR</th>
-            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase">Status</th>
-            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase">Link</th>
-            <th class="text-left px-5 py-3.5 text-xs font-bold text-gray-500 uppercase">Actions</th>
+          <tr>
+            <th class="text-left px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">#</th>
+            <th class="text-left px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Employee</th>
+            <th class="text-left px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Mobile</th>
+            <th class="text-left px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Designation</th>
+            <th class="text-left px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Assigned HR</th>
+            <th class="text-left px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Status</th>
+            <th class="text-left px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Link</th>
+            <th class="text-left px-5 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Actions</th>
           </tr>
         </thead>
         <tbody id="candidates-tbody">
-          <tr><td colspan="8" class="text-center py-14 text-gray-400">Loading candidates…</td></tr>
+          <tr><td colspan="8" class="text-center py-16 text-gray-400">
+            <div class="text-4xl mb-3">⏳</div>
+            <div class="font-semibold">Loading candidates…</div>
+          </td></tr>
         </tbody>
       </table>
     </div>
-    <div class="flex items-center justify-between px-5 py-4 border-t border-gray-100">
-      <span class="text-xs text-gray-500" id="page-info">–</span>
+    <div class="flex items-center justify-between px-5 py-4 border-t border-gray-100 bg-gray-50/50">
+      <span class="text-xs text-gray-500 font-medium" id="page-info">–</span>
       <div class="flex gap-2">
         <button onclick="prevPage()" id="btn-prev"
-                class="action-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-2">← Prev</button>
+                class="action-btn bg-white border border-gray-200 text-gray-600
+                       hover:bg-gray-50 px-4 py-2 shadow-sm">← Prev</button>
         <button onclick="nextPage()" id="btn-next"
-                class="action-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-2">Next →</button>
+                class="action-btn bg-white border border-gray-200 text-gray-600
+                       hover:bg-gray-50 px-4 py-2 shadow-sm">Next →</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- MODAL: INITIATE -->
+<!-- ── MODAL: INITIATE ── -->
 <div class="overlay" id="modal-initiate">
-  <div class="card modal-box w-full max-w-lg mx-4 p-7 relative max-h-screen overflow-y-auto">
-    <button onclick="closeModal('modal-initiate')"
-            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
-    <h2 class="text-lg font-bold text-gray-800 mb-5">➕ Initiate New Candidate</h2>
+  <div class="card modal-box w-full max-w-lg mx-4 p-8 relative max-h-screen overflow-y-auto">
+    <div class="flex items-center gap-3 mb-6">
+      <div class="w-10 h-10 gbg rounded-xl flex items-center justify-center text-white text-xl">➕</div>
+      <div>
+        <h2 class="text-lg font-black text-gray-800">Initiate New Candidate</h2>
+        <p class="text-xs text-gray-400">Fill details to start onboarding</p>
+      </div>
+      <button onclick="closeModal('modal-initiate')"
+              class="ml-auto text-gray-300 hover:text-gray-600 text-2xl font-bold leading-none">✕</button>
+    </div>
     <div class="space-y-4">
       <div>
         <label class="lbl">Employee Name *</label>
@@ -151,7 +282,7 @@
         </div>
         <div>
           <label class="lbl">Aadhaar No</label>
-          <input class="ifield" id="i-aadhaar" placeholder="12-digit Aadhaar" maxlength="12"/>
+          <input class="ifield" id="i-aadhaar" placeholder="12-digit" maxlength="12"/>
         </div>
       </div>
       <div>
@@ -162,70 +293,96 @@
         <label class="lbl">Designation *</label>
         <input class="ifield" id="i-designation" placeholder="e.g. Sales Executive"/>
       </div>
-      <div>
-        <label class="lbl">Assign HR</label>
-        <select class="ifield" id="i-hr">
-          <option value="">Select HR (optional)</option>
-        </select>
-      </div>
-      <div>
-        <label class="lbl">Send Link via SMS</label>
-        <select class="ifield" id="i-sendlink">
-          <option value="true">Yes – Send immediately</option>
-          <option value="false">No – Send manually later</option>
-        </select>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="lbl">Assign HR</label>
+          <select class="ifield" id="i-hr">
+            <option value="">Select HR (optional)</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Send SMS Link</label>
+          <select class="ifield" id="i-sendlink">
+            <option value="true">✅ Yes – Immediately</option>
+            <option value="false">⏸ No – Later</option>
+          </select>
+        </div>
       </div>
     </div>
     <div id="initiate-error"
-         class="hidden mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-xl text-sm"></div>
+         class="hidden mt-4 bg-red-50 border border-red-200 text-red-700
+                px-4 py-3 rounded-xl text-sm flex items-center gap-2"></div>
     <div class="flex gap-3 mt-6">
       <button onclick="closeModal('modal-initiate')"
-              class="flex-1 bg-gray-100 text-gray-600 py-2.5 rounded-xl font-semibold hover:bg-gray-200">Cancel</button>
+              class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-200">
+        Cancel</button>
       <button id="submit-initiate" onclick="submitInitiate()"
-              class="flex-1 gbg text-white py-2.5 rounded-xl font-bold hover:opacity-90 shadow">
-        Initiate & Send Link</button>
+              class="flex-1 gbg text-white py-3 rounded-xl font-black hover:opacity-90 shadow-lg
+                     flex items-center justify-center gap-2">
+        🚀 Initiate & Send Link
+      </button>
     </div>
   </div>
 </div>
 
-<!-- MODAL: DETAIL -->
+<!-- ── MODAL: DETAIL ── -->
 <div class="overlay" id="modal-detail">
-  <div class="card modal-box w-full max-w-2xl mx-4 p-7 relative max-h-[90vh] overflow-y-auto">
-    <button onclick="closeModal('modal-detail')"
-            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
-    <h2 class="text-lg font-bold text-gray-800 mb-5">👤 Candidate Details</h2>
-    <div id="detail-body" class="text-sm text-gray-600 space-y-2"></div>
-    <div class="flex gap-3 mt-6" id="detail-actions"></div>
+  <div class="card modal-box w-full max-w-2xl mx-4 relative max-h-[92vh] overflow-y-auto">
+    <div class="gbg px-7 py-5 flex items-center gap-3">
+      <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center
+                  text-white text-xl font-black" id="detail-avatar">?</div>
+      <div>
+        <h2 class="text-white font-black text-lg" id="detail-name">Candidate Details</h2>
+        <p class="text-blue-200 text-xs" id="detail-designation">–</p>
+      </div>
+      <button onclick="closeModal('modal-detail')"
+              class="ml-auto text-white/60 hover:text-white text-2xl font-bold">✕</button>
+    </div>
+    <div class="p-7">
+      <div id="detail-body" class="text-sm text-gray-600 space-y-1"></div>
+      <div class="flex gap-3 mt-6" id="detail-actions"></div>
+    </div>
   </div>
 </div>
 
-<!-- MODAL: REJECT -->
+<!-- ── MODAL: REJECT ── -->
 <div class="overlay" id="modal-reject">
   <div class="card modal-box w-full max-w-md mx-4 p-7 relative">
-    <button onclick="closeModal('modal-reject')"
-            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
-    <h2 class="text-lg font-bold text-gray-800 mb-4">❌ Reject Candidate</h2>
+    <div class="flex items-center gap-3 mb-5">
+      <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center text-xl">❌</div>
+      <div>
+        <h2 class="text-lg font-black text-gray-800">Reject Candidate</h2>
+        <p class="text-xs text-gray-400">This action cannot be undone</p>
+      </div>
+      <button onclick="closeModal('modal-reject')"
+              class="ml-auto text-gray-300 hover:text-gray-600 text-2xl font-bold">✕</button>
+    </div>
     <input type="hidden" id="reject-id"/>
     <div>
       <label class="lbl">Rejection Reason *</label>
       <textarea class="ifield" id="reject-reason" rows="4"
-                placeholder="Minimum 10 characters"></textarea>
+                placeholder="Provide a clear reason (min 10 characters)…"></textarea>
     </div>
     <div id="reject-error"
-         class="hidden mt-3 bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-xl text-xs"></div>
+         class="hidden mt-3 bg-red-50 border border-red-200 text-red-700
+                px-3 py-2 rounded-xl text-xs"></div>
     <div class="flex gap-3 mt-5">
       <button onclick="closeModal('modal-reject')"
-              class="flex-1 bg-gray-100 text-gray-600 py-2.5 rounded-xl font-semibold hover:bg-gray-200">Cancel</button>
+              class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-200">
+        Cancel</button>
       <button onclick="submitReject()"
-              class="flex-1 bg-red-600 text-white py-2.5 rounded-xl font-bold hover:bg-red-700">
-        Confirm Reject</button>
+              class="flex-1 bg-red-600 text-white py-3 rounded-xl font-black hover:bg-red-700
+                     shadow-lg shadow-red-200">
+        Confirm Reject
+      </button>
     </div>
   </div>
 </div>
 
-<!-- TOAST -->
-<div id="toast" class="fixed bottom-6 right-6 z-50 hidden">
-  <div class="bg-gray-900 text-white px-5 py-3 rounded-xl shadow-2xl text-sm font-semibold"></div>
+<!-- ── TOAST ── -->
+<div id="toast" class="fixed bottom-6 right-6 z-50 hidden pointer-events-none">
+  <div class="px-5 py-3.5 rounded-2xl shadow-2xl text-sm font-bold text-white
+              flex items-center gap-2.5 min-w-[200px]"></div>
 </div>
 
 <script>
@@ -233,7 +390,6 @@
            || window.API_BASE
            || "https://rspl-hr-onboarding-backend-production.up.railway.app/api";
 
-  // ── Auth Guard ──────────────────────────────────────────────────────────────
   const HR_TOKEN    = localStorage.getItem("hr_token");
   const HR_NAME     = localStorage.getItem("hr_name")     || "HR User";
   const HR_ROLE     = localStorage.getItem("hr_role")     || "HR";
@@ -245,7 +401,10 @@
   document.getElementById("hr-user-role").textContent = HR_ROLE.replace(/_/g, " ");
   document.getElementById("user-avatar").textContent  = HR_NAME.charAt(0).toUpperCase();
 
-  // ── authFetch ───────────────────────────────────────────────────────────────
+  // Show Admin link for HR_ADMIN
+  if ((HR_ROLE || "").toUpperCase() === "HR_ADMIN")
+    document.getElementById("admin-link").classList.remove("hidden");
+
   function authFetch(url, options = {}) {
     options.headers = options.headers || {};
     options.headers["Authorization"] = "Bearer " + HR_TOKEN;
@@ -261,24 +420,18 @@
     });
   }
 
-  function logout() {
-    localStorage.clear();
-    window.location.href = "login.html";
-  }
+  function logout() { localStorage.clear(); window.location.href = "login.html"; }
 
-  // ── State ───────────────────────────────────────────────────────────────────
-  let currentPage   = 0;
-  let totalPages    = 1;
-  let currentStatus = "";
-  let searchTerm    = "";
-  let searchTimer   = null;
+  let currentPage = 0, totalPages = 1, currentStatus = "", searchTerm = "", searchTimer = null;
 
-  // ── Helpers ─────────────────────────────────────────────────────────────────
+  // ── Toast ───────────────────────────────────────────────────────────────────
   function toast(msg, type = "green") {
-    const cols = { green:"#16a34a", red:"#dc2626", blue:"#2563eb" };
+    const colors = { green:"#16a34a", red:"#dc2626", blue:"#2563eb", orange:"#d97706" };
+    const icons  = { green:"✅", red:"❌", blue:"📱", orange:"⚠️" };
     const t = document.getElementById("toast");
-    t.querySelector("div").style.background = cols[type] || cols.green;
-    t.querySelector("div").textContent = msg;
+    const b = t.querySelector("div");
+    b.style.background = colors[type] || colors.green;
+    b.innerHTML = `<span>${icons[type]||"ℹ️"}</span><span>${msg}</span>`;
     t.classList.remove("hidden");
     setTimeout(() => t.classList.add("hidden"), 3500);
   }
@@ -289,10 +442,15 @@
            || "bg-gray-100 text-gray-600";
   }
 
+  function badgeIcon(s) {
+    return { INITIATED:"🚀", FORM_SUBMITTED:"📋", SIGNED:"✍️",
+             APPROVED:"✅", REJECTED:"❌" }[s] || "•";
+  }
+
   function linkBadge(ls) {
     return ls === "SENT"
       ? '<span class="badge bg-green-100 text-green-700">✓ Sent</span>'
-      : '<span class="badge bg-gray-100 text-gray-500">Not Sent</span>';
+      : '<span class="badge bg-gray-100 text-gray-400">Not Sent</span>';
   }
 
   function openModal(id)  { document.getElementById(id).classList.add("open"); }
@@ -301,18 +459,15 @@
   function debounceSearch() {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => {
-      searchTerm  = document.getElementById("search-input").value.trim();
-      currentPage = 0;
-      loadCandidates();
+      searchTerm = document.getElementById("search-input").value.trim();
+      currentPage = 0; loadCandidates();
     }, 400);
   }
 
   function setTab(el, status) {
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
     el.classList.add("active");
-    currentStatus = status;
-    currentPage   = 0;
-    loadCandidates();
+    currentStatus = status; currentPage = 0; loadCandidates();
   }
 
   function prevPage() { if (currentPage > 0) { currentPage--; loadCandidates(); } }
@@ -325,16 +480,29 @@
       const data = await res.json();
       if (data.success) {
         const s = data.data;
-        document.getElementById("stat-total").textContent     = s.total          || 0;
-        document.getElementById("stat-initiated").textContent = s.INITIATED       || 0;
-        document.getElementById("stat-submitted").textContent = s.FORM_SUBMITTED  || 0;
-        document.getElementById("stat-approved").textContent  = s.APPROVED        || 0;
-        document.getElementById("stat-rejected").textContent  = s.REJECTED        || 0;
+        const total = s.total || 0;
+        const approved = s.APPROVED || 0;
+        const pct = total > 0 ? Math.round((approved / total) * 100) : 0;
+
+        document.getElementById("stat-total").textContent     = total;
+        document.getElementById("stat-initiated").textContent = s.INITIATED      || 0;
+        document.getElementById("stat-submitted").textContent = s.FORM_SUBMITTED || 0;
+        document.getElementById("stat-approved").textContent  = approved;
+        document.getElementById("stat-rejected").textContent  = s.REJECTED       || 0;
+
+        // Nav stats
+        document.getElementById("nav-total").textContent    = total;
+        document.getElementById("nav-approved").textContent = approved;
+        document.getElementById("nav-pending").textContent  = s.INITIATED || 0;
+
+        // Progress bar
+        document.getElementById("progress-pct").textContent  = pct + "%";
+        document.getElementById("progress-fill").style.width = pct + "%";
       }
     } catch(e) {}
   }
 
-  // ── HR Team Dropdown ────────────────────────────────────────────────────────
+  // ── HR Dropdown ─────────────────────────────────────────────────────────────
   async function loadHRTeam() {
     try {
       const res  = await authFetch(`${API}/hr/team`);
@@ -343,7 +511,7 @@
         const sel = document.getElementById("i-hr");
         (data.data || []).forEach(hr => {
           const opt = document.createElement("option");
-          opt.value       = hr.id;
+          opt.value = hr.id;
           opt.textContent = `${hr.name} (${hr.role})`;
           sel.appendChild(opt);
         });
@@ -354,7 +522,10 @@
   // ── Candidates Table ────────────────────────────────────────────────────────
   async function loadCandidates() {
     const tbody = document.getElementById("candidates-tbody");
-    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-12 text-gray-400">Loading…</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-16 text-gray-400">
+      <div class="inline-block w-6 h-6 border-2 border-blue-500 border-t-transparent
+                  rounded-full animate-spin mb-2"></div>
+      <div class="font-semibold text-xs">Loading…</div></td></tr>`;
 
     let url = `${API}/hr/candidates?page=${currentPage}&size=15`;
     if (currentStatus) url += `&status=${currentStatus}`;
@@ -365,7 +536,8 @@
       const data = await res.json();
 
       if (!data.success) {
-        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-red-400">Failed to load</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-red-400">
+          Failed to load</td></tr>`;
         return;
       }
 
@@ -373,51 +545,75 @@
       totalPages = page.totalPages || 1;
 
       document.getElementById("page-info").textContent =
-        `Showing ${page.content.length} of ${page.totalElements} | Page ${page.page + 1}/${page.totalPages}`;
+        `Showing ${page.content.length} of ${page.totalElements} candidates  •  Page ${page.page + 1} / ${page.totalPages}`;
       document.getElementById("btn-prev").disabled = currentPage === 0;
       document.getElementById("btn-next").disabled = currentPage >= totalPages - 1;
 
       if (!page.content.length) {
-        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-14 text-gray-400">No candidates found</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-16 text-gray-400">
+          <div class="text-4xl mb-2">🔍</div>
+          <div class="font-semibold">No candidates found</div></td></tr>`;
         return;
       }
 
       tbody.innerHTML = page.content.map((c, i) => `
         <tr class="border-b border-gray-50 cursor-pointer" onclick="viewDetail(${c.id})">
-          <td class="px-5 py-3.5 text-gray-400 font-mono text-xs">${currentPage * 15 + i + 1}</td>
+          <td class="px-5 py-3.5 text-gray-300 font-mono text-xs font-bold">
+            ${String(currentPage * 15 + i + 1).padStart(2,"0")}</td>
           <td class="px-5 py-3.5">
-            <div class="font-semibold text-gray-800">${c.employeeName || "–"}</div>
-            <div class="text-xs text-gray-400">${c.emailId || ""}</div>
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-full gbg flex items-center justify-center
+                          text-white text-xs font-black flex-shrink-0">
+                ${(c.employeeName||"?").charAt(0).toUpperCase()}</div>
+              <div>
+                <div class="font-bold text-gray-800">${c.employeeName || "–"}</div>
+                <div class="text-xs text-gray-400">${c.emailId || ""}</div>
+              </div>
+            </div>
           </td>
-          <td class="px-5 py-3.5 text-gray-600">${c.mobileNo || "–"}</td>
-          <td class="px-5 py-3.5 text-gray-600">${c.designation || "–"}</td>
-          <td class="px-5 py-3.5 text-gray-500 text-xs">${c.assignedHr?.name || "–"}</td>
+          <td class="px-5 py-3.5 text-gray-600 font-mono text-xs">${c.mobileNo || "–"}</td>
+          <td class="px-5 py-3.5 text-gray-600 text-xs">${c.designation || "–"}</td>
+          <td class="px-5 py-3.5 text-gray-500 text-xs">
+            ${c.assignedHr?.name
+              ? `<div class="flex items-center gap-1.5">
+                   <div class="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center
+                               text-blue-600 text-xs font-bold">
+                     ${c.assignedHr.name.charAt(0)}</div>
+                   ${c.assignedHr.name}
+                 </div>`
+              : '<span class="text-gray-300">–</span>'}
+          </td>
           <td class="px-5 py-3.5">
-            <span class="badge ${badgeClass(c.joiningStatus)}">${(c.joiningStatus||"–").replace(/_/g," ")}</span>
+            <span class="badge ${badgeClass(c.joiningStatus)}">
+              ${badgeIcon(c.joiningStatus)} ${(c.joiningStatus||"–").replace(/_/g," ")}
+            </span>
           </td>
           <td class="px-5 py-3.5">${linkBadge(c.linkStatus)}</td>
           <td class="px-5 py-3.5" onclick="event.stopPropagation()">
-            <div class="flex gap-1.5">
+            <div class="flex gap-1.5 flex-wrap">
               ${c.joiningStatus === "INITIATED" || c.linkStatus === "NOT_SENT" ? `
                 <button onclick="sendLink(${c.id})"
-                        class="action-btn bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs px-2 py-1">
-                  📱 Link</button>` : ""}
+                        class="action-btn bg-blue-50 text-blue-700 hover:bg-blue-100 px-3 py-1.5">
+                  📱 Send</button>` : ""}
               ${c.joiningStatus === "SIGNED" ? `
                 <button onclick="approveCandidate(${c.id})"
-                        class="action-btn bg-green-600 text-white hover:bg-green-700 px-3 py-1">✓ Approve</button>
+                        class="action-btn bg-green-600 text-white hover:bg-green-700 px-3 py-1.5
+                               shadow-sm shadow-green-200">✓</button>
                 <button onclick="openReject(${c.id})"
-                        class="action-btn bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1">✕ Reject</button>` : ""}
+                        class="action-btn bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5">✕</button>` : ""}
               ${c.joiningStatus === "FORM_SUBMITTED" ? `
                 <button onclick="openReject(${c.id})"
-                        class="action-btn bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1">✕ Reject</button>` : ""}
+                        class="action-btn bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5">✕ Reject</button>` : ""}
               ${c.joiningStatus === "APPROVED" ? `
-                <span class="text-xs text-green-600 font-semibold">✓ ${c.employeeId || ""}</span>` : ""}
+                <span class="text-xs text-green-600 font-black bg-green-50 px-2 py-1 rounded-lg">
+                  🎉 ${c.employeeId || "Generated"}</span>` : ""}
             </div>
           </td>
         </tr>`).join("");
     } catch(e) {
       if (e.message !== "Session expired")
-        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-red-400">Error: ${e.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-red-400">
+          Error: ${e.message}</td></tr>`;
     }
   }
 
@@ -447,7 +643,10 @@
     }
 
     const btn = document.getElementById("submit-initiate");
-    btn.disabled = true; btn.textContent = "Initiating…";
+    btn.disabled = true;
+    btn.innerHTML = `<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="white" stroke-width="4"/>
+      <path class="opacity-75" fill="white" d="M4 12a8 8 0 018-8v8z"/></svg> Processing…`;
 
     const hrId = document.getElementById("i-hr").value;
     const payload = {
@@ -467,7 +666,7 @@
       });
       const data = await res.json();
       if (data.success) {
-        toast("✅ Candidate initiated successfully!", "green");
+        toast("Candidate initiated successfully!", "green");
         closeModal("modal-initiate");
         loadCandidates(); loadStats();
       } else {
@@ -480,7 +679,8 @@
         errEl.classList.remove("hidden");
       }
     } finally {
-      btn.disabled = false; btn.textContent = "Initiate & Send Link";
+      btn.disabled = false;
+      btn.innerHTML = "🚀 Initiate & Send Link";
     }
   }
 
@@ -490,16 +690,21 @@
       const res  = await authFetch(`${API}/hr/candidates/${id}/send-link`, { method:"POST" });
       const data = await res.json();
       data.success
-        ? (toast("📱 Link sent via SMS!", "blue"), loadCandidates())
-        : toast("❌ " + (data.message || "Failed"), "red");
+        ? (toast("Link sent via SMS!", "blue"), loadCandidates())
+        : toast(data.message || "Failed to send", "red");
     } catch(e) {}
   }
 
   // ── View Detail ─────────────────────────────────────────────────────────────
   async function viewDetail(id) {
     openModal("modal-detail");
-    document.getElementById("detail-body").innerHTML    = "<p class='text-gray-400'>Loading…</p>";
+    document.getElementById("detail-body").innerHTML    = `<div class="text-center py-8 text-gray-400">
+      <div class="inline-block w-6 h-6 border-2 border-blue-500 border-t-transparent
+                  rounded-full animate-spin"></div></div>`;
     document.getElementById("detail-actions").innerHTML = "";
+    document.getElementById("detail-name").textContent        = "Loading…";
+    document.getElementById("detail-designation").textContent = "";
+    document.getElementById("detail-avatar").textContent      = "…";
 
     try {
       const res  = await authFetch(`${API}/hr/candidates/${id}`);
@@ -510,48 +715,51 @@
       }
 
       const c = data.data;
+      document.getElementById("detail-name").textContent        = c.employeeName || "–";
+      document.getElementById("detail-designation").textContent = c.designation  || "–";
+      document.getElementById("detail-avatar").textContent      = (c.employeeName||"?").charAt(0).toUpperCase();
+
       const rows = [
-        ["Employee Name", c.employeeName],
-        ["Mobile",        c.mobileNo],
-        ["Email",         c.emailId || "–"],
-        ["Designation",   c.designation],
-        ["Aadhaar",       c.aadhaarNo || "–"],
-        ["Status",        `<span class="badge ${badgeClass(c.joiningStatus)}">${(c.joiningStatus||"").replace(/_/g," ")}</span>`],
-        ["Link Status",   linkBadge(c.linkStatus)],
-        ["Employee ID",   c.employeeId ? `<strong class="text-green-600">${c.employeeId}</strong>` : "–"],
-        ["Assigned HR",   c.assignedHr?.name || "–"],
-        ["Initiated By",  c.initiatedBy || "–"],
-        ["Date",          c.createdAt ? c.createdAt.substring(0,10) : "–"],
+        ["📱 Mobile",      c.mobileNo],
+        ["📧 Email",       c.emailId || "–"],
+        ["🪪 Aadhaar",     c.aadhaarNo || "–"],
+        ["📊 Status",      `<span class="badge ${badgeClass(c.joiningStatus)}">${badgeIcon(c.joiningStatus)} ${(c.joiningStatus||"").replace(/_/g," ")}</span>`],
+        ["🔗 Link",        linkBadge(c.linkStatus)],
+        ["🆔 Employee ID", c.employeeId ? `<strong class="text-green-600 font-black">${c.employeeId}</strong>` : "–"],
+        ["👤 Assigned HR", c.assignedHr?.name || "–"],
+        ["✍️ Initiated By",c.initiatedBy || "–"],
+        ["📅 Date",        c.createdAt ? c.createdAt.substring(0,10) : "–"],
         ...(c.joiningStatus !== "INITIATED" ? [
-          ["Father's Name", c.fathersName || "–"],
-          ["Date of Birth", c.dob || "–"],
-          ["Gender",        c.gender || "–"],
-          ["Blood Group",   c.bloodGroup || "–"],
-          ["PAN",           c.panCardNo || "–"],
-          ["Bank",          c.bankName ? `${c.bankName} | A/C: ${c.bankAccountNo} | IFSC: ${c.ifscCode}` : "–"],
-          ["Nominee",       c.nomineeName ? `${c.nomineeName} (${c.nomineeRelation})` : "–"],
-          ["Address",       c.permanentAddress ? `${c.permanentAddress}, ${c.district}, ${c.state} – ${c.pinCode}` : "–"],
+          ["👨 Father's Name", c.fathersName || "–"],
+          ["🎂 Date of Birth", c.dob || "–"],
+          ["⚧ Gender",        c.gender || "–"],
+          ["🩸 Blood Group",   c.bloodGroup || "–"],
+          ["🪪 PAN",           c.panCardNo || "–"],
+          ["🏦 Bank",          c.bankName ? `${c.bankName} • A/C: ${c.bankAccountNo} • IFSC: ${c.ifscCode}` : "–"],
+          ["👥 Nominee",       c.nomineeName ? `${c.nomineeName} (${c.nomineeRelation})` : "–"],
+          ["🏠 Address",       c.permanentAddress ? `${c.permanentAddress}, ${c.district}, ${c.state} – ${c.pinCode}` : "–"],
         ] : []),
-        ...(c.rejectionReason ? [["Rejection Reason", `<span class="text-red-600">${c.rejectionReason}</span>`]] : [])
+        ...(c.rejectionReason ? [["❌ Rejection", `<span class="text-red-600">${c.rejectionReason}</span>`]] : [])
       ];
 
       document.getElementById("detail-body").innerHTML = rows.map(([k,v]) => `
-        <div class="flex gap-3 py-1.5 border-b border-gray-50">
-          <span class="w-36 flex-shrink-0 text-gray-400 font-semibold text-xs uppercase tracking-wide">${k}</span>
-          <span class="text-gray-700">${v || "–"}</span>
+        <div class="flex gap-3 py-2 border-b border-gray-50 last:border-0">
+          <span class="w-36 flex-shrink-0 text-gray-400 text-xs font-bold uppercase tracking-wide pt-0.5">${k}</span>
+          <span class="text-gray-700 text-sm">${v || "–"}</span>
         </div>`).join("");
 
       let actions = "";
       if (c.joiningStatus === "SIGNED") {
         actions += `<button onclick="approveCandidate(${c.id})"
-          class="flex-1 gbg text-white py-2.5 rounded-xl font-bold hover:opacity-90 shadow">
-          ✓ Approve & Generate Employee ID</button>`;
+          class="flex-1 gbg3 text-white py-3 rounded-xl font-black hover:opacity-90 shadow-lg
+                 flex items-center justify-center gap-2">
+          ✅ Approve & Generate Employee ID</button>`;
         actions += `<button onclick="closeModal('modal-detail');openReject(${c.id})"
-          class="flex-1 bg-red-600 text-white py-2.5 rounded-xl font-bold hover:bg-red-700">
-          ✕ Reject</button>`;
+          class="flex-1 bg-red-600 text-white py-3 rounded-xl font-black hover:bg-red-700">
+          ❌ Reject</button>`;
       } else if (c.linkStatus === "NOT_SENT" || c.joiningStatus === "INITIATED") {
         actions += `<button onclick="sendLink(${c.id})"
-          class="flex-1 gbg text-white py-2.5 rounded-xl font-bold hover:opacity-90">
+          class="flex-1 gbg text-white py-3 rounded-xl font-black hover:opacity-90">
           📱 Send Onboarding Link</button>`;
       }
       document.getElementById("detail-actions").innerHTML = actions;
@@ -565,11 +773,11 @@
       const res  = await authFetch(`${API}/hr/candidates/${id}/approve`, { method:"POST" });
       const data = await res.json();
       if (data.success) {
-        toast("✅ Approved! Employee ID: " + (data.data?.employeeId || ""), "green");
+        toast("Approved! Employee ID: " + (data.data?.employeeId || ""), "green");
         closeModal("modal-detail");
         loadCandidates(); loadStats();
       } else {
-        toast("❌ " + (data.message || "Failed to approve"), "red");
+        toast(data.message || "Failed to approve", "red");
       }
     } catch(e) {}
   }
@@ -594,8 +802,7 @@
 
     try {
       const res  = await authFetch(`${API}/hr/candidates/${id}/reject`, {
-        method: "POST",
-        body:   JSON.stringify({ rejectionReason: reason })
+        method: "POST", body: JSON.stringify({ rejectionReason: reason })
       });
       const data = await res.json();
       if (data.success) {
@@ -604,7 +811,7 @@
         closeModal("modal-detail");
         loadCandidates(); loadStats();
       } else {
-        toast("❌ " + (data.message || "Failed"), "red");
+        toast(data.message || "Failed", "red");
       }
     } catch(e) {}
   }
