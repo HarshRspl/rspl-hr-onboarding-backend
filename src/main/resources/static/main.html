@@ -734,7 +734,7 @@
     try {
       const res  = await authFetch(`${API}/hr/candidates/${id}/reject`, {
         method: 'POST',
-        body: JSON.stringify({ reason })
+      body: JSON.stringify({ rejectionReason: reason })
       });
       const data = await res.json();
       if (data.success) {
