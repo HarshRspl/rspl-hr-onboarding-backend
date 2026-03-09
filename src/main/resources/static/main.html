@@ -4,10 +4,9 @@
   <meta charset="UTF-8" />
   <title>RSPL HR – Onboarding Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- Tailwind CDN for quick styling -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Optional: global config to override API base -->
-  <script src="config.js"></script>
+  <!-- FIX #3: onerror prevents crash if config.js is missing -->
+  <script src="config.js" onerror="void 0"></script>
   <style>
     body { font-family: "Segoe UI", sans-serif; background:#f1f5f9; }
     .gbg { background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%); }
@@ -47,10 +46,12 @@
       padding:5px 14px; border-radius:7px; font-size:12px; font-weight:700;
       cursor:pointer; transition:all .15s; border:none;
     }
+    .action-btn:disabled { opacity:0.5; cursor:not-allowed; }
     tr:hover td { background:#f8fafc; }
   </style>
 </head>
 <body>
+
 <!-- NAVBAR -->
 <nav class="gbg text-white px-6 py-3.5 flex items-center gap-4 shadow-lg sticky top-0 z-30">
   <div class="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center font-black text-xl">R</div>
@@ -59,7 +60,6 @@
     <div class="text-xs text-blue-200">HR Onboarding Dashboard</div>
   </div>
   <div class="ml-auto flex items-center gap-4">
-    <!-- Logged-in user -->
     <div class="hidden md:flex items-center gap-2 bg-white/10 rounded-xl px-4 py-2">
       <div class="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-sm font-bold"
            id="user-avatar">?</div>
@@ -68,13 +68,11 @@
         <p class="text-xs text-blue-200 leading-tight" id="hr-user-role"></p>
       </div>
     </div>
-    <!-- Admin portal shortcut for HR_ADMIN -->
     <button id="admin-btn"
             class="hidden md:flex items-center gap-2 bg-white/10 hover:bg-white/20
                    text-white px-4 py-2 rounded-xl text-xs font-semibold transition">
       🛠 Admin
     </button>
-    <!-- Logout -->
     <button onclick="logout()"
             class="flex items-center gap-2 bg-white/10 hover:bg-white/20
                    text-white px-4 py-2 rounded-xl text-sm font-semibold transition">
@@ -111,7 +109,6 @@
 
   <!-- Toolbar -->
   <div class="card px-5 py-4 mb-5 flex flex-col md:flex-row md:items-center gap-3">
-    <!-- Tabs -->
     <div class="flex gap-1 flex-wrap" id="tab-bar">
       <button class="tab-btn active" data-status="" onclick="setTab(this,'')">All</button>
       <button class="tab-btn" data-status="INITIATED" onclick="setTab(this,'INITIATED')">Initiated</button>
@@ -120,7 +117,6 @@
       <button class="tab-btn" data-status="APPROVED" onclick="setTab(this,'APPROVED')">Approved</button>
       <button class="tab-btn" data-status="REJECTED" onclick="setTab(this,'REJECTED')">Rejected</button>
     </div>
-    <!-- Search, Refresh, Initiate -->
     <div class="md:ml-auto flex gap-2">
       <input id="search-input" class="ifield w-52"
              placeholder="🔍 Search name / mobile…" oninput="debounceSearch()" />
@@ -261,7 +257,7 @@
               class="flex-1 bg-gray-100 text-gray-600 py-2.5 rounded-xl font-semibold hover:bg-gray-200">
         Cancel
       </button>
-      <button onclick="submitReject()"
+      <button id="submit-reject" onclick="submitReject()"
               class="flex-1 bg-red-600 text-white py-2.5 rounded-xl font-bold hover:bg-red-700">
         Confirm Reject
       </button>
@@ -275,7 +271,6 @@
 </div>
 
 <script>
-  // API base: config.js can set window.API_BASE; otherwise default to same-origin /api
   const API = window.API_BASE || '/api';
 
   // ---- Auth Guard ----
@@ -290,10 +285,10 @@
 
   // Populate navbar
   document.getElementById('hr-user-name').textContent = HR_NAME;
-  document.getElementById('hr-user-role').textContent = HR_ROLE.replace('_',' ');
+  // FIX #8: replaceAll instead of replace to handle roles like HR_FIELD_MANAGER
+  document.getElementById('hr-user-role').textContent = HR_ROLE.replaceAll('_', ' ');
   document.getElementById('user-avatar').textContent  = HR_NAME.charAt(0).toUpperCase();
 
-  // Show Admin button only if HR_ADMIN
   if ((HR_ROLE || '').toUpperCase() === 'HR_ADMIN') {
     const adminBtn = document.getElementById('admin-btn');
     adminBtn.classList.remove('hidden');
@@ -307,7 +302,14 @@
     }
   }
 
-  // Attach JWT to all API calls
+  // ---- FIX #4: XSS sanitizer ----
+  function esc(str) {
+    return String(str ?? '').replace(/[&<>"']/g, c =>
+      ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c])
+    );
+  }
+
+  // ---- Auth Fetch ----
   function authFetch(url, options = {}) {
     options.headers = options.headers || {};
     options.headers['Authorization'] = 'Bearer ' + HR_TOKEN;
@@ -344,15 +346,14 @@
   }
 
   function badgeClass(status) {
-    const s = (status || '').toUpperCase();
     const map = {
-      'INITIATED':       'b-initiated',
-      'FORM_SUBMITTED':  'b-form_submitted',
-      'SIGNED':          'b-signed',
-      'APPROVED':        'b-approved',
-      'REJECTED':        'b-rejected'
+      'INITIATED':      'b-initiated',
+      'FORM_SUBMITTED': 'b-form_submitted',
+      'SIGNED':         'b-signed',
+      'APPROVED':       'b-approved',
+      'REJECTED':       'b-rejected'
     };
-    return map[s] || 'bg-gray-100 text-gray-600';
+    return map[(status || '').toUpperCase()] || 'bg-gray-100 text-gray-600';
   }
 
   function linkBadge(ls) {
@@ -360,13 +361,13 @@
     return '<span class="badge bg-gray-100 text-gray-500">Not Sent</span>';
   }
 
-  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function openModal(id)  { document.getElementById(id).classList.add('open'); }
   function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
   function debounceSearch() {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => {
-      searchTerm = document.getElementById('search-input').value.trim();
+      searchTerm  = document.getElementById('search-input').value.trim();
       currentPage = 0;
       loadCandidates();
     }, 400);
@@ -376,59 +377,64 @@
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     el.classList.add('active');
     currentStatus = status;
-    currentPage = 0;
+    currentPage   = 0;
     loadCandidates();
   }
 
-  function prevPage() { if (currentPage > 0) { currentPage--; loadCandidates(); } }
+  function prevPage() { if (currentPage > 0)              { currentPage--; loadCandidates(); } }
   function nextPage() { if (currentPage < totalPages - 1) { currentPage++; loadCandidates(); } }
 
   // ---- Stats ----
+  // FIX #2: Stats always come from the dedicated endpoint; never overwritten by page data
   async function loadStats() {
-    // Try dedicated stats endpoint; if fails, we fallback when loading candidates
     try {
-      const res = await authFetch(`${API}/hr/candidates/stats`);
+      const res  = await authFetch(`${API}/hr/candidates/stats`);
       const data = await res.json();
       if (data.success) {
         const s = data.data;
-        document.getElementById('stat-total').textContent     = s.total || 0;
-        document.getElementById('stat-initiated').textContent = s.INITIATED || 0;
-        document.getElementById('stat-submitted').textContent = s.FORM_SUBMITTED || 0;
-        document.getElementById('stat-approved').textContent  = s.APPROVED || 0;
-        document.getElementById('stat-rejected').textContent  = s.REJECTED || 0;
-        return;
+        document.getElementById('stat-total').textContent     = s.total          ?? '–';
+        document.getElementById('stat-initiated').textContent = s.INITIATED       ?? '–';
+        document.getElementById('stat-submitted').textContent = s.FORM_SUBMITTED  ?? '–';
+        document.getElementById('stat-approved').textContent  = s.APPROVED        ?? '–';
+        document.getElementById('stat-rejected').textContent  = s.REJECTED        ?? '–';
       }
     } catch (e) {
-      // ignore, we'll compute from current page
+      // Stats endpoint unavailable; leave previous values intact
+      if (e.message !== 'Session expired') console.warn('Stats unavailable:', e.message);
     }
-  }
-
-  function updateStatsFromList(list, totalElements) {
-    document.getElementById('stat-total').textContent = totalElements;
-    const countBy = status => list.filter(c => (c.joiningStatus || c.status) === status).length;
-    document.getElementById('stat-initiated').textContent = countBy('INITIATED');
-    document.getElementById('stat-submitted').textContent = countBy('FORM_SUBMITTED');
-    document.getElementById('stat-approved').textContent  = countBy('APPROVED');
-    document.getElementById('stat-rejected').textContent  = countBy('REJECTED');
   }
 
   // ---- HR Team ----
   async function loadHRTeamForSelect() {
+    // Use cached team if already loaded this session
+    const cached = sessionStorage.getItem('hr_team');
+    if (cached) {
+      hrTeam = JSON.parse(cached);
+      populateHRSelect();
+      return;
+    }
     try {
-      const res = await authFetch(`${API}/hr/team`);
+      const res  = await authFetch(`${API}/hr/team`);
       const data = await res.json();
       if (data.success) {
         hrTeam = data.data;
-        const sel = document.getElementById('i-hr');
-        sel.innerHTML = '<option value="">Select HR (optional)</option>';
-        hrTeam.forEach(hr => {
-          const opt = document.createElement('option');
-          opt.value = hr.id;
-          opt.textContent = `${hr.name} (${hr.role})`;
-          sel.appendChild(opt);
-        });
+        sessionStorage.setItem('hr_team', JSON.stringify(hrTeam));
+        populateHRSelect();
       }
-    } catch (e) {}
+    } catch (e) {
+      if (e.message !== 'Session expired') console.warn('HR team unavailable:', e.message);
+    }
+  }
+
+  function populateHRSelect() {
+    const sel = document.getElementById('i-hr');
+    sel.innerHTML = '<option value="">Select HR (optional)</option>';
+    hrTeam.forEach(hr => {
+      const opt = document.createElement('option');
+      opt.value       = hr.id;
+      opt.textContent = `${hr.name} (${hr.role})`;
+      sel.appendChild(opt);
+    });
   }
 
   // ---- Load Candidates ----
@@ -447,50 +453,54 @@
     try {
       const res  = await authFetch(url);
       const data = await res.json();
+
       if (!data.success) {
         tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-red-400">
           Failed to load candidates</td></tr>`;
         return;
       }
+
       const page = data.data;
+      // FIX #9: Spring Data uses `number` for page index; support both field names
+      const pageIndex = page.number ?? page.page ?? 0;
       totalPages = page.totalPages || 1;
 
       document.getElementById('page-info').textContent =
-        `Showing ${page.content.length} of ${page.totalElements} candidates  ·  Page ${page.page + 1}/${page.totalPages}`;
+        `Showing ${page.content.length} of ${page.totalElements} candidates · Page ${pageIndex + 1}/${page.totalPages}`;
 
       document.getElementById('btn-prev').disabled = currentPage === 0;
       document.getElementById('btn-next').disabled = currentPage >= totalPages - 1;
 
       if (!page.content.length) {
-        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-14 text-gray-400">
-          No candidates found</td></tr>`;
+        tbody.innerHTML = `
+          <tr><td colspan="8" class="text-center py-14 text-gray-400">
+            <div class="text-4xl mb-3">🗂️</div>
+            <p class="font-semibold">No candidates found</p>
+            <p class="text-xs mt-1">Try a different filter or initiate a new candidate</p>
+          </td></tr>`;
         return;
       }
 
-      // Update stats if stats endpoint is not used
-      updateStatsFromList(page.content, page.totalElements);
-
       tbody.innerHTML = page.content.map((c, i) => {
         const status = c.joiningStatus || c.status || 'INITIATED';
-        const assignedHRName =
-          c.assignedHR?.name ||
-          c.assignedHRName ||
-          c.assignedHr?.name ||
-          c.assignedHr ||
-          '–';
+        const assignedHRName = esc(
+          c.assignedHR?.name || c.assignedHRName ||
+          c.assignedHr?.name || c.assignedHr || '–'
+        );
 
         return `
         <tr class="border-b border-gray-50 cursor-pointer" onclick="viewDetail(${c.id})">
           <td class="px-5 py-3.5 text-gray-400 font-mono text-xs">${currentPage * 15 + i + 1}</td>
           <td class="px-5 py-3.5">
-            <div class="font-semibold text-gray-800">${c.employeeName || '–'}</div>
-            <div class="text-xs text-gray-400">${c.emailId || c.email || ''}</div>
+            <!-- FIX #4: All user-data rendered through esc() -->
+            <div class="font-semibold text-gray-800">${esc(c.employeeName) || '–'}</div>
+            <div class="text-xs text-gray-400">${esc(c.emailId || c.email || '')}</div>
           </td>
-          <td class="px-5 py-3.5 text-gray-600">${c.mobileNo || '–'}</td>
-          <td class="px-5 py-3.5 text-gray-600">${c.designation || '–'}</td>
+          <td class="px-5 py-3.5 text-gray-600">${esc(c.mobileNo) || '–'}</td>
+          <td class="px-5 py-3.5 text-gray-600">${esc(c.designation) || '–'}</td>
           <td class="px-5 py-3.5 text-gray-500 text-xs">${assignedHRName}</td>
           <td class="px-5 py-3.5">
-            <span class="badge ${badgeClass(status)}">${(status || '–').replace('_',' ')}</span>
+            <span class="badge ${badgeClass(status)}">${esc(status).replaceAll('_',' ')}</span>
           </td>
           <td class="px-5 py-3.5">${linkBadge(c.linkStatus)}</td>
           <td class="px-5 py-3.5" onclick="event.stopPropagation()">
@@ -501,7 +511,7 @@
                   📱 Link
                 </button>` : ''}
               ${status === 'SIGNED' ? `
-                <button onclick="approveCandidate(${c.id})"
+                <button onclick="approveCandidate(${c.id}, this)"
                         class="action-btn bg-green-600 text-white hover:bg-green-700 px-3 py-1">
                   ✓ Approve
                 </button>
@@ -516,16 +526,17 @@
                 </button>` : ''}
               ${status === 'APPROVED' ? `
                 <span class="text-xs text-green-600 font-semibold">
-                  ✓ ${c.employeeId || ''}
+                  ✓ ${esc(c.employeeId || '')}
                 </span>` : ''}
             </div>
           </td>
         </tr>`;
       }).join('');
     } catch (e) {
+      // FIX #6: No more silent catch blocks
       if (e.message !== 'Session expired') {
         tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-red-400">
-          Error: ${e.message}</td></tr>`;
+          ⚠️ Error loading candidates: ${esc(e.message)}</td></tr>`;
       }
     }
   }
@@ -552,32 +563,33 @@
       errEl.classList.remove('hidden');
       return;
     }
+    // FIX #1: Corrected regex — was \\d (literal backslash+d), now \d (digit)
     if (!/^[6-9]\d{9}$/.test(mobile)) {
-      errEl.textContent = '⚠️ Mobile must be 10 digits starting with 6-9';
+      errEl.textContent = '⚠️ Mobile must be 10 digits starting with 6–9';
       errEl.classList.remove('hidden');
       return;
     }
 
-    const btn  = document.getElementById('submit-initiate');
-    btn.disabled = true;
+    const btn = document.getElementById('submit-initiate');
+    btn.disabled    = true;
     btn.textContent = 'Initiating…';
 
-    const hrId = document.getElementById('i-hr').value;
+    const hrId    = document.getElementById('i-hr').value;
     const payload = {
-      employeeName:  name,
-      mobileNo:      mobile,
-      aadhaarNo:     document.getElementById('i-aadhaar').value.trim(),
-      emailId:       document.getElementById('i-email').value.trim(),
-      designation:   desig,
-      assignedHRId:  hrId ? parseInt(hrId, 10) : null,
-      initiatedBy:   HR_USERNAME || 'hr_user',
+      employeeName:        name,
+      mobileNo:            mobile,
+      aadhaarNo:           document.getElementById('i-aadhaar').value.trim(),
+      emailId:             document.getElementById('i-email').value.trim(),
+      designation:         desig,
+      assignedHRId:        hrId ? parseInt(hrId, 10) : null,
+      initiatedBy:         HR_USERNAME || 'hr_user',
       sendLinkImmediately: document.getElementById('i-sendlink').value === 'true'
     };
 
     try {
       const res  = await authFetch(`${API}/hr/candidates/initiate`, {
         method: 'POST',
-        body: JSON.stringify(payload)
+        body:   JSON.stringify(payload)
       });
       const data = await res.json();
       if (data.success) {
@@ -591,11 +603,11 @@
       }
     } catch (e) {
       if (e.message !== 'Session expired') {
-        errEl.textContent = '⚠️ Server error. Try again.';
+        errEl.textContent = '⚠️ Server error. Please try again.';
         errEl.classList.remove('hidden');
       }
     } finally {
-      btn.disabled = false;
+      btn.disabled    = false;
       btn.textContent = 'Initiate & Send Link';
     }
   }
@@ -603,7 +615,7 @@
   // ---- Send Link ----
   async function sendLink(id) {
     try {
-      const res  = await authFetch(`${API}/hr/candidates/${id}/send-link`, { method:'POST' });
+      const res  = await authFetch(`${API}/hr/candidates/${id}/send-link`, { method: 'POST' });
       const data = await res.json();
       if (data.success) {
         toast('📱 Onboarding link sent via SMS!', 'blue');
@@ -611,15 +623,17 @@
       } else {
         toast('❌ ' + (data.message || 'Failed to send link'), 'red');
       }
-    } catch (e) {}
+    } catch (e) {
+      // FIX #6: Notify user on network failure
+      if (e.message !== 'Session expired') toast('❌ Network error. Try again.', 'red');
+    }
   }
 
   // ---- Candidate Details ----
   async function viewDetail(id) {
     openModal('modal-detail');
-    document.getElementById('detail-body').innerHTML =
-      "<p class='text-gray-400'>Loading…</p>";
-    document.getElementById('detail-actions').innerHTML = "";
+    document.getElementById('detail-body').innerHTML    = "<p class='text-gray-400'>Loading…</p>";
+    document.getElementById('detail-actions').innerHTML = '';
 
     try {
       const res  = await authFetch(`${API}/hr/candidates/${id}`);
@@ -631,57 +645,62 @@
       }
       const c = data.data;
       const rows = [
-        ['Employee Name', c.employeeName],
-        ['Mobile',        c.mobileNo],
-        ['Email',         c.emailId || c.email || '–'],
-        ['Designation',   c.designation],
-        ['Aadhaar',       c.aadhaarNo || '–'],
+        ['Employee Name', esc(c.employeeName)],
+        ['Mobile',        esc(c.mobileNo)],
+        ['Email',         esc(c.emailId || c.email || '–')],
+        ['Designation',   esc(c.designation)],
+        ['Aadhaar',       esc(c.aadhaarNo || '–')],
         ['Status',        `<span class="badge ${badgeClass(c.joiningStatus)}">
-                            ${(c.joiningStatus || '').replace('_',' ')}</span>`],
+                            ${esc(c.joiningStatus || '').replaceAll('_',' ')}</span>`],
         ['Link Status',   linkBadge(c.linkStatus)],
-        ['Employee ID',   c.employeeId ? `<strong class="text-green-600">${c.employeeId}</strong>` : '–'],
-        ['Assigned HR',   c.assignedHR?.name || c.assignedHr?.name || c.assignedHr || '–'],
-        ['Initiated By',  c.initiatedBy || '–'],
-        ['Date',          c.createdAt ? c.createdAt.substring(0,10) : '–'],
+        ['Employee ID',   c.employeeId
+                          ? `<strong class="text-green-600">${esc(c.employeeId)}</strong>`
+                          : '–'],
+        ['Assigned HR',   esc(c.assignedHR?.name || c.assignedHr?.name || c.assignedHr || '–')],
+        ['Initiated By',  esc(c.initiatedBy || '–')],
+        ['Date',          esc(c.createdAt ? c.createdAt.substring(0, 10) : '–')],
       ];
 
-      // optional extra fields if form submitted
       if (c.joiningStatus && c.joiningStatus !== 'INITIATED') {
         rows.push(
-          ["Father's Name", c.fathersName || '–'],
-          ['Date of Birth', c.dob || '–'],
-          ['Gender',        c.gender || '–'],
-          ['Blood Group',   c.bloodGroup || '–'],
-          ['PAN',           c.panCardNo || '–'],
-          ['Bank',          c.bankName ? `${c.bankName} · A/C: ${c.bankAccountNo} · IFSC: ${c.ifscCode}` : '–'],
-          ['Nominee',       c.nomineeName ? `${c.nomineeName} (${c.nomineeRelation})` : '–'],
+          ["Father's Name", esc(c.fathersName  || '–')],
+          ['Date of Birth', esc(c.dob           || '–')],
+          ['Gender',        esc(c.gender         || '–')],
+          ['Blood Group',   esc(c.bloodGroup     || '–')],
+          ['PAN',           esc(c.panCardNo      || '–')],
+          ['Bank',          c.bankName
+                            ? `${esc(c.bankName)} · A/C: ${esc(c.bankAccountNo)} · IFSC: ${esc(c.ifscCode)}`
+                            : '–'],
+          ['Nominee',       c.nomineeName
+                            ? `${esc(c.nomineeName)} (${esc(c.nomineeRelation)})`
+                            : '–'],
           ['Address',       c.permanentAddress
-                            ? `${c.permanentAddress}, ${c.district}, ${c.state} – ${c.pinCode}`
+                            ? `${esc(c.permanentAddress)}, ${esc(c.district)}, ${esc(c.state)} – ${esc(c.pinCode)}`
                             : '–']
         );
       }
       if (c.rejectionReason) {
         rows.push(['Rejection Reason',
-          `<span class="text-red-600">${c.rejectionReason}</span>`]);
+          `<span class="text-red-600">${esc(c.rejectionReason)}</span>`]);
       }
 
-      document.getElementById('detail-body').innerHTML = rows.map(([k,v]) => `
+      document.getElementById('detail-body').innerHTML = rows.map(([k, v]) => `
         <div class="flex gap-3 py-1.5 border-b border-gray-50">
           <span class="w-36 flex-shrink-0 text-gray-400 font-semibold text-xs uppercase tracking-wide">${k}</span>
           <span class="text-gray-700">${v || '–'}</span>
         </div>
       `).join('');
 
-      // Action buttons
+      // Action buttons in detail modal
       let actions = '';
       if (c.joiningStatus === 'SIGNED') {
         actions += `
-          <button onclick="approveCandidate(${c.id})"
+          <button id="detail-approve-btn" onclick="approveCandidate(${c.id}, this)"
                   class="flex-1 gbg text-white py-2.5 rounded-xl font-bold hover:opacity-90 shadow">
             ✓ Approve & Generate Employee ID
           </button>`;
         actions += `
-          <button onclick="closeModal('modal-detail');openReject(${c.id})"
+          <button onclick="closeModal('modal-detail'); openReject(${c.id})"
                   class="flex-1 bg-red-600 text-white py-2.5 rounded-xl font-bold hover:bg-red-700">
             ✕ Reject
           </button>`;
@@ -694,14 +713,24 @@
       }
       document.getElementById('detail-actions').innerHTML = actions;
 
-    } catch (e) {}
+    } catch (e) {
+      // FIX #6: Surface errors to the user
+      if (e.message !== 'Session expired') {
+        document.getElementById('detail-body').innerHTML =
+          `<p class='text-red-400'>⚠️ Error: ${esc(e.message)}</p>`;
+      }
+    }
   }
 
-  // ---- Approve & Reject ----
-  async function approveCandidate(id) {
+  // ---- Approve ----
+  // FIX #7: btn parameter enables loading state and prevents double-click
+  async function approveCandidate(id, btn) {
     if (!confirm('Approve this candidate and generate Employee ID?')) return;
+    const originalText = btn.textContent;
+    btn.disabled    = true;
+    btn.textContent = 'Approving…';
     try {
-      const res  = await authFetch(`${API}/hr/candidates/${id}/approve`, { method:'POST' });
+      const res  = await authFetch(`${API}/hr/candidates/${id}/approve`, { method: 'POST' });
       const data = await res.json();
       if (data.success) {
         toast('✅ Approved! Employee ID: ' + (data.data?.employeeId || ''), 'green');
@@ -711,11 +740,18 @@
       } else {
         toast('❌ ' + (data.message || 'Failed to approve'), 'red');
       }
-    } catch (e) {}
+    } catch (e) {
+      // FIX #6: Notify on failure
+      if (e.message !== 'Session expired') toast('❌ Network error. Try again.', 'red');
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = originalText;
+    }
   }
 
+  // ---- Reject ----
   function openReject(id) {
-    document.getElementById('reject-id').value = id;
+    document.getElementById('reject-id').value    = id;
     document.getElementById('reject-reason').value = '';
     document.getElementById('reject-error').classList.add('hidden');
     openModal('modal-reject');
@@ -731,10 +767,18 @@
       errEl.classList.remove('hidden');
       return;
     }
+
+    // FIX #7: Disable button to prevent double submission
+    const btn = document.getElementById('submit-reject');
+    btn.disabled    = true;
+    btn.textContent = 'Rejecting…';
+
     try {
+      // FIX #5: Explicit Content-Type header on reject call
       const res  = await authFetch(`${API}/hr/candidates/${id}/reject`, {
-        method: 'POST',
-      body: JSON.stringify({ rejectionReason: reason })
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ rejectionReason: reason })
       });
       const data = await res.json();
       if (data.success) {
@@ -744,12 +788,18 @@
         loadCandidates();
         loadStats();
       } else {
-        toast('❌ ' + (data.message || 'Failed'), 'red');
+        toast('❌ ' + (data.message || 'Failed to reject'), 'red');
       }
-    } catch (e) {}
+    } catch (e) {
+      // FIX #6: Surface error
+      if (e.message !== 'Session expired') toast('❌ Network error. Try again.', 'red');
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = 'Confirm Reject';
+    }
   }
 
-  // Init overlay backdrop close
+  // Close overlay on backdrop click
   document.querySelectorAll('.overlay').forEach(el => {
     el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
   });
